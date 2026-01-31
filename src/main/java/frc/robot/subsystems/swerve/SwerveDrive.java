@@ -24,8 +24,8 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.subsystems.Constants;
-import frc.robot.subsystems.Constants.SwerveConstants;
+import frc.robot.Constants;
+import frc.robot.Constants.SwerveConstants;
 
 public class SwerveDrive extends SubsystemBase {
     private final GyroIO gyroIO;

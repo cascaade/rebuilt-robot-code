@@ -8,7 +8,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Preferences;
-import frc.robot.subsystems.Constants.SwerveModuleConstants;
+import frc.robot.Constants.SwerveModuleConstants;
 
 public class SDSSwerveModule {
     public static final NetworkTable constantPreferences = NetworkTableInstance.getDefault().getTable("Swerve Modules");

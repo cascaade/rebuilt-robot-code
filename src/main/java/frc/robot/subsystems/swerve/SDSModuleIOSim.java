@@ -6,7 +6,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.subsystems.Constants.SwerveModuleConstants;
+import frc.robot.Constants.SwerveModuleConstants;
 
 // sim based on the advantagekit 2026 swerve example
 public class SDSModuleIOSim implements SDSModuleIO {
