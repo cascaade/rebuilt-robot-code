@@ -1,14 +1,21 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.Constants.IntakeConstants;
 
 public class Intake extends SubsystemBase {
     public static enum IntakePose {
         RETRACTED(0),
         EXTENDED(1);
 
-        IntakePose(double setpoint) {
+        private final double setpoint;
 
+        IntakePose(double setpoint) {
+            this.setpoint = setpoint;
+        }
+
+        public double getSetpoint() {
+            return setpoint;
         }
     }
 
@@ -21,6 +28,14 @@ public class Intake extends SubsystemBase {
     }
 
     public void setPose(IntakePose pose) {
-        
+        wristIO.setSetpoint(pose.getSetpoint());
+    }
+
+    public void startIntaking() {
+        intakeIO.setClosedLoop(IntakeConstants.intakeVoltage);
+    }
+
+    public void stopIntaking() {
+        intakeIO.setOpenLoop(0);
     }
 }

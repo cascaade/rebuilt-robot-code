@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.spark.FeedbackSensor;
+import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -158,7 +159,7 @@ public class Constants {
 
             turnConfig
                 .idleMode(IdleMode.kBrake)
-                .smartCurrentLimit(30)
+                .smartCurrentLimit(turnMotorCurrentLimit)
                 .voltageCompensation(12)
                 .closedLoopRampRate(0.01)
                 .inverted(true);
@@ -212,6 +213,51 @@ public class Constants {
         public static final int kWristCANID = 14;
 
         public static final SparkMaxConfig wristConfig = new SparkMaxConfig();
+        public static final SparkBaseConfig intakeConfig = new SparkMaxConfig();
+
+        public static final double intakeVoltage = 6;
+
+        public static final double wristMotorReduction = 1;
+
+        public static final double wristEncoderPositionFactor = 2 * Math.PI / wristMotorReduction;
+        public static final double wristEncoderVelocityFactor = (2 * Math.PI) / wristMotorReduction / 60;
+
+        public static final double wristP = 0;
+        public static final double wristI = 0;
+        public static final double wristD = 0;
+        public static final double wristG = 0;
+        public static final double wristS = 0;
+        public static final double wristV = 0;
+
+        public static final double wristPIDMinInput = 0;
+        public static final double wristPIDMaxInput = 0;
+
+        static {
+            wristConfig
+                .idleMode(IdleMode.kBrake)
+                .voltageCompensation(12)
+                .closedLoopRampRate(0.01)
+                .inverted(false);
+            wristConfig.encoder
+                .positionConversionFactor(wristEncoderPositionFactor)
+                .velocityConversionFactor(wristEncoderVelocityFactor)
+                .uvwAverageDepth(2);
+            wristConfig.closedLoop
+                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                .pid(wristP, wristI, wristD)
+                .positionWrappingEnabled(true)
+                .positionWrappingInputRange(wristPIDMinInput, wristPIDMaxInput)
+                .outputRange(-1,1);
+            wristConfig.signals
+                .absoluteEncoderPositionAlwaysOn(true)
+                .absoluteEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
+                .absoluteEncoderVelocityAlwaysOn(true)
+                .absoluteEncoderVelocityPeriodMs(20)
+                .appliedOutputPeriodMs(20)
+                .busVoltagePeriodMs(20)
+                .outputCurrentPeriodMs(20);
+            
+        }
     }
 
     public static class OperatorConstants {
