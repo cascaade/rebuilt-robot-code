@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.AutoAlignToHub;
 import frc.robot.subsystems.Constants;
 import frc.robot.subsystems.Constants.OperatorConstants;
 import frc.robot.subsystems.Constants.VisionConstants;
@@ -29,6 +30,8 @@ public class RobotContainer {
 
     private final SwerveDrive swerve;
     private final Vision vision;
+
+    private final Command autoAlignCommand;
 
     public RobotContainer() {
         Preferences.removeAll();
@@ -87,6 +90,8 @@ public class RobotContainer {
                 break;
         }
 
+        autoAlignCommand = new AutoAlignToHub(swerve);
+
         configureBindings();
     }
 
@@ -100,6 +105,8 @@ public class RobotContainer {
 
         // driverController.a().whileTrue(swerve.goofyFunction());
         // driverController.a().onFalse(swerve.runStopDrive());
+
+        driverController.a().whileTrue(autoAlignCommand);
 
         driverController.y().onTrue(swerve.runZeroGyro());
         driverController.x().onTrue(swerve.runToggleToXPosition());

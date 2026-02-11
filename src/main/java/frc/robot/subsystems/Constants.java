@@ -6,10 +6,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -58,6 +55,29 @@ public class Constants {
     // }
 
     public static final double odometryFrequency = 50.0; // hz (50 is default of 20ms)
+
+    public static class FieldConstants {
+        public static Pose2d getHubCenter() {
+            double x, y;
+
+            if (kFieldType.equals(FieldType.WELDED)) {
+                x = Units.inchesToMeters(182.11);
+                y = Units.inchesToMeters(158.84);
+            } else {
+                x = Units.inchesToMeters(181.56);
+                y = Units.inchesToMeters(158.32);
+            }
+
+            if (isRed()) {
+                x = -x;
+                y = -y;
+            }
+
+            return SwerveConstants.getInitialPose().transformBy(
+                new Transform2d(x, y, Rotation2d.kZero)
+            );
+        }
+    }
 
     public static class SwerveConstants {
         public static final int[] turnCANIDs = { 1, 2, 3, 4 };
