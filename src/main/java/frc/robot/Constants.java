@@ -214,9 +214,11 @@ public class Constants {
     } 
 
     public static class ShooterConstants {
-        public static final double motorKP = 0.1; 
-        public static final double motorKI = 0.0; 
-        public static final double motorKD = 0.0; 
-        public static final double motorKV = 0.12; 
+//        public static final double motorKP = 0.1;
+//        public static final double motorKI = 0.0;
+//        public static final double motorKD = 0.0;
+        public static final double motorKV = 0.12;
+        public static final double motorKS = 0.0;
+        public static final double bangBangBoost = 3.0; // volts
     }
 }
