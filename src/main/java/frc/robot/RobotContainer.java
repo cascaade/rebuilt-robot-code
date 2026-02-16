@@ -9,18 +9,24 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOSpark;
+import frc.robot.subsystems.shooter.ShooterIOTalon;
 import frc.robot.subsystems.swerve.GyroIO;
 import frc.robot.subsystems.swerve.GyroIOPigeon;
 import frc.robot.subsystems.swerve.SDSModuleIO;
 import frc.robot.subsystems.swerve.SDSModuleIOSim;
 import frc.robot.subsystems.swerve.SDSModuleIOSpark;
 import frc.robot.subsystems.swerve.SwerveDrive;
+import frc.robot.Constants.ShooterConstants;
 
 public class RobotContainer {
     private final CommandXboxController driverController;
     private final CommandXboxController auxController;
 
     private final SwerveDrive swerve;
+    private final Shooter shooter;
 
     public RobotContainer() {
         Preferences.removeAll();
@@ -37,6 +43,10 @@ public class RobotContainer {
                     new SDSModuleIOSpark(2),
                     new SDSModuleIOSpark(3)
                 );
+                shooter = new Shooter(
+                    new ShooterIOTalon(ShooterConstants.shooterMotorCANID),
+                    new ShooterIOSpark(ShooterConstants.feederMotorCANID)
+                );
                 break;
             case SIM:
                 swerve = new SwerveDrive(
@@ -46,6 +56,10 @@ public class RobotContainer {
                     new SDSModuleIOSim(),
                     new SDSModuleIOSim()
                 );
+                shooter = new Shooter(
+                    new ShooterIO() {},
+                    new ShooterIO() {}
+                );
                 break;
             default:
                 swerve = new SwerveDrive(
@@ -54,6 +68,10 @@ public class RobotContainer {
                     new SDSModuleIO() {},
                     new SDSModuleIO() {},
                     new SDSModuleIO() {}
+                );
+                shooter = new Shooter(
+                    new ShooterIO() {},
+                    new ShooterIO() {}
                 );
                 break;
         }
@@ -69,12 +87,12 @@ public class RobotContainer {
             driverController::getRightTriggerAxis // raw slow input
         ));
 
-        // driverController.a().whileTrue(swerve.goofyFunction());
-        // driverController.a().onFalse(swerve.runStopDrive());
-
         driverController.y().onTrue(swerve.runZeroGyro());
         driverController.x().onTrue(swerve.runToggleToXPosition());
         driverController.b().onTrue(swerve.runReconfigure());
+
+        shooter.setDefaultCommand(shooter.runShooterIdle());
+        driverController.rightBumper().whileTrue(shooter.runShootMaxSpeed());
     }
 
     public void testPeriodic() {

@@ -214,6 +214,9 @@ public class Constants {
     } 
 
     public static class ShooterConstants {
+        public static final int shooterMotorCANID = 14;
+        public static final int feederMotorCANID = 15;
+
 //        public static final double motorKP = 0.1;
 //        public static final double motorKI = 0.0;
 //        public static final double motorKD = 0.0;
@@ -223,5 +226,6 @@ public class Constants {
 
         public static final double shooterMotorMaxSpeed = 5; // rad/sec
         public static final double feederMotorMaxSpeed = 5; // rad/sec
+        public static final double idleMult = 0.3;
     }
 }
