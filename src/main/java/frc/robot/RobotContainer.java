@@ -47,10 +47,10 @@ public class RobotContainer {
                 );
                 vision = new Vision(
                     swerve::addVisionMeasurement,
-                    new VisionIOPhoton(VisionConstants.cam0config.name(), VisionConstants.cam0config.robotToCamera()),
-                    new VisionIOPhoton(VisionConstants.cam1config.name(), VisionConstants.cam1config.robotToCamera()),
-                    new VisionIOPhoton(VisionConstants.cam2config.name(), VisionConstants.cam2config.robotToCamera()),
-                    new VisionIOPhoton(VisionConstants.cam3config.name(), VisionConstants.cam3config.robotToCamera())
+                    new VisionIOPhoton(VisionConstants.camConfigs[0]),
+                    new VisionIOPhoton(VisionConstants.camConfigs[1])
+                    // new VisionIOPhoton(VisionConstants.camConfigs[2]),
+                    // new VisionIOPhoton(VisionConstants.camConfigs[3])
                 );
                 break;
             case SIM:

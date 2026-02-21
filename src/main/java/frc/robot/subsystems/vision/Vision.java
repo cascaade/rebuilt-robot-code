@@ -97,9 +97,9 @@ public class Vision extends SubsystemBase {
                     angularStdDev *= VisionConstants.angularStdDevMegatag2Factor;
                 }
 
-                if (cameraIndex < VisionConstants.cameraStdDevFactors.length) {
-                    linearStdDev *= VisionConstants.cameraStdDevFactors[cameraIndex];
-                    angularStdDev *= VisionConstants.cameraStdDevFactors[cameraIndex];
+                if (cameraIndex < VisionConstants.camConfigs.length) {
+                    linearStdDev *= VisionConstants.camConfigs[cameraIndex].standardDeviationMultiplier();
+                    angularStdDev *= VisionConstants.camConfigs[cameraIndex].standardDeviationMultiplier();
                 }
 
                 // Send vision observation

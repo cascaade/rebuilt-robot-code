@@ -12,18 +12,19 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.subsystems.Constants.VisionConstants;
+import frc.robot.subsystems.Constants.VisionConstants.CameraConfig;
 
 public class VisionIOPhoton implements VisionIO {
     private final PhotonCamera camera;
     private final Transform3d robotToCamera;
 
-    private final PhotonPoseEstimator photonEstimator;
-
     public VisionIOPhoton(String name, Transform3d robotToCamera) {
         this.camera = new PhotonCamera(name);
         this.robotToCamera = robotToCamera;
+    }
 
-        photonEstimator = new PhotonPoseEstimator(VisionConstants.aprilTagLayout, robotToCamera);
+    public VisionIOPhoton(CameraConfig config) {
+        this(config.name(), config.robotToCamera());
     }
 
     @Override
