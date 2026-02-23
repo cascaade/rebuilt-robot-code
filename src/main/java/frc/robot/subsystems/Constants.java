@@ -234,6 +234,21 @@ public class Constants {
         public static final double wristPIDMinInput = 0;
         public static final double wristPIDMaxInput = 0;
 
+        public static enum IntakePose {
+            RETRACTED(0),
+            EXTENDED(1);
+
+            private final double setpoint;
+
+            IntakePose(double setpoint) {
+                this.setpoint = setpoint;
+            }
+
+            public double getSetpoint() {
+                return setpoint;
+            }
+        }
+
         static {
             wristSparkConfig
                 .idleMode(IdleMode.kBrake)
