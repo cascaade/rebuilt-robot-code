@@ -1,3 +1,4 @@
+
 package frc.robot;
 
 import com.revrobotics.spark.FeedbackSensor;
@@ -134,7 +135,7 @@ public class Constants {
         public static final double turnPIDMinInput = 0;
         public static final double turnPIDMaxInput = 2 * Math.PI;
         public static final double[] doubleZeroRotations = {
-            -0.452, // fl
+            0.048, // fl
             -0.464, // fr
             0.051, // bl
             0.353 // br
