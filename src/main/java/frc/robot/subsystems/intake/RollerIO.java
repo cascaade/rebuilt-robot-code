@@ -12,9 +12,11 @@ public interface RollerIO {
         public double currentAmps = 0;
     }
 
-    public void updateInputs(IntakeIOInputs inputs);
+    public default void periodic() {}
 
-    public void setClosedLoop(double velocityRadPerSec);
+    public default void updateInputs(IntakeIOInputs inputs) {}
 
-    public void setOpenLoop(double voltage);
+    public default void setClosedLoop(double velocityRadPerSec) {}
+
+    public default void setOpenLoop(double voltage) {}
 }

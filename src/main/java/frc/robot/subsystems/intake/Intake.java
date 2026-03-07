@@ -24,4 +24,10 @@ public class Intake extends SubsystemBase {
     public void stopIntaking() {
         rollerIO.setOpenLoop(0);
     }
+
+    @Override
+    public void periodic() {
+        rollerIO.periodic();
+        wristIO.periodic();
+    }
 }

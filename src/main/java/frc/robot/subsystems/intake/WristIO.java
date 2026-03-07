@@ -14,9 +14,11 @@ public interface WristIO {
         public double currentAmps = 0;
     }
 
-    public void updateInputs(WristIOInputs inputs);
+    public default void periodic() {}
 
-    public void setSetpoint(double angle);
+    public default void updateInputs(WristIOInputs inputs) {}
 
-    public void setOpenLoop(double voltage);
+    public default void setSetpoint(double angle) {}
+
+    public default void setOpenLoop(double voltage) {}
 }

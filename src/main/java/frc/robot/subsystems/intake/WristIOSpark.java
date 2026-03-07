@@ -7,23 +7,68 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 
+import com.revrobotics.spark.config.SparkMaxConfig;
 import frc.robot.subsystems.Constants.IntakeConstants;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class WristIOSpark implements WristIO {
     private final SparkMax wristMotor;
     private final SparkClosedLoopController wristController;
     private final SparkAbsoluteEncoder wristEncoder;
+    private final SparkMaxConfig motorConfig;
+
+    private final LoggedNetworkNumber loggedKP = new LoggedNetworkNumber("Intake/Wrist/kP", IntakeConstants.wristP);
+    private final LoggedNetworkNumber loggedKD = new LoggedNetworkNumber("Intake/Wrist/kD", IntakeConstants.wristD);
+    private final LoggedNetworkNumber loggedKS = new LoggedNetworkNumber("Intake/Wrist/kS", IntakeConstants.wristS);
+    private final LoggedNetworkNumber loggedKCos = new LoggedNetworkNumber("Intake/Wrist/kCos", IntakeConstants.wristCos);
+
+    private double lastKp = 0.0;
+    private double lastKd = 0.0;
+    private double lastKs = 0.0;
+    private double lastKcos = 0.0;
 
     public WristIOSpark() {
         wristMotor = new SparkMax(IntakeConstants.kWristCANID, MotorType.kBrushless);
         wristController = wristMotor.getClosedLoopController();
         wristEncoder = wristMotor.getAbsoluteEncoder();
 
+        motorConfig = IntakeConstants.wristSparkConfig;
+
+        motorConfig.closedLoop
+            .pid(IntakeConstants.wristP, 0.0, IntakeConstants.wristD);
+        motorConfig.closedLoop.feedForward
+            .kCos(IntakeConstants.wristCos).kS(IntakeConstants.wristS);
+
         wristMotor.configure(IntakeConstants.wristSparkConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    }
+
+    @Override
+    public void periodic() {
+        double currentKp = loggedKP.get();
+        double currentKd = loggedKD.get();
+        double currentKs = loggedKS.get();
+        double currentKcos = loggedKCos.get();
+
+        if (currentKp != lastKp || currentKd != lastKd || currentKs != lastKs || currentKcos != lastKcos) {
+
+            motorConfig.closedLoop
+                .pid(IntakeConstants.wristP, 0.0, IntakeConstants.wristD);
+            motorConfig.closedLoop.feedForward
+                .kCos(IntakeConstants.wristCos).kS(IntakeConstants.wristS);
+
+            wristMotor.configure(motorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+
+            lastKp = currentKp;
+            lastKd = currentKd;
+            lastKs = currentKs;
+            lastKcos = currentKcos;
+
+            System.out.println("SparkMax Constants Updated!");
+        }
     }
 
     @Override
