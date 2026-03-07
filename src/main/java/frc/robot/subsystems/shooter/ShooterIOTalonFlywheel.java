@@ -1,27 +1,19 @@
 package frc.robot.subsystems.shooter;
 
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.math.controller.BangBangController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.ShooterConstants;
-import org.littletonrobotics.junction.AutoLogOutput;
 
-public class ShooterIOTalon implements ShooterIO {
+public class ShooterIOTalonFlywheel implements ShooterIO {
     public final TalonFX motor;
 
     private final MotionMagicVelocityVoltage velocityRequest = new MotionMagicVelocityVoltage(0.0);
 
-    public ShooterIOTalon(int CANID) {
+    public ShooterIOTalonFlywheel(int CANID) {
         motor = new TalonFX(CANID); 
         
         MotorOutputConfigs outputConfigs = new MotorOutputConfigs(); 

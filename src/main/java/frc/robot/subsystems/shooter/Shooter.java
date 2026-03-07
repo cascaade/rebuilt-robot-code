@@ -14,14 +14,16 @@ public class Shooter extends SubsystemBase {
     private final ShooterIO shooterIOM;
     private final ShooterIO shooterIOR;
     private final ShooterIO feederIO;
+    private final ShooterIO indexIO;
 
-    private final ShooterIOInputsAutoLogged[] shooterInputs = new ShooterIOInputsAutoLogged[4];
+    private final ShooterIOInputsAutoLogged[] shooterInputs = new ShooterIOInputsAutoLogged[5];
 
-    public Shooter(ShooterIO shooterIOL, ShooterIO shooterIOM, ShooterIO shooterIOR, ShooterIO feederIO) {
+    public Shooter(ShooterIO shooterIOL, ShooterIO shooterIOM, ShooterIO shooterIOR, ShooterIO feederIO, ShooterIO indexIO) {
         this.shooterIOL = shooterIOL;
         this.shooterIOM = shooterIOM;
         this.shooterIOR = shooterIOR;
         this.feederIO = feederIO;
+        this.indexIO = indexIO;
     }
 
     private double shooterMotorRegressionDistanceToVelocityRadPerSec(double distanceMeters) {
@@ -40,14 +42,16 @@ public class Shooter extends SubsystemBase {
         shooterIOM.setVelocityClosedLoop(shooterVelocityRadPerSec);
         shooterIOR.setVelocityClosedLoop(shooterVelocityRadPerSec);
         feederIO.setVelocityClosedLoop(feederVelocityRadPerSec);
+        indexIO.setVelocityClosedLoop(feederVelocityRadPerSec);
     }
 
     public Command runStopShooter() {
         return runOnce(() -> {
-            shooterIOL.setOpenLoop(0);
-            shooterIOM.setOpenLoop(0);
-            shooterIOR.setOpenLoop(0);
-            feederIO.setOpenLoop(0);
+            shooterIOL.stop();
+            shooterIOM.stop();
+            shooterIOR.stop();
+            feederIO.stop();
+            indexIO.stop();
         });
     }
 
@@ -57,6 +61,7 @@ public class Shooter extends SubsystemBase {
             shooterIOM.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed);
             shooterIOR.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed);
             feederIO.setVelocityClosedLoop(ShooterConstants.feederMotorMaxSpeed);
+            indexIO.setVelocityClosedLoop(ShooterConstants.feederMotorMaxSpeed);
         });
     }
 
@@ -65,7 +70,8 @@ public class Shooter extends SubsystemBase {
             shooterIOL.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed * ShooterConstants.idleMult);
             shooterIOM.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed * ShooterConstants.idleMult);
             shooterIOR.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed * ShooterConstants.idleMult);
-            feederIO.setOpenLoop(0);
+            feederIO.stop();
+            indexIO.stop();
         });
     }
 
@@ -86,10 +92,12 @@ public class Shooter extends SubsystemBase {
         shooterIOM.updateInputs(shooterInputs[1]);
         shooterIOR.updateInputs(shooterInputs[2]);
         feederIO.updateInputs(shooterInputs[3]);
+        indexIO.updateInputs(shooterInputs[4]);
 
         Logger.processInputs("Shooter/RightShooter", shooterInputs[0]);
         Logger.processInputs("Shooter/MiddleShooter", shooterInputs[1]);
         Logger.processInputs("Shooter/LeftShooter", shooterInputs[2]);
         Logger.processInputs("Shooter/Feeder", shooterInputs[3]);
+        Logger.processInputs("Shooter/Indexer", shooterInputs[4]);
     }
 }

@@ -11,8 +11,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSpark;
-import frc.robot.subsystems.shooter.ShooterIOTalon;
+import frc.robot.subsystems.shooter.ShooterIOSparkFeeder;
+import frc.robot.subsystems.shooter.ShooterIOSparkIndex;
+import frc.robot.subsystems.shooter.ShooterIOTalonFlywheel;
 import frc.robot.subsystems.swerve.GyroIO;
 import frc.robot.subsystems.swerve.GyroIOPigeon;
 import frc.robot.subsystems.swerve.SDSModuleIO;
@@ -44,10 +45,11 @@ public class RobotContainer {
                     new SDSModuleIOSpark(3)
                 );
                 shooter = new Shooter(
-                    new ShooterIOTalon(ShooterConstants.shooterLMotorCANID),
-                    new ShooterIOTalon(ShooterConstants.shooterMMotorCANID),
-                    new ShooterIOTalon(ShooterConstants.shooterRMotorCANID),
-                    new ShooterIOSpark(ShooterConstants.feederMotorCANID)
+                    new ShooterIOTalonFlywheel(ShooterConstants.shooterLMotorCANID),
+                    new ShooterIOTalonFlywheel(ShooterConstants.shooterMMotorCANID),
+                    new ShooterIOTalonFlywheel(ShooterConstants.shooterRMotorCANID),
+                    new ShooterIOSparkFeeder(ShooterConstants.feederMotorCANID),
+                    new ShooterIOSparkIndex(ShooterConstants.indexMotorCANID)
                 );
                 break;
             case SIM:
@@ -59,6 +61,7 @@ public class RobotContainer {
                     new SDSModuleIOSim()
                 );
                 shooter = new Shooter(
+                    new ShooterIO() {},
                     new ShooterIO() {},
                     new ShooterIO() {},
                     new ShooterIO() {},
@@ -74,6 +77,7 @@ public class RobotContainer {
                     new SDSModuleIO() {}
                 );
                 shooter = new Shooter(
+                    new ShooterIO() {},
                     new ShooterIO() {},
                     new ShooterIO() {},
                     new ShooterIO() {},

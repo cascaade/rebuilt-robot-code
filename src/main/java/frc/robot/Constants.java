@@ -226,6 +226,7 @@ public class Constants {
         public static final int shooterMMotorCANID = 14;
         public static final int shooterRMotorCANID = 14;
         public static final int feederMotorCANID = 15;
+        public static final int indexMotorCANID = 15;
 
         public static final double shooterMotorMaxSpeed = 5; // rad/sec
         public static final double feederMotorMaxSpeed = 5; // rad/sec
@@ -241,11 +242,17 @@ public class Constants {
         public static final double feederkS = 0;
         public static final double feederkV = 0.12;
 
+        public static final double indexkP = 0.4;
+        public static final double indexkD = 0;
+        public static final double indexkS = 0;
+        public static final double indexkV = 0.12;
+
         public static final double mmCruise = 80;
         public static final double mmAcceleration = 160;
         public static final double mmJerk = 1600;
 
         public static final SparkMaxConfig feederConfig = new SparkMaxConfig();
+        public static final SparkMaxConfig indexConfig = new SparkMaxConfig();
 
         public static final double feederMotorReduction = 3.0 / 1.0;
         public static final double feederEncoderPositionFactor = 2 * Math.PI / feederMotorReduction;
@@ -271,6 +278,33 @@ public class Constants {
             feederConfig.closedLoop.feedForward
                 .kS(feederkS).kV(feederkV);
             feederConfig.signals
+                .absoluteEncoderPositionAlwaysOn(true)
+                .absoluteEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
+                .absoluteEncoderVelocityAlwaysOn(true)
+                .absoluteEncoderVelocityPeriodMs(20)
+                .appliedOutputPeriodMs(20)
+                .busVoltagePeriodMs(20)
+                .outputCurrentPeriodMs(20);
+
+            indexConfig
+                .idleMode(IdleMode.kCoast)
+                .smartCurrentLimit(30)
+                .voltageCompensation(12)
+                .closedLoopRampRate(0.01)
+                .inverted(false); // i hope not ❤️
+            indexConfig.encoder
+                .positionConversionFactor(feederEncoderPositionFactor)
+                .positionConversionFactor(feederEncoderVelocityFactor)
+                .uvwAverageDepth(2);
+            indexConfig.closedLoop
+                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                .pid(indexkP, 0, indexkD)
+                .positionWrappingEnabled(true)
+                .positionWrappingInputRange(0, 2 * Math.PI)
+                .outputRange(-1,1);
+            indexConfig.closedLoop.feedForward
+                .kS(indexkS).kV(indexkV);
+            indexConfig.signals
                 .absoluteEncoderPositionAlwaysOn(true)
                 .absoluteEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
                 .absoluteEncoderVelocityAlwaysOn(true)
