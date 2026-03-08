@@ -241,10 +241,9 @@ public class Constants {
 
         static {
             climberConfig
-                .idleMode(IdleMode.kCoast)
-                .smartCurrentLimit(30)
+                .idleMode(IdleMode.kBrake)
+                .smartCurrentLimit(60)
                 .voltageCompensation(12)
-                .closedLoopRampRate(0.01)
                 .inverted(false);
             climberConfig.encoder
                 .positionConversionFactor(climbEncoderPositionFactor)
@@ -253,8 +252,6 @@ public class Constants {
             climberConfig.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .pid(kP, kI, kD)
-                .positionWrappingEnabled(true)
-                .positionWrappingInputRange(0, 2 * Math.PI)
                 .outputRange(-1,1);
             climberConfig.closedLoop.feedForward
                 .kS(kS).kV(kV);
