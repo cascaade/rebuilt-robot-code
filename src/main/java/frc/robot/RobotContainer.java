@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers; // [NEW]
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.swerve.GyroIO;
 import frc.robot.subsystems.swerve.GyroIOPigeon;
 import frc.robot.subsystems.swerve.SDSModuleIO;
@@ -107,12 +107,6 @@ public class RobotContainer {
         // );
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
-
-        // -------------------------------------------------------
-        // [NEW] Schedule the selected auto during autonomous period
-        // This replaces the need to call getAutonomousCommand() manually
-        // -------------------------------------------------------
-        RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
         configureBindings();
     }
