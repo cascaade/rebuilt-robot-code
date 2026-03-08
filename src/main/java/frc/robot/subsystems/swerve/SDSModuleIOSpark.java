@@ -1,24 +1,25 @@
 package frc.robot.subsystems.swerve;
 
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkMaxConfig;
+
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Preferences;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.Constants.SwerveModuleConstants;
 
 import org.littletonrobotics.junction.Logger;
-
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.revrobotics.PersistMode;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 public class SDSModuleIOSpark implements SDSModuleIO {
     private final Rotation2d zeroRotation;
@@ -36,6 +37,8 @@ public class SDSModuleIOSpark implements SDSModuleIO {
 
     private double driveKs;
     private double driveKv;
+
+    private final SlewRateLimiter rateLimiter = new SlewRateLimiter(0.00005);
 
     private final int index;
 
@@ -121,9 +124,10 @@ public class SDSModuleIOSpark implements SDSModuleIO {
 
     public void setDriveVelocityRadPerSec(double velocityRadPerSec) {
         if (Math.abs(velocityRadPerSec) < 0.01) velocityRadPerSec = 0;
+        double setpointRadPerSec = rateLimiter.calculate(velocityRadPerSec);
         double ffVolts = driveKs * Math.signum(velocityRadPerSec) + driveKv * velocityRadPerSec;
         driveController.setSetpoint(
-            velocityRadPerSec,
+            setpointRadPerSec,
             ControlType.kVelocity,
             ClosedLoopSlot.kSlot0,
             ffVolts,
