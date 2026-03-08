@@ -30,7 +30,7 @@ public class ClimbIOSpark implements ClimbIO {
         inputs.positionRadians = climbEncoder.getPosition();
         inputs.velocityRotPerSec = climbEncoder.getVelocity();
 
-        inputs.appliedVolts = climbMotor.getAppliedOutput();
+        inputs.appliedVolts = climbMotor.getBusVoltage() * climbMotor.getAppliedOutput();
         inputs.currentAmps = climbMotor.getOutputCurrent();
     }
 

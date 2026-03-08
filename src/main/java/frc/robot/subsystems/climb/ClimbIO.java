@@ -12,9 +12,9 @@ public interface ClimbIO {
         public double currentAmps = 0;
     }
 
-    public void updateInputs(ClimbIOInputs inputs);
+    public default void updateInputs(ClimbIOInputs inputs) {}
 
-    public void setClosedLoop(double radians);
+    public default void setClosedLoop(double radians) {}
 
-    public void setOpenLoop(double voltage);
+    public default void setOpenLoop(double voltage) {}
 }
