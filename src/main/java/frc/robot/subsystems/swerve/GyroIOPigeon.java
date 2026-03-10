@@ -26,12 +26,12 @@ public class GyroIOPigeon implements GyroIO {
         yaw = pigeon.getYaw();
         yawVelocity = pigeon.getAngularVelocityZWorld();
 
-        // without this line, will get stale CAN frames somehow
-        // TODO research
+        // security to make sure we aren't getting stale frames
         BaseStatusSignal.setUpdateFrequencyForAll(
             100,
             yaw, yawVelocity
         );
+        pigeon.optimizeBusUtilization();
     }
 
     @Override
