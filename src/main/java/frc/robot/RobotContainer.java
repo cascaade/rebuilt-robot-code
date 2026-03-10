@@ -6,9 +6,13 @@ package frc.robot;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.Preferences;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -26,9 +30,22 @@ public class RobotContainer {
     private final SwerveDrive swerve;
 
     private final AutoFactory autoFactory;
-    private final AutoChooser autoChooser;
+
+    private SendableChooser<String> autoChoose = new SendableChooser<>();
+    private SendableChooser<String> EP1 = new SendableChooser<>();
+    private SendableChooser<String> EP2 = new SendableChooser<>();
+    private SendableChooser<String> EP3 = new SendableChooser<>();
+    private SendableChooser<String> EP4 = new SendableChooser<>();
+    private SendableChooser<String> EP5 = new SendableChooser<>();
+    private String lastSelected = "";
+    String[] EPs1a3 = {"2", "3", "4", "5", "6", "7", "8", "N/A"};
+    String[] EPs2 = {"2", "3", "4a", "4b", "5", "6a", "6b", "7", "8", "N/A"};
 
     public RobotContainer() {
+        autoChoose.setDefaultOption("Auto 1", "Auto1");
+        autoChoose.addOption("Auto 2", "Auto2");
+        autoChoose.addOption("Auto 3", "Auto3");
+
         Preferences.removeAll();
 
         driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
@@ -91,22 +108,7 @@ public class RobotContainer {
             swerve
         );
 
-        // -------------------------------------------------------
-        // [NEW] Build AutoChooser and register autonomous routines
-        // Additional autos can be added here with more addRoutine() calls
-        // -------------------------------------------------------
-        autoChooser = new AutoChooser();
-        // autoChooser.addRoutine(
-        //     "Red 1 No Climb Auto",
-        //     () -> new Red1_NoClimb_Auto(autoFactory, intake, shooter).buildRoutine()
-        // );
-
-        // autoChooser.addRoutine(
-        //     "Blue 1 Climb Auto",
-        //     () -> new Blue1_Climb_Auto(autoFactory, intake, shooter, climber).buildRoutine()
-        // );
-
-        SmartDashboard.putData("Auto Chooser", autoChooser);
+        SmartDashboard.putData("Auto Chooser", autoChoose);
 
         configureBindings();
     }
@@ -125,7 +127,61 @@ public class RobotContainer {
     }
 
     public void testPeriodic() {
+        // String auto = autoChoose.getSelected();
+        // if (!lastSelected.equals(auto)) {
+        //     lastSelected = autoChoose.getSelected();
+        //     EP1 = new SendableChooser<>();
+        //     EP2 = new SendableChooser<>();
+        //     EP3 = new SendableChooser<>();
+        //     EP4 = new SendableChooser<>();
+        //     EP5 = new SendableChooser<>();
+
+        //     String[] actualEPs = auto.equals("Auto2") ? EPs2 : EPs1a3;
+            
+        //     for (String EP : actualEPs) {
+        //         EP1.addOption(EP,   EP);
+        //         EP2.addOption(EP, EP);
+        //         EP3.addOption(EP, EP);
+        //         EP4.addOption(EP, EP);
+        //         EP5.addOption(EP, EP);
+        //     }
+            
+        //     SmartDashboard.putData("Endpoint 1", EP1);
+        //     SmartDashboard.putData("Endpoint 2", EP2);
+        //     SmartDashboard.putData("Endpoint 3", EP3);
+        //     SmartDashboard.putData("Endpoint 4", EP4);
+        //     SmartDashboard.putData("Endpoint 5", EP5);
+        // }
+
         swerve.periodic();
+    }
+
+    public void initAutoChooser() {
+        String auto = autoChoose.getSelected();
+        if (!lastSelected.equals(auto)) {
+            lastSelected = autoChoose.getSelected();
+            EP1 = new SendableChooser<>();
+            EP2 = new SendableChooser<>();
+            EP3 = new SendableChooser<>();
+            EP4 = new SendableChooser<>();
+            EP5 = new SendableChooser<>();
+
+            String[] actualEPs = auto.equals("Auto2") ? EPs2 : EPs1a3;
+            
+            for (String EP : actualEPs) {
+                EP1.addOption(EP,   EP);
+                EP2.addOption(EP, EP);
+                EP3.addOption(EP, EP);
+                EP4.addOption(EP, EP);
+                EP5.addOption(EP, EP);
+            }
+            
+            SmartDashboard.putData("Endpoint 1", EP1);
+            SmartDashboard.putData("Endpoint 2", EP2);
+            SmartDashboard.putData("Endpoint 3", EP3);
+            SmartDashboard.putData("Endpoint 4", EP4);
+            SmartDashboard.putData("Endpoint 5", EP5);
+        }
     }
 
     // -------------------------------------------------------
@@ -134,6 +190,6 @@ public class RobotContainer {
     // above, so this is only needed if Robot.java calls it directly.
     // -------------------------------------------------------
     public Command getAutonomousCommand() {
-        return autoChooser.selectedCommandScheduler();
+        return Commands.none();
     }
 }
