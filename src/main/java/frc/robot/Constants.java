@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import frc.robot.util.LoggedTunableControlConstants;
 
 public class Constants {
     public static enum RobotMode {
@@ -228,25 +229,32 @@ public class Constants {
         public static final int feederMotorCANID = 23;
         public static final int indexMotorCANID = 24;
 
-        public static final double shooterMotorMaxSpeed = 5; // rad/sec
-        public static final double feederMotorMaxSpeed = 5; // rad/sec
+        // TODO test check theoretical limits
+        public static final double shooterMaxSpeed = 5; // rad/sec
+        public static final double feederMaxSpeed = 5; // rad/sec
         public static final double idleMult = 0.4;
         public static final double feederMotorMult = 0.3;
 
-        public static final double kP = 0.4;
-        public static final double kD = 0;
-        public static final double kS = 0;
-        public static final double kV = 0.12;
+        public static final LoggedTunableControlConstants flywheelConstants =
+            new LoggedTunableControlConstants("Shooter/Flywheel")
+                .setP(0.4)
+                .setD(0)
+                .setS(0)
+                .setV(0.12);
 
-        public static final double feederkP = 0.4;
-        public static final double feederkD = 0;
-        public static final double feederkS = 0;
-        public static final double feederkV = 0.12;
+        public static final LoggedTunableControlConstants feederConstants =
+            new LoggedTunableControlConstants("Shooter/Feeder")
+                .setP(0.4)
+                .setD(0)
+                .setS(0)
+                .setV(0.12);
 
-        public static final double indexkP = 0.4;
-        public static final double indexkD = 0;
-        public static final double indexkS = 0;
-        public static final double indexkV = 0.12;
+        public static final LoggedTunableControlConstants indexConstants =
+            new LoggedTunableControlConstants("Shooter/Index")
+                .setP(0.4)
+                .setD(0)
+                .setS(0)
+                .setV(0.12);
 
         public static final double mmCruise = 80;
         public static final double mmAcceleration = 160;
@@ -274,12 +282,12 @@ public class Constants {
                 .uvwAverageDepth(2);
             feederConfig.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .pid(feederkP, 0, feederkD)
+                .pid(feederConstants.kP(), 0, feederConstants.kD())
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0, 2 * Math.PI)
                 .outputRange(-1,1);
             feederConfig.closedLoop.feedForward
-                .kS(feederkS).kV(feederkV);
+                .kS(feederConstants.kS()).kV(feederConstants.kV());
             feederConfig.signals
                 .absoluteEncoderPositionAlwaysOn(true)
                 .absoluteEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
@@ -301,12 +309,12 @@ public class Constants {
                 .uvwAverageDepth(2);
             indexConfig.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .pid(indexkP, 0, indexkD)
+                .pid(indexConstants.kP(), 0, indexConstants.kD())
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0, 2 * Math.PI)
                 .outputRange(-1,1);
             indexConfig.closedLoop.feedForward
-                .kS(indexkS).kV(indexkV);
+                .kS(indexConstants.kS()).kV(indexConstants.kV());
             indexConfig.signals
                 .absoluteEncoderPositionAlwaysOn(true)
                 .absoluteEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
@@ -320,10 +328,10 @@ public class Constants {
             talonFlywheelConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
             var slot0 = talonFlywheelConfigs.Slot0;
-            slot0.kP = ShooterConstants.kP;
-            slot0.kD = ShooterConstants.kD;
-            slot0.kS = ShooterConstants.kS;
-            slot0.kV = ShooterConstants.kV;
+            slot0.kP = flywheelConstants.kP();
+            slot0.kD = flywheelConstants.kD();
+            slot0.kS = flywheelConstants.kS();
+            slot0.kV = flywheelConstants.kV();
 
             var motionMagicConfigs = talonFlywheelConfigs.MotionMagic;
             motionMagicConfigs.MotionMagicCruiseVelocity = ShooterConstants.mmCruise;

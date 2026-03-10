@@ -20,7 +20,7 @@ public class ShooterIOSparkFeeder implements ShooterIO {
     public final SparkClosedLoopController feederController;
     public final SparkMaxConfig motorConfig;
 
-    public final LoggedTunableControlConstants controlConstants = new LoggedTunableControlConstants("Shooter/Feeder");
+    public final LoggedTunableControlConstants controlConstants = ShooterConstants.feederConstants;
 
     public ShooterIOSparkFeeder(int CANID) {
         feederMotor = new SparkMax(CANID, MotorType.kBrushless);
@@ -31,23 +31,17 @@ public class ShooterIOSparkFeeder implements ShooterIO {
 
         motorConfig = ShooterConstants.feederConfig;
         feederMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        controlConstants
-            .setP(ShooterConstants.feederkP)
-            .setD(ShooterConstants.feederkD)
-            .setS(ShooterConstants.feederkS)
-            .setV(ShooterConstants.feederkV);
     }
 
     @Override
     public void periodic() {
-        controlConstants.setCallback((double kP, double kI, double kD, double kS, double kV, double kCos) -> {
+        controlConstants.setCallback(() -> {
             motorConfig.closedLoop
-                .p(kP)
-                .d(kD);
+                .p(controlConstants.kP())
+                .d(controlConstants.kD());
             motorConfig.closedLoop.feedForward
-                .kV(kV)
-                .kS(kS);
+                .kV(controlConstants.kV())
+                .kS(controlConstants.kS());
 
             feederMotor.configure(motorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 

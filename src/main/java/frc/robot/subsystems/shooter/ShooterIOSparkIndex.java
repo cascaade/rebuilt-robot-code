@@ -20,7 +20,7 @@ public class ShooterIOSparkIndex implements ShooterIO {
     public final SparkClosedLoopController indexController;
     public final SparkMaxConfig motorConfig;
 
-    public final LoggedTunableControlConstants controlConstants = new LoggedTunableControlConstants("Shooter/Index");
+    public final LoggedTunableControlConstants controlConstants = ShooterConstants.indexConstants;
 
     public ShooterIOSparkIndex(int CANID) {
         indexMotor = new SparkMax(CANID, MotorType.kBrushless);
@@ -31,23 +31,17 @@ public class ShooterIOSparkIndex implements ShooterIO {
 
         motorConfig = ShooterConstants.indexConfig;
         indexMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        controlConstants
-            .setP(ShooterConstants.indexkP)
-            .setD(ShooterConstants.indexkD)
-            .setS(ShooterConstants.indexkS)
-            .setV(ShooterConstants.indexkV);
     }
 
     @Override
     public void periodic() {
-        controlConstants.setCallback((double kP, double kI, double kD, double kS, double kV, double kCos) -> {
+        controlConstants.setCallback(() -> {
             motorConfig.closedLoop
-                .p(kP)
-                .d(kD);
+                .p(controlConstants.kP())
+                .d(controlConstants.kD());
             motorConfig.closedLoop.feedForward
-                .kV(kV)
-                .kS(kS);
+                .kV(controlConstants.kV())
+                .kS(controlConstants.kS());
 
             indexMotor.configure(motorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 

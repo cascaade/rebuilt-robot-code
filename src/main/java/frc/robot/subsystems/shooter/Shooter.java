@@ -18,7 +18,7 @@ public class Shooter extends SubsystemBase {
     private final ShooterIO feederIO;
     private final ShooterIO indexIO;
 
-    private final LoggedNetworkNumber loggedRadPerSec = new LoggedNetworkNumber("Shooter/Tuning/Setpoint", ShooterConstants.kP);
+    private final LoggedNetworkNumber loggedRadPerSec = new LoggedNetworkNumber("Shooter/Tuning/SpeedSetpoint", ShooterConstants.shooterMaxSpeed);
 
     private final ShooterIOInputsAutoLogged[] shooterInputs = new ShooterIOInputsAutoLogged[5];
 
@@ -51,21 +51,31 @@ public class Shooter extends SubsystemBase {
         });
     }
 
-    public Command runShootMaxSpeed() {
+    public Command runShootTheoreticalMaxSpeed() {
         return run(() -> {
-            shooterIOL.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed);
-            shooterIOM.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed);
-            shooterIOR.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed);
-            feederIO.setVelocityClosedLoop(ShooterConstants.feederMotorMaxSpeed);
-            indexIO.setVelocityClosedLoop(ShooterConstants.feederMotorMaxSpeed);
+            shooterIOL.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed);
+            shooterIOM.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed);
+            shooterIOR.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed);
+            feederIO.setVelocityClosedLoop(ShooterConstants.feederMaxSpeed);
+            indexIO.setVelocityClosedLoop(ShooterConstants.feederMaxSpeed);
+        });
+    }
+
+    public Command runAllNominalSpeed() {
+        return run(() -> {
+            shooterIOL.setOpenLoop(12);
+            shooterIOM.setOpenLoop(12);
+            shooterIOR.setOpenLoop(12);
+            feederIO.setOpenLoop(12);
+            indexIO.setOpenLoop(12);
         });
     }
 
     public Command runShooterIdle() {
         return run(() -> {
-            shooterIOL.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed * ShooterConstants.idleMult);
-            shooterIOM.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed * ShooterConstants.idleMult);
-            shooterIOR.setVelocityClosedLoop(ShooterConstants.shooterMotorMaxSpeed * ShooterConstants.idleMult);
+            shooterIOL.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed * ShooterConstants.idleMult);
+            shooterIOM.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed * ShooterConstants.idleMult);
+            shooterIOR.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed * ShooterConstants.idleMult);
             feederIO.stop();
             indexIO.stop();
         });
@@ -85,6 +95,7 @@ public class Shooter extends SubsystemBase {
     public Command runShootOneShooter() {
         return run(() -> {
             shooterIOL.setVelocityClosedLoop(loggedRadPerSec.get());
+            feederIO.setVelocityClosedLoop(loggedRadPerSec.get() * ShooterConstants.feederMotorMult);
         });
     }
 

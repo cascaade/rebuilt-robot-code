@@ -16,29 +16,23 @@ public class ShooterIOTalonFlywheel implements ShooterIO {
 
     private final MotionMagicVelocityVoltage velocityRequest = new MotionMagicVelocityVoltage(0.0);
 
-    public final LoggedTunableControlConstants controlConstants = new LoggedTunableControlConstants("Shooter/Flywheel");
+    public final LoggedTunableControlConstants controlConstants = ShooterConstants.flywheelConstants;
 
     public ShooterIOTalonFlywheel(int CANID) {
         motor = new TalonFX(CANID);
         this.CANID = CANID;
 
         motor.getConfigurator().apply(ShooterConstants.talonFlywheelConfigs);
-
-        controlConstants
-            .setP(ShooterConstants.kP)
-            .setD(ShooterConstants.kD)
-            .setS(ShooterConstants.kS)
-            .setV(ShooterConstants.kV);
     }
 
     @Override
     public void periodic() {
-        controlConstants.setCallback((double kP, double kI, double kD, double kS, double kV, double kCos) -> {
+        controlConstants.setCallback(() -> {
             Slot0Configs slot0 = new Slot0Configs();
-            slot0.kP = kP;
-            slot0.kD = kD;
-            slot0.kS = kS;
-            slot0.kV = kV;
+            slot0.kP = controlConstants.kP();
+            slot0.kD = controlConstants.kD();
+            slot0.kS = controlConstants.kS();
+            slot0.kV = controlConstants.kV();
 
             motor.getConfigurator().apply(slot0, 0);
 

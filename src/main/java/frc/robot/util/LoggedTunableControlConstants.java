@@ -1,8 +1,13 @@
 package frc.robot.util;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class LoggedTunableControlConstants {
+    private static final Set<LoggedTunableControlConstants> INSTANCES = new HashSet<>();
+
     private final String baseKey;
 
     private final LoggedNetworkNumber loggedKP;
@@ -74,8 +79,39 @@ public class LoggedTunableControlConstants {
         return this;
     }
 
+    public double kP() {
+        return lastKP;
+    }
+
+    public double kI() {
+        return lastKI;
+    }
+
+    public double kD() {
+        return lastKD;
+    }
+
+    public double kS() {
+        return lastKS;
+    }
+
+    public double kV() {
+        return lastKV;
+    }
+
+    public double kCos() {
+        return lastKCos;
+    }
+
     public void setCallback(UpdateCallback callback) {
+        if (this.callback != null)
+            System.err.println("Callback for " + baseKey + " tuning constants overwritten.");
+
         this.callback = callback;
+
+        callback.execute();
+
+        INSTANCES.add(this);
     }
 
     public void periodic() {
@@ -87,12 +123,12 @@ public class LoggedTunableControlConstants {
         double currentKCos = loggedKCos.get();
 
         if (
-            currentKP != lastKP ||
-            currentKI != lastKI ||
-            currentKD != lastKD ||
-            currentKS != lastKS ||
-            currentKV != lastKV ||
-            currentKCos != lastKCos
+            Math.abs(currentKP - lastKP) > 1e-9 ||
+            Math.abs(currentKI - lastKI) > 1e-9 ||
+            Math.abs(currentKD - lastKD) > 1e-9 ||
+            Math.abs(currentKS - lastKS) > 1e-9 ||
+            Math.abs(currentKV - lastKV) > 1e-9 ||
+            Math.abs(currentKCos - lastKCos) > 1e-9
         ) {
             lastKP = currentKP;
             lastKI = currentKI;
@@ -104,14 +140,20 @@ public class LoggedTunableControlConstants {
             if (callback == null) {
                 throw new Error("LoggedTunableControlConstants changed, but no callback was set.");
             } else {
-                callback.execute(currentKP, currentKI, currentKD, currentKS, currentKV, currentKCos);
+                callback.execute();
                 System.out.println("Control Constants for " + baseKey + " have updated.");
             }
         }
     }
 
+    public static void tuningPeriodic() {
+        for (LoggedTunableControlConstants constants : INSTANCES) {
+            constants.periodic();
+        }
+    }
+
     @FunctionalInterface
     public static interface UpdateCallback {
-        void execute(double kP, double kI, double kD, double kS, double kV, double kCos);
+        void execute();
     }
 }
