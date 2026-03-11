@@ -1,22 +1,20 @@
 package frc.robot.subsystems.intake;
 
 import com.revrobotics.PersistMode;
-import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
-import frc.robot.subsystems.Constants.IntakeConstants;
 
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
+import frc.robot.Constants.IntakeConstants;
 
 public class RollerIOSpark implements RollerIO {
     private final SparkMax intakeMotor;
