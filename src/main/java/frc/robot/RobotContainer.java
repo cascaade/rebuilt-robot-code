@@ -8,6 +8,13 @@ import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.subsystems.Constants;
+import frc.robot.subsystems.Constants.OperatorConstants;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.RollerIO;
+import frc.robot.subsystems.intake.RollerIOSpark;
+import frc.robot.subsystems.intake.WristIO;
+import frc.robot.subsystems.intake.WristIOSpark;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
@@ -31,6 +38,7 @@ public class RobotContainer {
 
     private final SwerveDrive swerve;
     private final Shooter shooter;
+    private final Intake intake;
     private final Climb climb;
 
     public RobotContainer() {
@@ -55,6 +63,10 @@ public class RobotContainer {
                     new ShooterIOSparkFeeder(ShooterConstants.feederMotorCANID),
                     new ShooterIOSparkIndex(ShooterConstants.indexMotorCANID)
                 );
+                intake = new Intake(
+                    new RollerIOSpark(),
+                    new WristIOSpark()
+                );
                 climb = new Climb(
                     new ClimbIOSpark()
                 );
@@ -74,6 +86,10 @@ public class RobotContainer {
                     new ShooterIO() {},
                     new ShooterIO() {}
                 );
+                intake = new Intake(
+                    new RollerIO() {},
+                    new WristIO() {}
+                );
                 climb = new Climb(
                     new ClimbIO() {}
                 );
@@ -92,6 +108,10 @@ public class RobotContainer {
                     new ShooterIO() {},
                     new ShooterIO() {},
                     new ShooterIO() {}
+                );
+                intake = new Intake(
+                    new RollerIO() {},
+                    new WristIO() {}
                 );
                 climb = new Climb(
                     new ClimbIO() {}
@@ -116,6 +136,10 @@ public class RobotContainer {
 
         shooter.setDefaultCommand(shooter.runStopShooter());
         driverController.rightBumper().whileTrue(shooter.runAllFromNetworkSpeed());
+
+        driverController.x().onTrue(intake.toggleWristPose());
+        driverController.leftBumper().whileTrue(intake.runRollers());
+        driverController.leftBumper().whileFalse(intake.runStopRollers());
     }
 
     public void testPeriodic() {
