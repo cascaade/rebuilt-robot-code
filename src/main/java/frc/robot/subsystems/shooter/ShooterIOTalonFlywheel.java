@@ -23,20 +23,17 @@ public class ShooterIOTalonFlywheel implements ShooterIO {
         this.CANID = CANID;
 
         motor.getConfigurator().apply(ShooterConstants.talonFlywheelConfigs);
-    }
 
-    @Override
-    public void periodic() {
-        controlConstants.setCallback(() -> {
+        controlConstants.addCallback(() -> {
             Slot0Configs slot0 = new Slot0Configs();
             slot0.kP = controlConstants.kP();
             slot0.kD = controlConstants.kD();
             slot0.kS = controlConstants.kS();
             slot0.kV = controlConstants.kV();
 
-            motor.getConfigurator().apply(slot0, 0);
+            motor.getConfigurator().apply(slot0);
 
-            System.out.println("Control Constants Updated!");
+            System.out.println("Control Constants Updated!" + " " + CANID);
         });
     }
 
@@ -45,7 +42,7 @@ public class ShooterIOTalonFlywheel implements ShooterIO {
         Logger.recordOutput("Shooter/Flywheel/" + CANID + "/Setpoint", velocityRadPerSec);
 
         motor.setControl(
-            velocityRequest.withVelocity(Units.radiansToRotations(velocityRadPerSec))
+            velocityRequest.withVelocity(Units.radiansToRotations(velocityRadPerSec)).withSlot(0)
         );
     }
 

@@ -102,7 +102,7 @@ public class RobotContainer {
 //        driverController.b().onTrue(swerve.runReconfigure());
 
         shooter.setDefaultCommand(shooter.runStopShooter());
-        driverController.rightBumper().whileTrue(shooter.runShootOneShooter());
+        driverController.rightBumper().whileTrue(shooter.runAllFromNetworkSpeed());
 //        driverController.rightBumper().whileTrue(shooter.runShootAtHub(swerve::getPose));
 //        driverController.leftBumper().whileTrue(shooter.runShootMaxSpeed());
     }

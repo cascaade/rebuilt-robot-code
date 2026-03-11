@@ -232,29 +232,30 @@ public class Constants {
         // TODO test check theoretical limits
         public static final double shooterMaxSpeed = 5; // rad/sec
         public static final double feederMaxSpeed = 5; // rad/sec
+        public static final double indexMaxSpeed = 0; // rad/sec
         public static final double idleMult = 0.4;
-        public static final double feederMotorMult = 0.3;
+        public static final double feederMotorMult = 1;
 
         public static final LoggedTunableControlConstants flywheelConstants =
             new LoggedTunableControlConstants("Shooter/Flywheel")
-                .setP(0.4)
+                .setP(0.34)
                 .setD(0)
-                .setS(0)
-                .setV(0.12);
+                .setS(0.18)
+                .setV(0.111);
 
         public static final LoggedTunableControlConstants feederConstants =
             new LoggedTunableControlConstants("Shooter/Feeder")
-                .setP(0.4)
+                .setP(0.000001)
                 .setD(0)
-                .setS(0)
-                .setV(0.12);
+                .setS(0.129)
+                .setV(0.00203);
 
         public static final LoggedTunableControlConstants indexConstants =
             new LoggedTunableControlConstants("Shooter/Index")
-                .setP(0.4)
+                .setP(0.00001)
                 .setD(0)
-                .setS(0)
-                .setV(0.12);
+                .setS(0.18)
+                .setV(0.00209);
 
         public static final double mmCruise = 80;
         public static final double mmAcceleration = 160;
@@ -268,6 +269,9 @@ public class Constants {
         public static final double feederEncoderPositionFactor = 2 * Math.PI / feederMotorReduction;
         public static final double feederEncoderVelocityFactor = (2 * Math.PI) / 60.0 / feederMotorReduction;
 
+        public static final double indexMotorReduction = 3.0 / 1.0;
+        public static final double indexEncoderPositionFactor = 2 * Math.PI / indexMotorReduction;
+        public static final double indexEncoderVelocityFactor = (2 * Math.PI) / 60.0 / indexMotorReduction;
 
         static {
             feederConfig
@@ -278,7 +282,7 @@ public class Constants {
                 .inverted(false); // i hope not ❤️
             feederConfig.encoder
                 .positionConversionFactor(feederEncoderPositionFactor)
-                .positionConversionFactor(feederEncoderVelocityFactor)
+                .velocityConversionFactor(feederEncoderVelocityFactor)
                 .uvwAverageDepth(2);
             feederConfig.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
@@ -304,8 +308,8 @@ public class Constants {
                 .closedLoopRampRate(0.01)
                 .inverted(false);
             indexConfig.encoder
-                .positionConversionFactor(feederEncoderPositionFactor)
-                .positionConversionFactor(feederEncoderVelocityFactor)
+                .positionConversionFactor(indexEncoderPositionFactor)
+                .velocityConversionFactor(indexEncoderVelocityFactor)
                 .uvwAverageDepth(2);
             indexConfig.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
@@ -324,15 +328,12 @@ public class Constants {
                 .busVoltagePeriodMs(20)
                 .outputCurrentPeriodMs(20);
 
-            
             talonFlywheelConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-
             var slot0 = talonFlywheelConfigs.Slot0;
             slot0.kP = flywheelConstants.kP();
             slot0.kD = flywheelConstants.kD();
             slot0.kS = flywheelConstants.kS();
             slot0.kV = flywheelConstants.kV();
-
             var motionMagicConfigs = talonFlywheelConfigs.MotionMagic;
             motionMagicConfigs.MotionMagicCruiseVelocity = ShooterConstants.mmCruise;
             motionMagicConfigs.MotionMagicAcceleration = ShooterConstants.mmAcceleration;

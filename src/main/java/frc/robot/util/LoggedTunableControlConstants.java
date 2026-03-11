@@ -1,6 +1,8 @@
 package frc.robot.util;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -24,7 +26,7 @@ public class LoggedTunableControlConstants {
     private double lastKV;
     private double lastKCos;
 
-    private UpdateCallback callback;
+    private final List<UpdateCallback> callbacks = new ArrayList<>();
 
     public LoggedTunableControlConstants(String baseKey) {
         if (baseKey.endsWith("/")) {
@@ -103,15 +105,26 @@ public class LoggedTunableControlConstants {
         return lastKCos;
     }
 
-    public void setCallback(UpdateCallback callback) {
-        if (this.callback != null)
-            System.err.println("Callback for " + baseKey + " tuning constants overwritten.");
+    public void addCallback(UpdateCallback callback) {
+        if (callbacks.contains(callback)) {
+            System.err.println("Duplicate callback added for " + baseKey);
+            return;
+        }
 
-        this.callback = callback;
-
+        callbacks.add(callback);
         callback.execute();
 
-        INSTANCES.add(this);
+        if (callbacks.size() == 1) {
+            INSTANCES.add(this);
+        }
+    }
+
+    public void removeCallback(UpdateCallback callback) {
+        callbacks.remove(callback);
+
+        if (callbacks.isEmpty()) {
+            INSTANCES.remove(this);
+        }
     }
 
     public void periodic() {
@@ -137,10 +150,12 @@ public class LoggedTunableControlConstants {
             lastKV = currentKV;
             lastKCos = currentKCos;
 
-            if (callback == null) {
+            if (callbacks.isEmpty()) {
                 throw new Error("LoggedTunableControlConstants changed, but no callback was set.");
             } else {
-                callback.execute();
+                for (UpdateCallback callback : callbacks) {
+                    callback.execute();
+                }
                 System.out.println("Control Constants for " + baseKey + " have updated.");
             }
         }

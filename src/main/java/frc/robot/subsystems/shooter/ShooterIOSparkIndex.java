@@ -31,11 +31,8 @@ public class ShooterIOSparkIndex implements ShooterIO {
 
         motorConfig = ShooterConstants.indexConfig;
         indexMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    }
 
-    @Override
-    public void periodic() {
-        controlConstants.setCallback(() -> {
+        controlConstants.addCallback(() -> {
             motorConfig.closedLoop
                 .p(controlConstants.kP())
                 .d(controlConstants.kD());

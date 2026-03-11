@@ -18,7 +18,9 @@ public class Shooter extends SubsystemBase {
     private final ShooterIO feederIO;
     private final ShooterIO indexIO;
 
-    private final LoggedNetworkNumber loggedRadPerSec = new LoggedNetworkNumber("Shooter/Tuning/SpeedSetpoint", ShooterConstants.shooterMaxSpeed);
+    private final LoggedNetworkNumber loggedFlywheelRadPerSec = new LoggedNetworkNumber("Shooter/Flywheel/Tuning/Setpoint", ShooterConstants.shooterMaxSpeed);
+    private final LoggedNetworkNumber loggedFeederRadPerSec = new LoggedNetworkNumber("Shooter/Feeder/Tuning/Setpoint", ShooterConstants.feederMaxSpeed);
+    private final LoggedNetworkNumber loggedIndexRadPerSec = new LoggedNetworkNumber("Shooter/Index/Tuning/Setpoint", ShooterConstants.indexMaxSpeed);
 
     private final ShooterIOInputsAutoLogged[] shooterInputs = new ShooterIOInputsAutoLogged[5];
 
@@ -28,6 +30,10 @@ public class Shooter extends SubsystemBase {
         this.shooterIOR = shooterIOR;
         this.feederIO = feederIO;
         this.indexIO = indexIO;
+
+        for (int i = 0; i < shooterInputs.length; i++) {
+            shooterInputs[i] = new ShooterIOInputsAutoLogged();
+        }
     }
 
     private void shootWithDistance(double distanceMeters) {
@@ -63,9 +69,9 @@ public class Shooter extends SubsystemBase {
 
     public Command runAllNominalSpeed() {
         return run(() -> {
-            shooterIOL.setOpenLoop(12);
-            shooterIOM.setOpenLoop(12);
-            shooterIOR.setOpenLoop(12);
+            shooterIOL.setOpenLoop(24);
+//            shooterIOM.setOpenLoop(12);
+//            shooterIOR.setOpenLoop(12);
             feederIO.setOpenLoop(12);
             indexIO.setOpenLoop(12);
         });
@@ -92,10 +98,21 @@ public class Shooter extends SubsystemBase {
         });
     }
 
+    public Command runAllFromNetworkSpeed() {
+        return run(() -> {
+            shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
+            indexIO.setVelocityClosedLoop(loggedIndexRadPerSec.get());
+        });
+    }
+
     public Command runShootOneShooter() {
         return run(() -> {
-            shooterIOL.setVelocityClosedLoop(loggedRadPerSec.get());
-            feederIO.setVelocityClosedLoop(loggedRadPerSec.get() * ShooterConstants.feederMotorMult);
+            shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            feederIO.setVelocityClosedLoop(loggedFlywheelRadPerSec.get() * ShooterConstants.feederMotorMult);
+            indexIO.setVelocityClosedLoop(loggedFlywheelRadPerSec.get() * ShooterConstants.feederMotorMult);
         });
     }
 
