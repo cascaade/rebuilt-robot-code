@@ -15,6 +15,8 @@ public class Intake extends SubsystemBase {
     private boolean isDeployedFlag = true;
     private boolean isHomingFlag = false;
 
+    private double wristSetpointAdjust = 0.0;
+
     private RollerIOInputsAutoLogged rollerInputs = new RollerIOInputsAutoLogged();
     private WristIOInputsAutoLogged wristInputs = new WristIOInputsAutoLogged();
 
@@ -27,7 +29,17 @@ public class Intake extends SubsystemBase {
     }
 
     private void setPose(IntakeWristPose pose) {
-        wristIO.setSetpoint(pose.getSetpoint());
+        wristIO.setSetpoint(pose.getSetpoint() + wristSetpointAdjust);
+    }
+
+    public Command incrementWristSetpointAdjust(boolean positive) {
+        return runOnce(() -> {
+            if (positive) {
+                wristSetpointAdjust += 0.2;
+            } else {
+                wristSetpointAdjust -= 0.2;
+            }
+        });
     }
 
     public Command runRollers() {
@@ -83,10 +95,12 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (isDeployedFlag) {
-            setPose(IntakeWristPose.DEPLOYED);
-        } else {
-            setPose(IntakeWristPose.STOWED);
+        if (!isHomingFlag) {
+            if (isDeployedFlag) {
+                setPose(IntakeWristPose.DEPLOYED);
+            } else {
+                setPose(IntakeWristPose.STOWED);
+            }
         }
 
         rollerIO.periodic();

@@ -137,6 +137,9 @@ public class RobotContainer {
 
         intake.setDefaultCommand(intake.runRollers());
         driverController.a().onTrue(intake.toggleWristPose());
+
+        auxController.a().onTrue(intake.incrementWristSetpointAdjust(true));
+        auxController.b().onTrue(intake.incrementWristSetpointAdjust(false));
     }
 
     public void testPeriodic() {
