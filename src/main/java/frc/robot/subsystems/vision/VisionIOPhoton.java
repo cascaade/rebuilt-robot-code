@@ -11,8 +11,8 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import frc.robot.subsystems.Constants.VisionConstants;
-import frc.robot.subsystems.Constants.VisionConstants.CameraConfig;
+import frc.robot.Constants.VisionConstants;
+import frc.robot.Constants.VisionConstants.CameraConfig;
 
 public class VisionIOPhoton implements VisionIO {
     private final PhotonCamera camera;

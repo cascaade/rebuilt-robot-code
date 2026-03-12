@@ -6,8 +6,9 @@ import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -36,17 +37,46 @@ public class Constants {
     }
 
     public static enum FieldType {
-		ANDYMARK, WELDED
+		ANDYMARK("andymark"), WELDED("welded");
+
+        private final String jsonFolder;
+
+        FieldType(String folder) {
+            this.jsonFolder = folder;
+        }
+
+        public String getJsonFolder() {
+            return jsonFolder;
+        }
 	}
 
-    public static final SendableChooser<FieldType> kFieldType = new SendableChooser<>();
+    public static final FieldType kFieldType = FieldType.ANDYMARK;
 
-    static {
-        kFieldType.setDefaultOption("AndyMark Field", FieldType.ANDYMARK);
-        kFieldType.addOption("Welded Field", FieldType.WELDED);
-    }
+    // public static final SendableChooser<FieldType> kFieldType = new SendableChooser<>();
+    // static {
+    //     kFieldType.setDefaultOption("AndyMark Field", FieldType.ANDYMARK);
+    //     kFieldType.addOption("Welded Field", FieldType.WELDED);
+    // }
 
     public static final double odometryFrequency = 50.0; // hz (50 is default of 20ms)
+
+    public static class FieldConstants {
+        public static Pose2d getHubCenter() {
+            double x, y;
+
+            if (kFieldType.equals(FieldType.WELDED)) {
+                x = Units.inchesToMeters(182.11);
+                y = Units.inchesToMeters(158.84);
+            } else {
+                x = Units.inchesToMeters(181.56);
+                y = Units.inchesToMeters(158.32);
+            }
+
+            return SwerveConstants.getInitialPose().transformBy(
+                new Transform2d(x, y, Rotation2d.kZero)
+            );
+        }
+    }
 
     public static class SwerveConstants {
         public static final int[] turnCANIDs = { 1, 2, 3, 4 };
@@ -59,8 +89,8 @@ public class Constants {
 
         public static final double kSlowedMult = 0.12;
         
-        public static final double kMaxWheelSpeed = 20; // m/2
-        public static final double kMagVelLimit = 5; // m/s -- trusting andy that 5 is physical limit, maybe requires testing
+        public static final double kMaxWheelSpeed = 20; // m/s?
+        public static final double kMagVelLimit = 4.5; // m/s
         public static final double kRotVelLimit = 2 * (2 * Math.PI); // rad/s
 
         public static final double toXDelaySeconds = 1;
@@ -72,7 +102,7 @@ public class Constants {
          */
         public static Pose2d getInitialPose() {
             if (isRed()) {
-                if (kFieldType.getSelected().equals(FieldType.WELDED)) {
+                if (kFieldType.equals(FieldType.WELDED)) {
                     return new Pose2d(
                         Units.inchesToMeters(651.22),
                         Units.inchesToMeters(317.69),
@@ -97,7 +127,7 @@ public class Constants {
         // drive config
         public static final SparkMaxConfig driveConfig = new SparkMaxConfig();
 
-        public static final double driveMotorReduction = 6.12; // l3 mk4i gear set
+        public static final double driveMotorReduction = 6.75; // l2 mk4i gear set
         
         public static final int driveMotorCurrentLimit = 50;
 
@@ -209,6 +239,52 @@ public class Constants {
         }
     }
 
+    public static class VisionConstants {
+        public static record CameraConfig(
+            String name,
+            Transform3d robotToCamera,
+            double standardDeviationMultiplier
+        ) {}
+
+        public static final CameraConfig[] camConfigs = {
+            new CameraConfig(
+                "photonvision_intake",
+                new Transform3d(),
+                1.2
+            ),
+            new CameraConfig(
+                "photonvision_shooter",
+                new Transform3d(),
+                0.8
+            ),
+            new CameraConfig(
+                "photonvision_climber",
+                new Transform3d(),
+                1.0
+            ),
+            new CameraConfig(
+                "photonvision_shoot_climb",
+                new Transform3d(),
+                1.0
+            )
+        };
+
+        // AprilTag layout
+        public static AprilTagFieldLayout aprilTagLayout =
+            AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+
+        public static double maxAmbiguity = 0.3;
+        public static double maxZError = 0.75;
+
+        public static double linearStdDevBaseline = 0.02; // Meters
+        public static double angularStdDevBaseline = 0.06; // Radians
+
+        // Multipliers to apply for MegaTag 2 observations
+        public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
+        public static double angularStdDevMegatag2Factor =
+            Double.POSITIVE_INFINITY; // No rotation data available
+    }
+
     public static class ClimbConstants {
         public static enum ClimbPose {
             RETRACTED(2 * Math.PI),
@@ -264,12 +340,6 @@ public class Constants {
                 .appliedOutputPeriodMs(20)
                 .busVoltagePeriodMs(20)
                 .outputCurrentPeriodMs(20);
-        }
-    }
-
-    public static class FieldConstants {
-        public static Pose2d getHubCenter() {
-            return new Pose2d();
         }
     }
 
@@ -335,7 +405,7 @@ public class Constants {
                 .smartCurrentLimit(30)
                 .voltageCompensation(12)
                 .closedLoopRampRate(0.01)
-                .inverted(false); // i hope not ❤️
+                .inverted(false);
             feederConfig.encoder
                 .positionConversionFactor(feederEncoderPositionFactor)
                 .velocityConversionFactor(feederEncoderVelocityFactor)
