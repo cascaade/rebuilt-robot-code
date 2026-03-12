@@ -164,6 +164,7 @@ public class RobotContainer {
         auxController.y().onTrue(shooter.incrementShooterDistanceAdjust(false));
 
         intake.setDefaultCommand(intake.runRollers());
+        auxController.rightBumper().whileTrue(intake.runStopRollers());
         driverController.a().onTrue(intake.toggleWristPose());
         auxController.a().onTrue(intake.incrementWristSetpointAdjust(true));
         auxController.b().onTrue(intake.incrementWristSetpointAdjust(false));

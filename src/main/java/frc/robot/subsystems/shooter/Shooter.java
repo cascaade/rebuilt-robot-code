@@ -45,8 +45,15 @@ public class Shooter extends SubsystemBase {
         shooterIOL.setVelocityClosedLoop(shooterVelocityRadPerSec);
         shooterIOM.setVelocityClosedLoop(shooterVelocityRadPerSec);
         shooterIOR.setVelocityClosedLoop(shooterVelocityRadPerSec);
-        feederIO.setVelocityClosedLoop(feederVelocityRadPerSec);
-        indexIO.setVelocityClosedLoop(feederVelocityRadPerSec);
+
+        if (
+            shooterInputs[0].velocityRadPerSec > shooterVelocityRadPerSec * 0.95 &&
+            shooterInputs[1].velocityRadPerSec > shooterVelocityRadPerSec * 0.95 &&
+            shooterInputs[2].velocityRadPerSec > shooterVelocityRadPerSec * 0.95
+        ) {
+            feederIO.setVelocityClosedLoop(feederVelocityRadPerSec);
+            indexIO.setVelocityClosedLoop(feederVelocityRadPerSec);
+        }
     }
 
     public Command incrementShooterDistanceAdjust(boolean positive) {
