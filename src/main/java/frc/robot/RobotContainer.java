@@ -62,9 +62,9 @@ public class RobotContainer {
                 vision = new Vision(
                     swerve::addVisionMeasurement,
                     new VisionIOPhoton(VisionConstants.camConfigs[0]),
-                    new VisionIOPhoton(VisionConstants.camConfigs[1]),
-                    new VisionIOPhoton(VisionConstants.camConfigs[2]),
-                    new VisionIOPhoton(VisionConstants.camConfigs[3])
+                    new VisionIOPhoton(VisionConstants.camConfigs[1])
+                    // new VisionIOPhoton(VisionConstants.camConfigs[2]),
+                    // new VisionIOPhoton(VisionConstants.camConfigs[3])
                 );
                 shooter = new Shooter(
                     new ShooterIOTalonFlywheel(ShooterConstants.shooterLMotorCANID),
@@ -159,15 +159,19 @@ public class RobotContainer {
         driverController.b().onTrue(swerve.runReconfigure());
 
         shooter.setDefaultCommand(shooter.runShooterIdle());
-        driverController.rightBumper().whileTrue(shooter.runAllFromNetworkSpeed());
+        driverController.rightBumper().toggleOnTrue(shooter.runShooterFromNetworkSpeed());
+        driverController.leftBumper().whileTrue(shooter.runOtherFromNetworkSpeed());
         auxController.x().onTrue(shooter.incrementShooterDistanceAdjust(true));
         auxController.y().onTrue(shooter.incrementShooterDistanceAdjust(false));
 
-        intake.setDefaultCommand(intake.runRollers());
-        auxController.rightBumper().whileTrue(intake.runStopRollers());
+        intake.setDefaultCommand(intake.runStopRollers());
+        auxController.rightBumper().toggleOnFalse(intake.runRollers());
         driverController.a().onTrue(intake.toggleWristPose());
-        auxController.a().onTrue(intake.incrementWristSetpointAdjust(true));
+        auxController.a().onTrue(intake.incrementWristSetpointAdjust(
+            true));
         auxController.b().onTrue(intake.incrementWristSetpointAdjust(false));
+        auxController.leftBumper().onTrue(intake.resetPosition());
+
     }
 
     public void testPeriodic() {

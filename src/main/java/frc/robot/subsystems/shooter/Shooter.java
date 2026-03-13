@@ -101,6 +101,9 @@ public class Shooter extends SubsystemBase {
             shooterIOL.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed * ShooterConstants.idleMult);
             shooterIOM.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed * ShooterConstants.idleMult);
             shooterIOR.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed * ShooterConstants.idleMult);
+            // shooterIOL.setVelocityClosedLoop(200);
+            // shooterIOM.setVelocityClosedLoop(200);
+            // shooterIOR.setVelocityClosedLoop(200);
             feederIO.stop();
             indexIO.stop();
         });
@@ -122,6 +125,26 @@ public class Shooter extends SubsystemBase {
             shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
             shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
             shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
+            indexIO.setVelocityClosedLoop(loggedIndexRadPerSec.get());
+        });
+    }
+
+    public Command runShooterFromNetworkSpeed() {
+        return run(() -> {
+            shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            // feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
+            // indexIO.setVelocityClosedLoop(loggedIndexRadPerSec.get());
+        });
+    }
+
+    public Command runOtherFromNetworkSpeed() {
+        return run(() -> {
+            // shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            // shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            // shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
             feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
             indexIO.setVelocityClosedLoop(loggedIndexRadPerSec.get());
         });
