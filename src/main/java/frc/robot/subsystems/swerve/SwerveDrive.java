@@ -172,7 +172,7 @@ public class SwerveDrive extends SubsystemBase {
             ChassisSpeeds chassisSpeeds = new ChassisSpeeds(mag * Math.cos(dir), mag * Math.sin(dir), omega);    
 
             adjustSpeedsForPresetRotation(chassisSpeeds);
-            submitChassisSpeeds(chassisSpeeds);
+            submitChassisSpeeds(chassisSpeeds, true);
         });
     }
 
@@ -192,7 +192,8 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     private void submitChassisSpeeds(
-        ChassisSpeeds chassisSpeeds
+        ChassisSpeeds chassisSpeeds,
+        boolean flipToFieldCentric
     ) {
         if (
             chassisSpeeds.vxMetersPerSecond != 0 ||
@@ -207,10 +208,14 @@ public class SwerveDrive extends SubsystemBase {
             return;
         }
 
-        ChassisSpeeds adjustedSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            chassisSpeeds,
-            getPose().getRotation().rotateBy(new Rotation2d(Constants.isRed() ? Math.PI : 0))
-        );
+        ChassisSpeeds adjustedSpeeds = chassisSpeeds;
+
+        if (flipToFieldCentric) {
+            adjustedSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                chassisSpeeds,
+                getPose().getRotation().rotateBy(new Rotation2d(Constants.isRed() ? Math.PI : 0))
+            );
+        }
 
         adjustedSpeeds = ChassisSpeeds.discretize(adjustedSpeeds, LoggedRobot.defaultPeriodSecs);
 
@@ -243,6 +248,20 @@ public class SwerveDrive extends SubsystemBase {
             toX = !toX;
             Logger.recordOutput("Swerve/toX", toX);
         });
+    }
+
+    public Command runXSetTime(double speedMult) {
+        return run(() -> {
+            ChassisSpeeds speeds = new ChassisSpeeds(SwerveConstants.kMagVelLimit * speedMult, 0, 0);
+            submitChassisSpeeds(speeds, false);
+        }).until(() -> false).withTimeout(0.2);
+    }
+
+    public Command runOmegaSetTime(double speedMult) {
+        return run(() -> {
+            ChassisSpeeds speeds = new ChassisSpeeds(0, 0, SwerveConstants.kRotVelLimit * speedMult);
+            submitChassisSpeeds(speeds, false);
+        }).until(() -> false).withTimeout(0.2);
     }
 
     public Command runZeroGyro() {

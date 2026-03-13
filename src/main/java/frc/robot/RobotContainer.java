@@ -63,8 +63,6 @@ public class RobotContainer {
                     swerve::addVisionMeasurement,
                     new VisionIOPhoton(VisionConstants.camConfigs[0]),
                     new VisionIOPhoton(VisionConstants.camConfigs[1])
-                    // new VisionIOPhoton(VisionConstants.camConfigs[2]),
-                    // new VisionIOPhoton(VisionConstants.camConfigs[3])
                 );
                 shooter = new Shooter(
                     new ShooterIOTalonFlywheel(ShooterConstants.shooterLMotorCANID),
@@ -151,16 +149,20 @@ public class RobotContainer {
             driverController::getLeftX, // vx
             driverController::getLeftY, // vy
             driverController::getRightX, // omega
-            driverController::getRightTriggerAxis // raw slow input
+            driverController::getLeftTriggerAxis // raw slow input
         ));
         auxController.x().onTrue(swerve.runToggleAimHub());
         driverController.y().onTrue(swerve.runZeroGyro());
         driverController.x().onTrue(swerve.runToggleToXPosition());
         driverController.b().onTrue(swerve.runReconfigure());
+        auxController.povUp().onTrue(swerve.runXSetTime(-0.15));
+        auxController.povDown().onTrue(swerve.runXSetTime(0.15));
+        auxController.povLeft().onTrue(swerve.runOmegaSetTime(0.05));
+        auxController.povRight().onTrue(swerve.runOmegaSetTime(-0.05));
 
-        shooter.setDefaultCommand(shooter.runShooterIdle());
-        driverController.rightBumper().toggleOnTrue(shooter.runShooterFromNetworkSpeed());
-        driverController.leftBumper().whileTrue(shooter.runOtherFromNetworkSpeed());
+        driverController.rightBumper().onTrue(shooter.toggleRunShooter());
+        driverController.rightTrigger(.5).onTrue(shooter.toggleRunIndex());
+        driverController.rightTrigger(.5).onFalse(shooter.toggleRunIndex());
         auxController.x().onTrue(shooter.incrementShooterDistanceAdjust(true));
         auxController.y().onTrue(shooter.incrementShooterDistanceAdjust(false));
 
@@ -171,7 +173,6 @@ public class RobotContainer {
             true));
         auxController.b().onTrue(intake.incrementWristSetpointAdjust(false));
         auxController.leftBumper().onTrue(intake.resetPosition());
-
     }
 
     public void testPeriodic() {

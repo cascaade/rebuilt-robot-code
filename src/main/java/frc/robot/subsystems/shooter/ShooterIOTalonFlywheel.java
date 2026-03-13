@@ -1,5 +1,6 @@
 package frc.robot.subsystems.shooter;
 
+import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -35,6 +36,11 @@ public class ShooterIOTalonFlywheel implements ShooterIO {
 
             System.out.println("Control Constants Updated!" + " " + CANID);
         });
+    }
+
+    @Override
+    public void addToOrchestra(Orchestra orchestra, int track) {
+        orchestra.addInstrument(motor, track);
     }
 
     @Override
