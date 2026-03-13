@@ -207,7 +207,7 @@ public class Shooter extends SubsystemBase {
         }
 
         Logger.recordOutput("Shooter/OrchestraPlaying", orchestra.isPlaying());
-        Logger.recordOutput("Shooter/DisabledTimer", disabledTimer.get());
+        Logger.recordOutput("Shooter/DisabledTimer", (int) disabledTimer.get());
 
         if (runShooterFlag) {
             shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());

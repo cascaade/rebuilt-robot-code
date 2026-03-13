@@ -151,10 +151,10 @@ public class RobotContainer {
             driverController::getRightX, // omega
             driverController::getLeftTriggerAxis // raw slow input
         ));
-        auxController.x().onTrue(swerve.runToggleAimHub());
+//        auxController.x().onTrue(swerve.runToggleAimHub());
         driverController.y().onTrue(swerve.runZeroGyro());
-        driverController.x().onTrue(swerve.runToggleToXPosition());
-        driverController.b().onTrue(swerve.runReconfigure());
+//        driverController.x().onTrue(swerve.runToggleToXPosition());
+//        driverController.b().onTrue(swerve.runReconfigure());
         auxController.povUp().onTrue(swerve.runXSetTime(-0.15));
         auxController.povDown().onTrue(swerve.runXSetTime(0.15));
         auxController.povLeft().onTrue(swerve.runOmegaSetTime(0.05));
@@ -163,12 +163,12 @@ public class RobotContainer {
         driverController.rightBumper().onTrue(shooter.toggleRunShooter());
         driverController.rightTrigger(.5).onTrue(shooter.toggleRunIndex());
         driverController.rightTrigger(.5).onFalse(shooter.toggleRunIndex());
-        auxController.x().onTrue(shooter.incrementShooterDistanceAdjust(true));
-        auxController.y().onTrue(shooter.incrementShooterDistanceAdjust(false));
+//        auxController.x().onTrue(shooter.incrementShooterDistanceAdjust(true));
+//        auxController.y().onTrue(shooter.incrementShooterDistanceAdjust(false));
 
         intake.setDefaultCommand(intake.runStopRollers());
         auxController.rightBumper().toggleOnFalse(intake.runRollers());
-        driverController.a().onTrue(intake.toggleWristPose());
+        auxController.leftTrigger().onTrue(intake.toggleWristPose());
         auxController.a().onTrue(intake.incrementWristSetpointAdjust(
             true));
         auxController.b().onTrue(intake.incrementWristSetpointAdjust(false));

@@ -23,6 +23,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -50,6 +52,8 @@ public class SwerveDrive extends SubsystemBase {
     private PIDController trajHeadingController;
 
     private Rotation2d rawGyroRotation;
+
+    private final Field2d field;
 
     public SwerveDrive(
         GyroIO gyroIO,
@@ -90,6 +94,9 @@ public class SwerveDrive extends SubsystemBase {
         trajHeadingController.enableContinuousInput(0, 2 * Math.PI);
 
         lastMove = Timer.getFPGATimestamp();
+
+        field = new Field2d();
+        SmartDashboard.putData("Odometry/Field", field);
     }
 
     private double adjustAxisInput(
@@ -350,6 +357,7 @@ public class SwerveDrive extends SubsystemBase {
         Logger.recordOutput("Swerve/Positions", updatedModulePositions);
         Logger.recordOutput("Swerve/States/Actual", moduleStates);
         poseEstimator.update(rawGyroRotation, updatedModulePositions);
-        getPose();
+
+        field.setRobotPose(getPose());
     }
 }
