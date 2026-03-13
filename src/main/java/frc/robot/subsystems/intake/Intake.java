@@ -14,6 +14,7 @@ public class Intake extends SubsystemBase {
 
     private boolean isDeployedFlag = true;
     private boolean isHomingFlag = false;
+    private boolean isRollingFlag = true;
 
     private double wristSetpointAdjust = 0.0;
 
@@ -93,6 +94,12 @@ public class Intake extends SubsystemBase {
             });
     }
 
+    public Command toggleRollerFlag() {
+        return runOnce(() -> {
+            isRollingFlag = !isRollingFlag;
+        });
+    }
+
     @Override
     public void periodic() {
         if (!isHomingFlag) {
@@ -101,6 +108,11 @@ public class Intake extends SubsystemBase {
             } else {
                 setPose(IntakeWristPose.STOWED);
             }
+        }
+        if(isRollingFlag) {
+            rollerIO.setClosedLoop(speed.get());
+        } else {
+            rollerIO.setOpenLoop(0);
         }
 
         Logger.recordOutput("Intake/Deployed", isDeployedFlag);
