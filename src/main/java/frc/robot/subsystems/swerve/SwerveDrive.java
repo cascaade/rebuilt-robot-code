@@ -8,6 +8,14 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 
+import java.util.Arrays;
+import java.util.function.DoubleSupplier;
+
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
@@ -170,7 +178,7 @@ public class SwerveDrive extends SubsystemBase {
             ChassisSpeeds chassisSpeeds = new ChassisSpeeds(mag * Math.cos(dir), mag * Math.sin(dir), omega);    
 
             adjustSpeedsForPresetRotation(chassisSpeeds);
-            submitChassisSpeeds(chassisSpeeds, true);
+            submitChassisSpeeds(chassisSpeeds, true, false);
         });
     }
 
@@ -191,7 +199,8 @@ public class SwerveDrive extends SubsystemBase {
 
     private void submitChassisSpeeds(
         ChassisSpeeds chassisSpeeds,
-        boolean flipToFieldCentric
+        boolean flipToFieldCentric,
+        boolean isRedFlipped
     ) {
         if (
             chassisSpeeds.vxMetersPerSecond != 0 ||
@@ -211,7 +220,7 @@ public class SwerveDrive extends SubsystemBase {
         if (flipToFieldCentric) {
             adjustedSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                 chassisSpeeds,
-                getPose().getRotation().rotateBy(new Rotation2d(Constants.isRed() ? Math.PI : 0))
+                getPose().getRotation().rotateBy(new Rotation2d(Constants.isRed() && !isRedFlipped ? Math.PI : 0))
             );
         }
 
@@ -251,14 +260,14 @@ public class SwerveDrive extends SubsystemBase {
     public Command runXSetTime(double speedMult) {
         return run(() -> {
             ChassisSpeeds speeds = new ChassisSpeeds(SwerveConstants.kMagVelLimit * speedMult, 0, 0);
-            submitChassisSpeeds(speeds, false);
+            submitChassisSpeeds(speeds, false, false);
         }).until(() -> false).withTimeout(0.2);
     }
 
     public Command runOmegaSetTime(double speedMult) {
         return run(() -> {
             ChassisSpeeds speeds = new ChassisSpeeds(0, 0, SwerveConstants.kRotVelLimit * speedMult);
-            submitChassisSpeeds(speeds, false);
+            submitChassisSpeeds(speeds, false, false);
         }).until(() -> false).withTimeout(0.2);
     }
 
@@ -289,6 +298,72 @@ public class SwerveDrive extends SubsystemBase {
     @AutoLogOutput(key = "Odometry/Pose")
     public Pose2d getPose() {
         return poseEstimator.getEstimatedPosition();
+    }
+
+    // ============================================================
+    // METHOD 1: resetOdometry(Pose2d)
+    // Resets the pose estimator to a known pose.
+    // Called by ChoreoLib at the start of every auto routine
+    // to align the robot's internal odometry with the trajectory
+    // start position.
+    // ============================================================
+
+    /**
+     * Resets the robot's odometry to the given pose.
+     * Used by ChoreoLib at the start of an autonomous routine.
+     *
+     * @param pose the field-relative pose to reset to
+     */
+    public void resetOdometry(Pose2d pose) {
+        poseEstimator.resetPosition(
+            rawGyroRotation,       // current raw gyro angle (not zeroed)
+            modulePositions,       // current module positions
+            pose                   // target pose to reset to
+        );
+    }
+
+
+    // ============================================================
+    // METHOD 2: followTrajectory(SwerveSample)
+    // Called every scheduler cycle while a Choreo trajectory
+    // is active. Applies the sample's feedforward velocities
+    // plus PID correction based on how far off the robot is
+    // from the sample's expected pose.
+    //
+    // This mirrors the pattern from ChoreoLib's documentation
+    // and is consistent with your existing runChassisSpeeds()
+    // infrastructure.
+    // ============================================================
+
+    /**
+     * Follows a Choreo swerve trajectory sample.
+     * Combines feedforward chassis speeds from the sample with
+     * PID feedback to correct positional error in real time.
+     *
+     * @param sample the trajectory sample to follow at this timestep
+     */
+    public void followTrajectory(SwerveSample sample) {
+        Pose2d currentPose = getPose();
+
+        // Build chassis speeds from the sample's feedforward velocities
+        // plus PID correction for x, y, and heading error
+        ChassisSpeeds speeds = new ChassisSpeeds(
+            sample.vx + autoXController.calculate(currentPose.getX(), sample.x),
+            sample.vy + autoYController.calculate(currentPose.getY(), sample.y),
+            sample.omega + autoHeadingController.calculate(
+                currentPose.getRotation().getRadians(),
+                sample.heading
+            )
+        );
+
+        // Log the auto chassis speeds for debugging in AdvantageScope
+        Logger.recordOutput("Swerve/ChassisSpeeds/Auto", speeds);
+
+        // Drive field-relative using the existing discretize + kinematics pipeline.
+        // NOTE: We call runChassisSpeeds() directly so that the existing
+        // ChassisSpeeds.fromFieldRelativeSpeeds() and discretize() logic applies,
+        // matching exactly how teleop driving works.
+        runChassisSpeeds(speeds, true);
     }
 
     public void addVisionMeasurement(Pose2d visionMeasurement, double timestamp, Matrix<N3,N1> stdDevs) {
