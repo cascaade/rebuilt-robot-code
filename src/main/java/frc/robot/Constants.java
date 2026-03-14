@@ -387,6 +387,10 @@ public class Constants {
         public static final double indexMaxSpeed = 5000; // rad/sec
         public static final double idleMult = 0.8;
         public static final double feederMotorMult = 1;
+        
+        public static final double shooterRunSpeed = 340; // rad/sec
+        public static final double feederRunSpeed = 5000; // rad/sec
+        public static final double indexRunSpeed = 5000; // rad/sec
 
         public static final LoggedTunableControlConstants flywheelConstants =
             new LoggedTunableControlConstants("Shooter/Flywheel")
