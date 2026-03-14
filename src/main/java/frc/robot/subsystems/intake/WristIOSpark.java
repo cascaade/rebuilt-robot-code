@@ -1,5 +1,7 @@
 package frc.robot.subsystems.intake;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -11,8 +13,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.Constants.IntakeConstants;
-
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class WristIOSpark implements WristIO {
     private final SparkMax wristMotor;

@@ -1,5 +1,7 @@
 package frc.robot.subsystems.shooter;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -8,10 +10,9 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
+
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.util.LoggedTunableControlConstants;
-
-import org.littletonrobotics.junction.Logger;
 
 public class ShooterIOSparkFeeder implements ShooterIO {
 

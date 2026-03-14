@@ -1,12 +1,12 @@
 package frc.robot.subsystems.intake;
 
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.IntakeConstants.IntakeWristPose;
-
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class Intake extends SubsystemBase {
     private final RollerIO rollerIO;
@@ -14,11 +14,12 @@ public class Intake extends SubsystemBase {
 
     private boolean isDeployedFlag = true;
     private boolean isHomingFlag = false;
+    private boolean isRollingFlag = true;
 
     private double wristSetpointAdjust = 0.0;
 
-    private RollerIOInputsAutoLogged rollerInputs = new RollerIOInputsAutoLogged();
-    private WristIOInputsAutoLogged wristInputs = new WristIOInputsAutoLogged();
+    private final RollerIOInputsAutoLogged rollerInputs = new RollerIOInputsAutoLogged();
+    private final WristIOInputsAutoLogged wristInputs = new WristIOInputsAutoLogged();
 
     LoggedNetworkNumber speed = new LoggedNetworkNumber("Intake/Roller/Speed", IntakeConstants.intakeMaxSpeed);
     LoggedNetworkNumber position = new LoggedNetworkNumber("Intake/Wrist/Pose", 0);
@@ -93,6 +94,12 @@ public class Intake extends SubsystemBase {
             });
     }
 
+    public Command toggleRollerFlag() {
+        return runOnce(() -> {
+            isRollingFlag = !isRollingFlag;
+        });
+    }
+
     @Override
     public void periodic() {
         if (!isHomingFlag) {
@@ -102,6 +109,14 @@ public class Intake extends SubsystemBase {
                 setPose(IntakeWristPose.STOWED);
             }
         }
+        if(isRollingFlag) {
+            rollerIO.setClosedLoop(speed.get());
+        } else {
+            rollerIO.setOpenLoop(0);
+        }
+
+        Logger.recordOutput("Intake/Deployed", isDeployedFlag);
+        Logger.recordOutput("Intake/Homing", isHomingFlag);
 
         rollerIO.periodic();
         wristIO.periodic();

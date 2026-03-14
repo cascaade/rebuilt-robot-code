@@ -59,6 +59,7 @@ public class Robot extends LoggedRobot {
     public void robotPeriodic() {
         LoggedTunableControlConstants.tuningPeriodic();
         CommandScheduler.getInstance().run();
+        m_robotContainer.initAutoChooser();
     }
 
     @Override

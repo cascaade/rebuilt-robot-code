@@ -7,6 +7,7 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+
 import frc.robot.Constants.ClimbConstants;
 
 public class ClimbIOSpark implements ClimbIO {

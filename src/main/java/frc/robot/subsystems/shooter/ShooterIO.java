@@ -1,6 +1,8 @@
 package frc.robot.subsystems.shooter;
 
-import org.littletonrobotics.junction.AutoLog; 
+import org.littletonrobotics.junction.AutoLog;
+
+import com.ctre.phoenix6.Orchestra;
 
 public interface ShooterIO {
 
@@ -15,6 +17,8 @@ public interface ShooterIO {
     }
 
     public default void periodic() {}
+
+    public default void addToOrchestra(Orchestra orchestra, int track) {}
 
     public default void setVelocityClosedLoop(double velocityRadPerSec) {}
 

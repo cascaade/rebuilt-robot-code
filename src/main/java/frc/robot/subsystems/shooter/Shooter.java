@@ -1,15 +1,20 @@
 package frc.robot.subsystems.shooter;
 
+import java.util.function.Supplier;
+
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
+import com.ctre.phoenix6.Orchestra;
+
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.util.HubShootLUT;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-
-import java.util.function.Supplier;
 
 public class Shooter extends SubsystemBase {
     private final ShooterIO shooterIOL;
@@ -24,6 +29,13 @@ public class Shooter extends SubsystemBase {
 
     private final ShooterIOInputsAutoLogged[] shooterInputs = new ShooterIOInputsAutoLogged[5];
 
+    private final Orchestra orchestra;
+    private final Timer disabledTimer = new Timer();
+
+    private double shooterDistanceAdjust = 0;
+    private boolean runShooterFlag = false;
+    private boolean runIndexFlag = false;
+
     public Shooter(ShooterIO shooterIOL, ShooterIO shooterIOM, ShooterIO shooterIOR, ShooterIO feederIO, ShooterIO indexIO) {
         this.shooterIOL = shooterIOL;
         this.shooterIOM = shooterIOM;
@@ -31,20 +43,45 @@ public class Shooter extends SubsystemBase {
         this.feederIO = feederIO;
         this.indexIO = indexIO;
 
+        orchestra = new Orchestra();
+
         for (int i = 0; i < shooterInputs.length; i++) {
             shooterInputs[i] = new ShooterIOInputsAutoLogged();
         }
+
+        shooterIOL.addToOrchestra(orchestra, 2);
+        shooterIOM.addToOrchestra(orchestra, 1);
+        shooterIOR.addToOrchestra(orchestra, 0);
+
+        orchestra.loadMusic("fugue.chrp");
     }
 
     private void shootWithDistance(double distanceMeters) {
-        double shooterVelocityRadPerSec = HubShootLUT.getFlywheelSpeedAtDistance(distanceMeters);
+        double shooterVelocityRadPerSec = HubShootLUT.getFlywheelSpeedAtDistance(distanceMeters + shooterDistanceAdjust);
         double feederVelocityRadPerSec = shooterVelocityRadPerSec * ShooterConstants.feederMotorMult;
 
         shooterIOL.setVelocityClosedLoop(shooterVelocityRadPerSec);
         shooterIOM.setVelocityClosedLoop(shooterVelocityRadPerSec);
         shooterIOR.setVelocityClosedLoop(shooterVelocityRadPerSec);
-        feederIO.setVelocityClosedLoop(feederVelocityRadPerSec);
-        indexIO.setVelocityClosedLoop(feederVelocityRadPerSec);
+
+        if (
+            shooterInputs[0].velocityRadPerSec > shooterVelocityRadPerSec * 0.95 &&
+            shooterInputs[1].velocityRadPerSec > shooterVelocityRadPerSec * 0.95 &&
+            shooterInputs[2].velocityRadPerSec > shooterVelocityRadPerSec * 0.95
+        ) {
+            feederIO.setVelocityClosedLoop(feederVelocityRadPerSec);
+            indexIO.setVelocityClosedLoop(feederVelocityRadPerSec);
+        }
+    }
+
+    public Command incrementShooterDistanceAdjust(boolean positive) {
+        return runOnce(() -> {
+            if (positive) {
+                shooterDistanceAdjust += 0.2;
+            } else {
+                shooterDistanceAdjust -= 0.2;
+            }
+        });
     }
 
     public Command runStopShooter() {
@@ -82,6 +119,9 @@ public class Shooter extends SubsystemBase {
             shooterIOL.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed * ShooterConstants.idleMult);
             shooterIOM.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed * ShooterConstants.idleMult);
             shooterIOR.setVelocityClosedLoop(ShooterConstants.shooterMaxSpeed * ShooterConstants.idleMult);
+            // shooterIOL.setVelocityClosedLoop(200);
+            // shooterIOM.setVelocityClosedLoop(200);
+            // shooterIOR.setVelocityClosedLoop(200);
             feederIO.stop();
             indexIO.stop();
         });
@@ -108,6 +148,26 @@ public class Shooter extends SubsystemBase {
         });
     }
 
+    public Command runShooterFromNetworkSpeed() {
+        return run(() -> {
+            shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            // feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
+            // indexIO.setVelocityClosedLoop(loggedIndexRadPerSec.get());
+        });
+    }
+
+    public Command runOtherFromNetworkSpeed() {
+        return run(() -> {
+            // shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            // shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            // shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
+            indexIO.setVelocityClosedLoop(loggedIndexRadPerSec.get());
+        });
+    }
+
     public Command runShootOneShooter() {
         return run(() -> {
             shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
@@ -116,8 +176,60 @@ public class Shooter extends SubsystemBase {
         });
     }
 
+    public Command toggleRunShooter() {
+        return runOnce(() -> {
+            runShooterFlag = !runShooterFlag;
+        });
+    }
+
+    public Command toggleRunIndex() {
+        return runOnce(() -> {
+            runIndexFlag = !runIndexFlag;
+        });
+    }
+
     @Override
     public void periodic() {
+        if (RobotState.isDisabled()) {
+            if (!disabledTimer.isRunning()) {
+                disabledTimer.start();
+            }
+
+            if (disabledTimer.get() >= 30.0) {
+                if (!orchestra.isPlaying()) {
+                    orchestra.play();
+                }
+            }
+        } else {
+            orchestra.stop();
+            disabledTimer.stop();
+            disabledTimer.reset();
+        }
+
+        Logger.recordOutput("Shooter/OrchestraPlaying", orchestra.isPlaying());
+        Logger.recordOutput("Shooter/DisabledTimer", (int) disabledTimer.get());
+
+        if (runShooterFlag) {
+            shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+        } else {
+            shooterIOL.setOpenLoop(0);
+            shooterIOM.setOpenLoop(0);
+            shooterIOR.setOpenLoop(0);
+        }
+        if (runIndexFlag) {
+             feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
+             indexIO.setVelocityClosedLoop(loggedIndexRadPerSec.get());
+        } else {
+            feederIO.setOpenLoop(0);
+            indexIO.setOpenLoop(0);
+        }
+
+        Logger.recordOutput("Shooter/ShooterRunning", runShooterFlag);
+        Logger.recordOutput("Shooter/IndexRunning", runIndexFlag);
+        Logger.recordOutput("Shooter/ShooterDistanceAdjust", shooterDistanceAdjust);
+
         shooterIOL.periodic();
         shooterIOM.periodic();
         shooterIOR.periodic();

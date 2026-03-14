@@ -8,13 +8,17 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import frc.robot.util.LoggedTunableControlConstants;
 
 public class Constants {
@@ -248,13 +252,36 @@ public class Constants {
 
         public static final CameraConfig[] camConfigs = {
             new CameraConfig(
-                "photonvision_intake",
-                new Transform3d(),
-                1.2
+                "shooter_left",
+//                new Transform3d((7.75, -11.5), (-7.75, -11.5)),
+                new Transform3d(
+                    new Translation3d(
+                        -11.5 - 0.472,
+                        7.75 - 0.472,
+                    7.6875
+                    ),
+                    new Rotation3d(
+                        0,
+                        15,
+                        180
+                    )
+                ),
+                1.20
             ),
             new CameraConfig(
-                "photonvision_shooter",
-                new Transform3d(),
+                "shooter_right",
+                new Transform3d(
+                    new Translation3d(
+                        -11.5 - 0.472,
+                        -7.75 + 0.472,
+                        7.6875
+                    ),
+                    new Rotation3d(
+                        0,
+                        15,
+                        180
+                    )
+                ),
                 0.8
             ),
             new CameraConfig(
@@ -356,10 +383,10 @@ public class Constants {
         public static final int indexMotorCANID = 24;
 
         // TODO test check theoretical limits
-        public static final double shooterMaxSpeed = 5; // rad/sec
-        public static final double feederMaxSpeed = 5; // rad/sec
-        public static final double indexMaxSpeed = 0; // rad/sec
-        public static final double idleMult = 0.4;
+        public static final double shooterMaxSpeed = 340; // rad/sec
+        public static final double feederMaxSpeed = 5000; // rad/sec
+        public static final double indexMaxSpeed = 5000; // rad/sec
+        public static final double idleMult = 0.8;
         public static final double feederMotorMult = 1;
 
         public static final LoggedTunableControlConstants flywheelConstants =
@@ -455,6 +482,7 @@ public class Constants {
                 .outputCurrentPeriodMs(20);
 
             talonFlywheelConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+            talonFlywheelConfigs.Audio.AllowMusicDurDisable = true;
             var slot0 = talonFlywheelConfigs.Slot0;
             slot0.kP = flywheelConstants.kP();
             slot0.kD = flywheelConstants.kD();
