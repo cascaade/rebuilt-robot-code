@@ -61,7 +61,7 @@ public class RobotContainer {
     private SendableChooser<String> EP5 = new SendableChooser<>();
     private String lastSelected = "";
     String[] EPs1 = {"2", "3", "4", "5", "6", "7", "8", "Preload", "N/A"};
-    String[] EPs3 = {"2", "3", "4", "5", "6", "7", "8", "N/A"};
+    String[] EPs3 = {"2", "3", "4", "5", "6", "7", "8", "Preload", "N/A"};
     String[] EPs2 = {"2", "3", "4a", "4b", "5", "6a", "6b", "7", "8", "Preload", "N/A"};
 
     public RobotContainer() {
@@ -213,19 +213,19 @@ public class RobotContainer {
         auxController.povLeft().onTrue(swerve.runOmegaSetTime(0.05));
         auxController.povRight().onTrue(swerve.runOmegaSetTime(-0.05));
 
-        driverController.rightBumper().onTrue(shooter.toggleRunShooter());
+        auxController.y().onTrue(shooter.toggleRunShooter());
         driverController.rightTrigger(.5).onTrue(shooter.toggleRunIndex());
         driverController.rightTrigger(.5).onFalse(shooter.toggleRunIndex());
-       auxController.x().onTrue(shooter.incrementShooterDistanceAdjust(true));
-       auxController.y().onTrue(shooter.incrementShooterDistanceAdjust(false));
+    //    auxController.x().onTrue(shooter.incrementShooterDistanceAdjust(true));
+    //    auxController.y().onTrue(shooter.incrementShooterDistanceAdjust(false));
 
         // intake.setDefaultCommand(intake.runStopRollers());
         // auxController.rightBumper().toggleOnFalse(intake.runRollers());
         auxController.rightBumper().onTrue(intake.toggleRollerFlag());
         auxController.leftTrigger().onTrue(intake.toggleWristPose());
-        auxController.a().onTrue(intake.incrementWristSetpointAdjust(
+        auxController.y().onTrue(intake.incrementWristSetpointAdjust(
             true));
-        auxController.b().onTrue(intake.incrementWristSetpointAdjust(false));
+        auxController.a().onTrue(intake.incrementWristSetpointAdjust(false));
         auxController.leftBumper().onTrue(intake.resetPosition());
     }
 
