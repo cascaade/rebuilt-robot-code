@@ -348,9 +348,9 @@ public class SwerveDrive extends SubsystemBase {
         // Build chassis speeds from the sample's feedforward velocities
         // plus PID correction for x, y, and heading error
         ChassisSpeeds speeds = new ChassisSpeeds(
-            sample.vx + autoXController.calculate(currentPose.getX(), sample.x),
-            sample.vy + autoYController.calculate(currentPose.getY(), sample.y),
-            sample.omega + autoHeadingController.calculate(
+            sample.vx + trajVXController.calculate(currentPose.getX(), sample.x),
+            sample.vy + trajVYController.calculate(currentPose.getY(), sample.y),
+            sample.omega + trajHeadingController.calculate(
                 currentPose.getRotation().getRadians(),
                 sample.heading
             )
@@ -363,7 +363,7 @@ public class SwerveDrive extends SubsystemBase {
         // NOTE: We call runChassisSpeeds() directly so that the existing
         // ChassisSpeeds.fromFieldRelativeSpeeds() and discretize() logic applies,
         // matching exactly how teleop driving works.
-        runChassisSpeeds(speeds, true);
+        submitChassisSpeeds(speeds, false, false);
     }
 
     public void addVisionMeasurement(Pose2d visionMeasurement, double timestamp, Matrix<N3,N1> stdDevs) {

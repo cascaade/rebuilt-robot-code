@@ -297,7 +297,7 @@ public class RobotContainer {
         String[] pathNames = new String[5];
         for (int i=0; i<count; i++) {
             paths[i] = pathsTemp[i];
-            pathNames[i] = pathNames[i];
+            pathNames[i] = pathNamesTemp[i];
         }
 
 
