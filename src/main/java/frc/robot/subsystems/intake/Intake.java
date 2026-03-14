@@ -15,6 +15,7 @@ public class Intake extends SubsystemBase {
     private boolean isDeployedFlag = true;
     private boolean isHomingFlag = false;
     private boolean isRollingFlag = true;
+    private boolean rollingDir = false; // False if not moving in reverse
 
     private double wristSetpointAdjust = 0.0;
 
@@ -100,6 +101,12 @@ public class Intake extends SubsystemBase {
         });
     }
 
+        public Command toggleRollerDirection() {
+        return runOnce(() -> {
+            rollingDir = !rollingDir;
+        });
+    }
+
     @Override
     public void periodic() {
         if (!isHomingFlag) {
@@ -110,13 +117,15 @@ public class Intake extends SubsystemBase {
             }
         }
         if(isRollingFlag) {
-            rollerIO.setClosedLoop(speed.get());
+            rollerIO.setClosedLoop(rollingDir ? -speed.get() : speed.get());
         } else {
             rollerIO.setOpenLoop(0);
         }
 
         Logger.recordOutput("Intake/Deployed", isDeployedFlag);
         Logger.recordOutput("Intake/Homing", isHomingFlag);
+        Logger.recordOutput("Intake/RollersRunning", isRollingFlag);
+        Logger.recordOutput("Intake/RollerDirection", rollingDir);
 
         rollerIO.periodic();
         wristIO.periodic();

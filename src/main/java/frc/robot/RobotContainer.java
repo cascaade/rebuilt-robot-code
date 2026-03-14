@@ -5,6 +5,8 @@
 
 package frc.robot;
 
+import org.littletonrobotics.junction.Logger;
+
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
@@ -227,6 +229,7 @@ public class RobotContainer {
             true));
         auxController.a().onTrue(intake.incrementWristSetpointAdjust(false));
         auxController.leftBumper().onTrue(intake.resetPosition());
+        auxController.b().onTrue(intake.toggleRollerDirection());
     }
 
     public void testPeriodic() {
@@ -271,6 +274,8 @@ public class RobotContainer {
 
         pathNamesTemp[0] = autoName+"__1"+"_"+points[0];
         pathsTemp[0] = auto.trajectory(pathNamesTemp[0]);
+
+        Logger.recordOutput("Auto/EPs", points);
 
         // Define everything in pathNameTemp and pathsTemp
         for (int i=1; i<points.length; i++) {
@@ -374,6 +379,7 @@ public class RobotContainer {
     // above, so this is only needed if Robot.java calls it directly.
     // -------------------------------------------------------
     public Command getAutonomousCommand() {
-        return buildAuto().cmd();
+        // return buildAuto().cmd();
+        return new WaitCommand(10);
     }
 }
