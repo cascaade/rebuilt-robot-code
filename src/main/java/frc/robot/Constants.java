@@ -253,36 +253,35 @@ public class Constants {
         public static final CameraConfig[] camConfigs = {
             new CameraConfig(
                 "shooter_left",
-//                new Transform3d((7.75, -11.5), (-7.75, -11.5)),
                 new Transform3d(
                     new Translation3d(
-                        -11.5 - 0.472,
-                        7.75 - 0.472,
-                    7.6875
+                        Units.inchesToMeters(-11.5),
+                        Units.inchesToMeters(-7.75),
+                        Units.inchesToMeters(6.25)
                     ),
                     new Rotation3d(
                         0,
-                        15,
-                        180
+                        Units.degreesToRadians(-15),
+                        Units.degreesToRadians(180)
                     )
                 ),
-                1.20
+                1
             ),
             new CameraConfig(
                 "shooter_right",
                 new Transform3d(
                     new Translation3d(
-                        -11.5 - 0.472,
-                        -7.75 + 0.472,
-                        7.6875
+                        Units.inchesToMeters(-11.5),
+                        Units.inchesToMeters(6.9),
+                        Units.inchesToMeters(6.25)
                     ),
                     new Rotation3d(
-                        0,
-                        15,
-                        180
+                        Units.degreesToRadians(0),
+                        Units.degreesToRadians(-15),
+                        Units.degreesToRadians(180)
                     )
                 ),
-                0.8
+                1
             ),
             new CameraConfig(
                 "photonvision_climber",
