@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import com.revrobotics.PersistMode;
@@ -86,7 +87,8 @@ public class WristIOSpark implements WristIO {
 
     @Override
     public void setSetpoint(double angle) {
-        wristController.setSetpoint(angle, ControlType.kPosition);
+//        wristController.setSetpoint(angle, ControlType.kPosition);
+        Logger.recordOutput("Intake/Wrist/HardwareSetpointAngle", angle);
     }
 
     @Override

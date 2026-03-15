@@ -95,5 +95,4 @@ public class RollerIOSpark implements RollerIO {
         Logger.recordOutput("Intake/Roller/Voltage", voltage);
         Logger.recordOutput("Intake/Roller/VoltageUpdate", Timer.getFPGATimestamp());
     }
-    
 }

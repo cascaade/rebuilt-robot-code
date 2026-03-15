@@ -389,7 +389,7 @@ public class Constants {
         
         public static final double shooterRunSpeed = 340; // rad/sec
         public static final double feederRunSpeed = 5000; // rad/sec
-        public static final double indexRunSpeed = 600; // rad/sec
+        public static final double indexRunSpeed = 5000; // rad/sec
 
         public static final LoggedTunableControlConstants flywheelConstants =
             new LoggedTunableControlConstants("Shooter/Flywheel")
@@ -518,7 +518,7 @@ public class Constants {
         public static final double rollerEncoderPositionFactor = 2 * Math.PI / rollerMotorReduction;
         public static final double rollerEncoderVelocityFactor = (2 * Math.PI) / rollerMotorReduction / 60;
 
-        public static final double wristP = 0.6;
+        public static final double wristP = 0.2;
         public static final double wristD = 0;
         public static final double wristCos = 0;
         public static final double wristS = 0;
