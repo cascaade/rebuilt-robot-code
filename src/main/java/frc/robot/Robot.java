@@ -11,6 +11,8 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.LoggedTunableControlConstants;
@@ -21,33 +23,37 @@ public class Robot extends LoggedRobot {
     private final RobotContainer m_robotContainer;
 
     public Robot() {
-        // record metadata about the log
-        Logger.recordMetadata("Robot", "TestBot");
+        Logger.recordMetadata("Robot", "CompBot");
         Logger.recordMetadata("Season", "2026 REBUILT");
         Logger.recordMetadata("RobotMode", Constants.currentMode.equals(Constants.RobotMode.REAL) ? "REAL" : (
             Constants.currentMode.equals(Constants.RobotMode.SIM) ? "SIM" : "REPLAY"
         ));
 
-        // Set up data receivers & replay source
-        switch (Constants.currentMode) {
-            case REAL:
-                // Running on a real robot, log to a USB stick ("/U/logs")
-                Logger.addDataReceiver(new WPILOGWriter());
-                Logger.addDataReceiver(new NT4Publisher());
-                break;
+        Logger.recordMetadata("EventName",      DriverStation.getEventName());
+        Logger.recordMetadata("MatchType",      DriverStation.getMatchType().toString());
+        Logger.recordMetadata("MatchNumber",    String.valueOf(DriverStation.getMatchNumber()));
+        Logger.recordMetadata("ReplayNumber",   String.valueOf(DriverStation.getReplayNumber()));
+        Logger.recordMetadata("Alliance", DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get().toString() : "Unknown");
+        Logger.recordMetadata("AllianceStation", DriverStation.getLocation().isPresent() ? String.valueOf(DriverStation.getLocation().getAsInt()) : "Unknown");
+        Logger.recordMetadata("GameSpecificMessage", DriverStation.getGameSpecificMessage());
 
-            case SIM:
-                // Running a physics simulator, log to NT
-                Logger.addDataReceiver(new NT4Publisher());
-                break;
+        Logger.recordMetadata("StationNumber", DriverStation.getLocation().isPresent() ? String.valueOf(DriverStation.getLocation().getAsInt()) : "Unknown");
 
-            case REPLAY:
-                // Replaying a log, set up replay source
-                setUseTiming(false); // Run as fast as possible
-                String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
-                Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
-                Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
-                break;
+        Logger.recordMetadata("FMSAttached",   String.valueOf(DriverStation.isFMSAttached()));
+        Logger.recordMetadata("DSAttached",    String.valueOf(DriverStation.isDSAttached()));
+        Logger.recordMetadata("BatteryVoltage", String.format("%.2fV", RobotController.getBatteryVoltage()));
+
+        if (
+            Constants.currentMode.equals(Constants.RobotMode.REAL) ||
+            Constants.currentMode.equals(Constants.RobotMode.SIM)
+        ) {
+            Logger.addDataReceiver(new WPILOGWriter());
+            Logger.addDataReceiver(new NT4Publisher());
+        } else {
+            setUseTiming(false); // Run as fast as possible
+            String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
+            Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
+            Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
         }
 
         Logger.start();
@@ -59,7 +65,7 @@ public class Robot extends LoggedRobot {
     public void robotPeriodic() {
         LoggedTunableControlConstants.tuningPeriodic();
         CommandScheduler.getInstance().run();
-        m_robotContainer.initAutoChooser();
+//        m_robotContainer.initAutoChooser();
     }
 
     @Override

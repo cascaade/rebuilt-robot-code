@@ -133,7 +133,7 @@ public class Constants {
 
         public static final double driveMotorReduction = 6.75; // l2 mk4i gear set
         
-        public static final int driveMotorCurrentLimit = 50;
+        public static final int driveMotorCurrentLimit = 30;
 
         public static final double driveEncoderPositionFactor = 2 * Math.PI / driveMotorReduction; // Rotor Rotations -> Wheel Radians
         public static final double driveEncoderVelocityFactor = (2 * Math.PI) / 60.0 / driveMotorReduction; // Rotor RPM -> Wheel Rad/Sec
@@ -197,7 +197,6 @@ public class Constants {
                 .idleMode(IdleMode.kBrake)
                 .smartCurrentLimit(turnMotorCurrentLimit)
                 .voltageCompensation(12)
-                .closedLoopRampRate(0.01)
                 .inverted(true);
             turnConfig.encoder
                 .positionConversionFactor(turnEncoderPositionFactor)
@@ -253,36 +252,35 @@ public class Constants {
         public static final CameraConfig[] camConfigs = {
             new CameraConfig(
                 "shooter_left",
-//                new Transform3d((7.75, -11.5), (-7.75, -11.5)),
                 new Transform3d(
                     new Translation3d(
-                        -11.5 - 0.472,
-                        7.75 - 0.472,
-                    7.6875
+                        Units.inchesToMeters(-11.5),
+                        Units.inchesToMeters(-7.75),
+                        Units.inchesToMeters(7.75)
                     ),
                     new Rotation3d(
                         0,
-                        15,
-                        180
+                        Units.degreesToRadians(-15),
+                        Units.degreesToRadians(180)
                     )
                 ),
-                1.20
+                1
             ),
             new CameraConfig(
                 "shooter_right",
                 new Transform3d(
                     new Translation3d(
-                        -11.5 - 0.472,
-                        -7.75 + 0.472,
-                        7.6875
+                        Units.inchesToMeters(-11.5),
+                        Units.inchesToMeters(6.9),
+                        Units.inchesToMeters(7.75)
                     ),
                     new Rotation3d(
-                        0,
-                        15,
-                        180
+                        Units.degreesToRadians(0),
+                        Units.degreesToRadians(-15),
+                        Units.degreesToRadians(180)
                     )
                 ),
-                0.8
+                1
             ),
             new CameraConfig(
                 "photonvision_climber",
@@ -385,9 +383,13 @@ public class Constants {
         // TODO test check theoretical limits
         public static final double shooterMaxSpeed = 340; // rad/sec
         public static final double feederMaxSpeed = 5000; // rad/sec
-        public static final double indexMaxSpeed = 5000; // rad/sec
+        public static final double indexMaxSpeed = 600; // rad/sec
         public static final double idleMult = 0.8;
         public static final double feederMotorMult = 1;
+        
+        public static final double shooterRunSpeed = 340; // rad/sec
+        public static final double feederRunSpeed = 5000; // rad/sec
+        public static final double indexRunSpeed = 5000; // rad/sec
 
         public static final LoggedTunableControlConstants flywheelConstants =
             new LoggedTunableControlConstants("Shooter/Flywheel")
@@ -502,9 +504,11 @@ public class Constants {
         public static final SparkMaxConfig wristSparkConfig = new SparkMaxConfig();
         public static final SparkMaxConfig rollerSparkConfig = new SparkMaxConfig();
 
-        public static final double intakeMaxSpeed = 600; // rad/sec
+        public static final double intakeMaxSpeed = 5000; // rad/sec
 
         public static final double autoHomeCurrentThreshold = 30;
+        public static final int wristCurrentLimit = 40;
+        public static final int rollerCurrentLimit = 30;
 
         public static final double wristMotorReduction = 32.0 / 1.0;
         public static final double rollerMotorReduction = 2.0 / 1.0;
@@ -514,7 +518,7 @@ public class Constants {
         public static final double rollerEncoderPositionFactor = 2 * Math.PI / rollerMotorReduction;
         public static final double rollerEncoderVelocityFactor = (2 * Math.PI) / rollerMotorReduction / 60;
 
-        public static final double wristP = 0.6;
+        public static final double wristP = 0.2;
         public static final double wristD = 0;
         public static final double wristCos = 0;
         public static final double wristS = 0;
@@ -543,6 +547,7 @@ public class Constants {
             wristSparkConfig
                 .idleMode(IdleMode.kBrake)
                 .voltageCompensation(12)
+                .smartCurrentLimit(wristCurrentLimit)
                 .inverted(false);
             wristSparkConfig.encoder
                 .positionConversionFactor(wristEncoderPositionFactor)
@@ -568,6 +573,7 @@ public class Constants {
             rollerSparkConfig
                 .idleMode(IdleMode.kCoast)
                 .voltageCompensation(12)
+                .smartCurrentLimit(rollerCurrentLimit)
                 .closedLoopRampRate(0.02)
                 .inverted(true);
             rollerSparkConfig.encoder

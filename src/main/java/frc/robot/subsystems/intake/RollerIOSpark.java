@@ -13,6 +13,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants.IntakeConstants;
 
 public class RollerIOSpark implements RollerIO {
@@ -85,11 +86,13 @@ public class RollerIOSpark implements RollerIO {
         intakeController.setSetpoint(velocityRadPerSec, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
 
         Logger.recordOutput("Intake/Roller/Setpoint", velocityRadPerSec);
+        Logger.recordOutput("Intake/Roller/SetpointUpdate", Timer.getFPGATimestamp());
     }
 
     @Override
     public void setOpenLoop(double voltage) {
         intakeMotor.setVoltage(voltage);
+        Logger.recordOutput("Intake/Roller/Voltage", voltage);
+        Logger.recordOutput("Intake/Roller/VoltageUpdate", Timer.getFPGATimestamp());
     }
-    
 }
