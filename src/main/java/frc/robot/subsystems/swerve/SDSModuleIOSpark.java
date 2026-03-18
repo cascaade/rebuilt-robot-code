@@ -2,6 +2,8 @@ package frc.robot.subsystems.swerve;
 
 import org.littletonrobotics.junction.Logger;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
@@ -17,7 +19,10 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Preferences;
+import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.Constants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.Constants.SwerveModuleConstants;
 
@@ -31,9 +36,13 @@ public class SDSModuleIOSpark implements SDSModuleIO {
     private final RelativeEncoder driveEncoder;
 
     private final CANcoder turnCANCoder;
+    private final StatusSignal<Angle> turnCANCoderPositionSignal;
 
     private final SparkClosedLoopController turnController;
     private final SparkClosedLoopController driveController;
+
+    private final boolean driveConnected;
+    private final boolean turnConnected;
 
     private double driveKs;
     private double driveKv;
@@ -67,27 +76,36 @@ public class SDSModuleIOSpark implements SDSModuleIO {
         turnMotor.configure(turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         driveMotor.configure(driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        // TODO research to figure out if you can save StatusSignal as a variable instead of doing .getAbsolutePosition every time on the CANCoders. what is recommended?
         turnCANCoder = new CANcoder(SwerveConstants.canCoderCANIDs[index]);
-        turnEncoder.setPosition(turnCANCoder.getAbsolutePosition().getValueAsDouble() * (2 * Math.PI)); // TODO test to make sure this sets the motor to the correct position
+        turnCANCoderPositionSignal = turnCANCoder.getAbsolutePosition();
+        turnCANCoderPositionSignal.setUpdateFrequency(Constants.odometryFrequency);
+        turnCANCoder.optimizeBusUtilization();
+        turnEncoder.setPosition(turnCANCoderPositionSignal.getValueAsDouble() * (2 * Math.PI));
+
+        driveConnected = driveMotor.getFirmwareVersion() != 0;
+        turnConnected = turnMotor.getFirmwareVersion() != 0;
     }
     
     public void updateInputs(SDSModuleIOInputs inputs) {
-        turnEncoder.setPosition(turnCANCoder.getAbsolutePosition().getValueAsDouble() * (2 * Math.PI));
+        BaseStatusSignal.refreshAll(turnCANCoderPositionSignal);
+
+        double canCoderPosition = turnCANCoderPositionSignal.getValueAsDouble();
+
+        turnEncoder.setPosition(canCoderPosition * (2 * Math.PI));
 
         // TODO why dont any electrical signals read? (i.e. appliedvolts & currentamps)
-        inputs.turnConnected = turnMotor.getFirmwareVersion() != 0;
+        inputs.turnConnected = turnConnected;
         inputs.turnPosition = new Rotation2d(turnEncoder.getPosition()).minus(zeroRotation);
         inputs.turnVelocityRadPerSec = turnEncoder.getVelocity();
-        inputs.canCoderPosition = turnCANCoder.getAbsolutePosition().getValueAsDouble();
-        inputs.turnAppliedVolts = turnMotor.getAppliedOutput() * turnMotor.getBusVoltage();
+        inputs.canCoderPosition = canCoderPosition;
+        inputs.turnAppliedVolts = RobotController.getBatteryVoltage() * turnMotor.getAppliedOutput();
         inputs.turnCurrentAmps = turnMotor.getOutputCurrent();
 
-        inputs.driveConnected = driveMotor.getFirmwareVersion() != 0;
+        inputs.driveConnected = driveConnected;
         inputs.drivePositionRad = driveEncoder.getPosition();
         inputs.driveVelocityRadPerSec = driveEncoder.getVelocity();
         inputs.driveVelocityWheelMetersPerSec = inputs.driveVelocityRadPerSec * SwerveModuleConstants.kSwerveWheelDiameter / 2.0;
-        inputs.driveAppliedVolts = driveMotor.getAppliedOutput() * driveMotor.getBusVoltage();
+        inputs.driveAppliedVolts = RobotController.getBatteryVoltage() * driveMotor.getAppliedOutput();
         inputs.driveCurrentAmps = driveMotor.getOutputCurrent();
     }
 
