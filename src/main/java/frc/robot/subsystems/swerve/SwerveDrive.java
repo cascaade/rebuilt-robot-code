@@ -326,13 +326,13 @@ public class SwerveDrive extends SubsystemBase {
      *
      * @param pose the field-relative pose to reset to
      */
-    // public void resetOdometry(Pose2d pose) {
-    //     poseEstimator.resetPosition(
-    //         rawGyroRotation,       // current raw gyro angle (not zeroed)
-    //         modulePositions,       // current module positions
-    //         pose                   // target pose to reset to
-    //     );
-    // }
+    public void resetOdometry(Pose2d pose) {
+        poseEstimator.resetPosition(
+            rawGyroRotation,       // current raw gyro angle (not zeroed)
+            modulePositions,       // current module positions
+            pose                   // target pose to reset to
+        );
+    }
 
 
     // ============================================================
@@ -354,29 +354,29 @@ public class SwerveDrive extends SubsystemBase {
      *
      * @param sample the trajectory sample to follow at this timestep
      */
-    // public void followTrajectory(SwerveSample sample) {
-    //     Pose2d currentPose = getPose();
+    public void followTrajectory(SwerveSample sample) {
+        Pose2d currentPose = getPose();
 
-    //     // Build chassis speeds from the sample's feedforward velocities
-    //     // plus PID correction for x, y, and heading error
-    //     ChassisSpeeds speeds = new ChassisSpeeds(
-    //         sample.vx + trajVXController.calculate(currentPose.getX(), sample.x),
-    //         sample.vy + trajVYController.calculate(currentPose.getY(), sample.y),
-    //         sample.omega + trajHeadingController.calculate(
-    //             currentPose.getRotation().getRadians(),
-    //             sample.heading
-    //         )
-    //     );
+        // Build chassis speeds from the sample's feedforward velocities
+        // plus PID correction for x, y, and heading error
+        ChassisSpeeds speeds = new ChassisSpeeds(
+            sample.vx + trajVXController.calculate(currentPose.getX(), sample.x),
+            sample.vy + trajVYController.calculate(currentPose.getY(), sample.y),
+            sample.omega + trajHeadingController.calculate(
+                currentPose.getRotation().getRadians(),
+                sample.heading
+            )
+        );
 
-    //     // Log the auto chassis speeds for debugging in AdvantageScope
-    //     Logger.recordOutput("Swerve/ChassisSpeeds/Auto", speeds);
+        // Log the auto chassis speeds for debugging in AdvantageScope
+        Logger.recordOutput("Swerve/ChassisSpeeds/Auto", speeds);
 
-    //     // Drive field-relative using the existing discretize + kinematics pipeline.
-    //     // NOTE: We call runChassisSpeeds() directly so that the existing
-    //     // ChassisSpeeds.fromFieldRelativeSpeeds() and discretize() logic applies,
-    //     // matching exactly how teleop driving works.
-    //     submitChassisSpeeds(speeds, true, true);
-    // }
+        // Drive field-relative using the existing discretize + kinematics pipeline.
+        // NOTE: We call runChassisSpeeds() directly so that the existing
+        // ChassisSpeeds.fromFieldRelativeSpeeds() and discretize() logic applies,
+        // matching exactly how teleop driving works.
+        submitChassisSpeeds(speeds, true, true);
+    }
 
     public void addVisionMeasurement(Pose2d visionMeasurement, double timestamp, Matrix<N3,N1> stdDevs) {
         // higher standard deviations means vision measurements are trusted less

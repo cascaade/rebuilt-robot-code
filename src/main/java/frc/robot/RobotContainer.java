@@ -11,7 +11,12 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.wpilibj.Preferences;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -57,28 +62,32 @@ public class RobotContainer {
 
     private final LoggedNetworkBoolean runAutoBoolean = new LoggedNetworkBoolean("Auto/RunAuto", true);
 
-//    private final AutoFactory autoFactory;
-
-//    private SendableChooser<String> autoChoose = new SendableChooser<>();
-//    private SendableChooser<String> EP1 = new SendableChooser<>();
-//    private SendableChooser<String> EP2 = new SendableChooser<>();
-//    private SendableChooser<String> EP3 = new SendableChooser<>();
-//    private SendableChooser<String> EP4 = new SendableChooser<>();
-//    private SendableChooser<String> EP5 = new SendableChooser<>();
-//    private String lastSelected = "";
-//    String[] EPs1 = {"2", "3", "4", "5", "6", "7", "8", "Preload", "N/A"};
-//    String[] EPs3 = {"2", "3", "4", "5", "6", "7", "8", "Preload", "N/A"};
-//    String[] EPs2 = {"2", "3", "4a", "4b", "5", "6a", "6b", "7", "8", "Preload", "N/A"};
+    private final AutoFactory autoFactory;
+    private final StringPublisher autoPathPublisher;
+    private final StringSubscriber autoPathSubscriber;
+    private final SendableChooser<String> autoMode = new SendableChooser<>();
 
     public RobotContainer() {
-//        autoChoose.setDefaultOption("Auto 1", "Auto1");
-//        autoChoose.addOption("Auto 2", "Auto2");
-//        autoChoose.addOption("Auto 3", "Auto3");
+        autoMode.setDefaultOption("Auto 1", "Auto1");
+        autoMode.addOption("Auto 2", "Auto2");
+        autoMode.addOption("Auto 3", "Auto3");
+        SmartDashboard.putData("Auto", autoMode);
+
+        var topic = NetworkTableInstance.getDefault()
+            .getStringTopic("/SmartDashboard/Auto Path");
+        autoPathPublisher = topic.publish();
+        autoPathPublisher.set("1,2,5,6"); // default shown in textbox
+        autoPathSubscriber = topic.subscribe("1,2,5,6");
 
         Preferences.removeAll();
 
         driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
         auxController = new CommandXboxController(OperatorConstants.kAuxControllerPort);
+
+        // var topic = NetworkTableInstance.getDefault().getStringTopic("/SmartDashboard/Auto Path");
+
+        // StringPublisher autoPathPublisher = topic.publish();
+        // StringSubscriber autoPathSubscriber = topic.subscribe("Auto1__2_5");;
 
         switch(Constants.currentMode) {
             case REAL:
@@ -171,34 +180,13 @@ public class RobotContainer {
                 break;
         }
 
-        // -------------------------------------------------------
-        // [NEW] Instantiate intake and shooter subsystems
-        // -------------------------------------------------------
-        // intake  = new IntakeSubsystem();
-        // shooter = new ShooterSubsystem();
-
-        // -------------------------------------------------------
-        // [NEW] Build the AutoFactory
-        //   - swerve::getPose         → supplies current robot Pose2d
-        //   - swerve::resetOdometry   → resets odometry to trajectory start
-        //   - swerve::followTrajectory → your SwerveSample follower method
-        //   - true                    → enable alliance (red/blue) flipping
-        //   - swerve                  → drive subsystem requirement
-        //
-        // ACTION REQUIRED: Verify these method names match your SwerveDrive class.
-        //   getPose()           should return Pose2d
-        //   resetOdometry()     should accept Pose2d
-        //   followTrajectory()  should accept SwerveSample
-        // -------------------------------------------------------
-//        autoFactory = new AutoFactory(
-//            swerve::getPose,
-//            swerve::resetOdometry,
-//            swerve::followTrajectory,
-//            true,
-//            swerve
-//        );
-
-//        SmartDashboard.putData("Auto Chooser", autoChoose);
+        autoFactory = new AutoFactory(
+            swerve::getPose,
+            swerve::resetOdometry,
+            swerve::followTrajectory,
+            true,
+            swerve
+            );
 
         configureBindings();
     }
@@ -242,164 +230,156 @@ public class RobotContainer {
         auxController.rightBumper().onTrue(intake.toggleRollerFlag());
     }
 
+    public AutoRoutine buildAuto() {
+        String autoNum = autoMode.getSelected();
+        String pathName = autoPathSubscriber.get();
+        
+        String[] points = pathName.split(",");
+        
+        AutoRoutine auto = autoFactory.newRoutine("auto");
+
+        if (pathName.isEmpty()) {
+            AutoTrajectory path = auto.trajectory(autoNum+"__1_Preload");
+            auto.active().onTrue(Commands.sequence(
+                path.resetOdometry(),
+                path.cmd(),
+                shooter.toggleRunShooter(),
+                new WaitCommand(5),
+                shooter.toggleRunIndex(),
+                new WaitCommand(5),
+                shooter.toggleRunIndex(),
+                shooter.toggleRunShooter()
+            ));
+            return auto;
+        }
+
+        if (points.length < 2) {
+            System.out.println("Not enough points");
+            return auto;
+        }
+
+        String[] pathNames = new String[points.length-1];
+        AutoTrajectory[] paths = new AutoTrajectory[points.length-1];
+
+        for (int i=0; i<points.length-1; i++) {
+            pathNames[i] = autoNum+"__"+points[i]+"_"+points[i+1];
+            paths[i] = auto.trajectory(pathNames[i]);
+        }
+
+        // Debug only
+        for(String s : pathNames) {
+            System.out.println(s);
+        }
+
+        auto.active().onTrue(Commands.sequence(
+            paths[0].resetOdometry(),
+            paths[0].cmd()
+        ));
+
+        for (int i = 0; i < paths.length - 1; i++) {
+            String EP = points[i+1];
+            String pathN = pathNames[i];
+            if (shouldShootAfter(EP)) {
+                paths[i].done().onTrue(Commands.sequence(
+                    shooter.toggleRunShooter(),
+                    new WaitCommand(5),
+                    shooter.toggleRunIndex(),
+                    new WaitCommand(5),
+                    shooter.toggleRunIndex(),
+                    shooter.toggleRunShooter(),
+                    paths[i+1].cmd()
+                ));
+            } 
+            else if (shouldIntakeDuring(pathN)) {
+                paths[i].active().onTrue(intake.toggleRollerFlag());
+                paths[i].done().onTrue(Commands.sequence(
+                    intake.toggleRollerFlag(),
+                    paths[i+1].cmd()
+                ));
+            }
+            else {
+                paths[i].done().onTrue(paths[i+1].cmd());
+            }
+        }
+
+        String lastEP = points[points.length-1];
+        AutoTrajectory lastPath = paths[paths.length-1];
+        String lastPathName = pathNames[pathNames.length-1];
+
+        if (shouldShootAfter(lastEP)) {
+            paths[paths.length - 1].done().onTrue(Commands.sequence(
+                shooter.toggleRunShooter(),
+                new WaitCommand(5),
+                shooter.toggleRunIndex(),
+                new WaitCommand(5),
+                shooter.toggleRunIndex(),
+                shooter.toggleRunShooter()
+            ));
+        }
+        else if (shouldIntakeDuring(lastPathName)) {
+            lastPath.active().onTrue(intake.toggleRollerFlag());
+            lastPath.done().onTrue(intake.toggleRollerFlag());
+        }
+
+        return auto;
+        
+        // pathNames = new String[pathName.length()-1];
+        // AutoTrajectory[] paths = new AutoTrajectory[pathName.length()-1];
+        // for (int i=0; i<pathName.length()-1; i++) {
+        //     AutoTrajectory path = auto.trajectory(autoNum+"__"+pathName.substring(i, i+1)+"_"+pathName.substring(i+1, i+2));
+        //     pathNames[i] = autoNum+"__"+pathName.substring(i, i+1)+"_"+pathName.substring(i+1, i+2);
+        //     paths[i] = path;
+        // }
+        
+        // for(String s : pathNames) {
+        //     System.out.println(s);
+        // }
+        
+        // auto.active().onTrue(Commands.sequence(
+        //     paths[0].resetOdometry(),
+        //     paths[0].cmd()
+        // ));
+        // for (int i=1; i<pathNames.length-1; i++) {
+        //     String EP = pathNames[i].substring(pathNames[i].length()-2);
+        //     if (EP.equals("4a") || EP.equals("4b") || EP.equals("_4") || EP.equals("_6") 
+        //     || EP.equals("6a") || EP.equals("6b")) {
+        //         paths[i].done().onTrue(
+        //         Commands.sequence(
+        //             shooter.toggleRunShooter(),
+        //             new WaitCommand(5),
+        //             shooter.toggleRunIndex(),
+        //             new WaitCommand(5),
+        //             shooter.toggleRunIndex(),
+        //             shooter.toggleRunShooter(),
+        //             paths[i+1].cmd()
+        //         )
+        //     );
+        //     }
+        //     else {
+        //         paths[i].done().onTrue(paths[i+1].cmd());
+        //     }
+        // }
+        
+        // return auto;
+    }
+
+    private boolean shouldShootAfter(String EP) {
+        return EP.equals("4a") || EP.equals("4b") || EP.equals("4") || EP.equals("6") 
+            || EP.equals("6a") || EP.equals("6b");
+    }
+
+    private boolean shouldIntakeDuring(String path) {
+        return path.equals("Auto2__2_5") || path.equals("Auto2__5_6a") || path.equals("Auto2__2_3") ||
+        path.equals("Auto3__5_6") || path.equals("Auto1__2_3") || path.equals("Auto2__2_4a") ||
+        path.equals("Auto2__5_2") || path.equals("Auto1__2_5") || path.equals("Auto3__5_2") ||
+        path.equals("Auto1__2_4");
+    }
+
     public void testPeriodic() {
         swerve.periodic();
     }
 
-//    public void initAutoChooser() {
-//        String auto = autoChoose.getSelected();
-//        if (!lastSelected.equals(auto)) {
-//            lastSelected = autoChoose.getSelected();
-//            EP1 = new SendableChooser<>();
-//            EP2 = new SendableChooser<>();
-//            EP3 = new SendableChooser<>();
-//            EP4 = new SendableChooser<>();
-//            EP5 = new SendableChooser<>();
-//
-//            String[] actualEPs = auto.equals("Auto2") ? EPs2 : auto.equals("Auto1") ? EPs1 : EPs3;
-//
-//            for (String EP : actualEPs) {
-//                EP1.addOption(EP, EP);
-//                EP2.addOption(EP, EP);
-//                EP3.addOption(EP, EP);
-//                EP4.addOption(EP, EP);
-//                EP5.addOption(EP, EP);
-//            }
-//
-//            SmartDashboard.putData("Endpoint 1", EP1);
-//            SmartDashboard.putData("Endpoint 2", EP2);
-//            SmartDashboard.putData("Endpoint 3", EP3);
-//            SmartDashboard.putData("Endpoint 4", EP4);
-//            SmartDashboard.putData("Endpoint 5", EP5);
-//        }
-//    }
-
-//    public AutoRoutine buildAuto() {
-//
-//        String autoName = autoChoose.getSelected();
-//        String[] points = {EP1.getSelected(), EP2.getSelected(), EP3.getSelected(), EP4.getSelected(), EP5.getSelected()};
-//        AutoTrajectory[] pathsTemp = new AutoTrajectory[5];
-//        String[] pathNamesTemp = new String[5];
-//        AutoRoutine auto = autoFactory.newRoutine("auto");
-//
-//        pathNamesTemp[0] = autoName+"__1"+"_"+points[0];
-//        pathsTemp[0] = auto.trajectory(pathNamesTemp[0]);
-//
-//        Logger.recordOutput("Auto/EPs", points);
-//
-//        // Define everything in pathNameTemp and pathsTemp
-//        for (int i=1; i<points.length; i++) {
-//            if (points[i] != null && !points[i].equals("N/A")) {
-//                pathNamesTemp[i] = autoName+"__"+points[i-1]+"_"+points[i];
-//                pathsTemp[i] = auto.trajectory(pathNamesTemp[i]);
-//            } else {
-//                break;
-//            }
-//        }
-//
-//        // Checks how many non-nulls there are to make new arrays without nulls
-//        int count = 0;
-//        for (String name : pathNamesTemp) {
-//            if (name != null) {
-//                count++;
-//            }
-//        }
-//
-//        // Makes new arrays with no null objects
-//        AutoTrajectory[] paths = new AutoTrajectory[count];
-//        String[] pathNames = new String[5];
-//        for (int i=0; i<count; i++) {
-//            paths[i] = pathsTemp[i];
-//            pathNames[i] = pathNamesTemp[i];
-//        }
-//
-//
-//        // Checks if the path requires shooting or intaking and puts it accordingly
-//        for (int i=1; i<paths.length; i++) {
-//            if (
-//                pathNames[i].equals("Auto1__2_5") ||
-//                pathNames[i].equals("Auto2__2_5") ||
-//                pathNames[i].equals("Auto2__5_6a") ||
-//                pathNames[i].equals("Auto2__2_3") ||
-//                pathNames[i].equals("Auto3__5_6") ||
-//                pathNames[i].equals("Auto1__2_3") ||
-//                pathNames[i].equals("Auto2__2_4a") ||
-//                pathNames[i].equals("Auto2__5_2") ||
-//                pathNames[i].equals("Auto3__5_2") ||
-//                pathNames[i].equals("Auto1__2_4")
-//            ) {
-//                paths[i].active().onTrue(intake.toggleRollerFlag());
-//                paths[i].done().onTrue(intake.toggleRollerFlag());
-//            }
-//        }
-//
-//        // Checks if path is a preloading path
-//        if (points[0].equals("Preload")) {
-//            AutoTrajectory path = auto.trajectory(autoName+"__1_Preload");
-//            auto.active().onTrue(
-//                Commands.sequence(
-//                    path.resetOdometry(),
-//                    path.cmd()
-//                )
-//            );
-//            path.done().onTrue(
-//                Commands.sequence(
-//                    shooter.runShooterOn(),
-//                    new WaitCommand(2),
-//                    shooter.runIndexOn(),
-//                    new WaitCommand(10),
-//                    shooter.runShooterOff(),
-//                    shooter.runIndexOff()
-//                )
-//            );
-//            return auto;
-//        }
-//
-//        auto.active().onTrue(
-//            Commands.sequence(
-//                paths[0].resetOdometry(),
-//                paths[0].cmd()
-//            )
-//        );
-//
-//        // chain paths together, inserting shoot when needed
-//        for (int i = 1; i < paths.length; i++) {
-//            if (shouldShootAfter(pathNames[i-1])) {
-//                paths[i-1].done().onTrue(
-//                    Commands.sequence(
-//                        shooter.toggleRunShooter(),
-//                        new WaitCommand(2),
-//                        paths[i].cmd()
-//                    )
-//                );
-//            } else {
-//                paths[i-1].done().onTrue(paths[i].cmd());
-//            }
-//    }
-//        return auto;
-//    }
-
-//    private boolean shouldShootAfter(String name) {
-//        return (name.equals("Auto3__6_8") || name.equals("Auto2__5_6a") || name.equals("Auto2__2_4a")|| name.equals("Auto2__1_5") || name.equals("Auto2__3_4") || name.equals("Auto2__5_6b") || name.equals("Auto1__2_4") || name.equals("Auto1__5_6"));
-//    }
-
-    // -------------------------------------------------------
-    // getAutonomousCommand() is preserved for compatibility
-    // but the auto is now also scheduled via RobotModeTriggers
-    // above, so this is only needed if Robot.java calls it directly.
-    // -------------------------------------------------------
     public Command getAutonomousCommand() {
-        // return buildAuto().cmd();
-        // return new WaitCommand(10);
-        // Command testCommand = new
-//        if (runAutoBoolean.getAsBoolean()) {
-//            return Commands.sequence(
-//                shooter.runShooterAutonomous(340),
-//                swerve.runXSetTime(.2,3.5),
-//                shooter.runOtherAutonomous(5000,5000)
-//            );
-//        } else {
-            return Commands.none();
-//        }
+            return buildAuto().cmd();
     }
 }
