@@ -190,7 +190,7 @@ public class SwerveDrive extends SubsystemBase {
             Pose2d hubPose = FieldConstants.getHubCenter();
 
             Translation2d robotToHub = hubPose.getTranslation().minus(robotPose.getTranslation());
-            Rotation2d targetHeading = robotToHub.getAngle();
+            Rotation2d targetHeading = robotToHub.getAngle().minus(Rotation2d.k180deg);
 
             speeds.omegaRadiansPerSecond = trajHeadingController.calculate(
                 robotPose.getRotation().getRadians(),

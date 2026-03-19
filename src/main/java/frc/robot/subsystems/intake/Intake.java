@@ -26,7 +26,7 @@ public class Intake extends SubsystemBase {
     private final WristIOInputsAutoLogged wristInputs = new WristIOInputsAutoLogged();
 
     LoggedNetworkNumber speed = new LoggedNetworkNumber("Intake/Roller/Speed", IntakeConstants.intakeMaxSpeed);
-    LoggedNetworkNumber voltage = new LoggedNetworkNumber("Intake/Roller/Voltage", 6);
+    LoggedNetworkNumber voltage = new LoggedNetworkNumber("Intake/Roller/Voltage", 8);
     LoggedNetworkNumber position = new LoggedNetworkNumber("Intake/Wrist/Pose", 0);
 
     public Intake(RollerIO rollerIO, WristIO wristIO) {

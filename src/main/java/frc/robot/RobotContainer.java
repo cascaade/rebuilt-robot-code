@@ -210,7 +210,8 @@ public class RobotContainer {
             driverController::getRightX, // omega
             driverController::getLeftTriggerAxis // raw slow input
         ));
-//       auxController.rightTrigger().onTrue(swerve.runToggleAimHub());
+       driverController.leftBumper().onTrue(swerve.runToggleAimHub());
+       driverController.leftBumper().onFalse(swerve.runToggleAimHub());
         driverController.y().onTrue(swerve.runZeroGyro());
 //        driverController.x().onTrue(swerve.runToggleToXPosition());
 //        driverController.b().onTrue(swerve.runReconfigure());

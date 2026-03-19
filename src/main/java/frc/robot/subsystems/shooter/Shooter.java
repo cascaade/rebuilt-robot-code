@@ -57,20 +57,20 @@ public class Shooter extends SubsystemBase {
 
     private void shootWithDistance(double distanceMeters) {
         double shooterVelocityRadPerSec = HubShootLUT.getFlywheelSpeedAtDistance(distanceMeters + shooterDistanceAdjust);
-        double feederVelocityRadPerSec = shooterVelocityRadPerSec * ShooterConstants.feederMotorMult;
+//        double feederVelocityRadPerSec = shooterVelocityRadPerSec * ShooterConstants.feederMotorMult;
 
         shooterIOL.setVelocityClosedLoop(shooterVelocityRadPerSec);
         shooterIOM.setVelocityClosedLoop(shooterVelocityRadPerSec);
         shooterIOR.setVelocityClosedLoop(shooterVelocityRadPerSec);
 
-        if (
-            shooterInputs[0].velocityRadPerSec > shooterVelocityRadPerSec * 0.95 &&
-            shooterInputs[1].velocityRadPerSec > shooterVelocityRadPerSec * 0.95 &&
-            shooterInputs[2].velocityRadPerSec > shooterVelocityRadPerSec * 0.95
-        ) {
-            feederIO.setVelocityClosedLoop(feederVelocityRadPerSec);
-            indexIO.setVelocityClosedLoop(feederVelocityRadPerSec);
-        }
+//        if (
+//            shooterInputs[0].velocityRadPerSec > shooterVelocityRadPerSec * 0.95 &&
+//            shooterInputs[1].velocityRadPerSec > shooterVelocityRadPerSec * 0.95 &&
+//            shooterInputs[2].velocityRadPerSec > shooterVelocityRadPerSec * 0.95
+//        ) {
+//            feederIO.setVelocityClosedLoop(feederVelocityRadPerSec);
+//            indexIO.setVelocityClosedLoop(feederVelocityRadPerSec);
+//        }
     }
 
     public Command incrementShooterDistanceAdjust(boolean positive) {
@@ -253,9 +253,9 @@ public class Shooter extends SubsystemBase {
                 shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
                 shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
             } else {
-                shooterIOL.setOpenLoop(0);
-                shooterIOM.setOpenLoop(0);
-                shooterIOR.setOpenLoop(0);
+                shooterIOL.stop();
+                shooterIOM.stop();
+                shooterIOR.stop();
             }
             if (runIndexFlag) {
                 feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());

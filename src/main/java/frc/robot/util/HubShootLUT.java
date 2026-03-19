@@ -1,13 +1,18 @@
 package frc.robot.util;
 
+import edu.wpi.first.math.util.Units;
+
 import java.util.Map;
 import java.util.TreeMap;
 
 public class HubShootLUT {
     private static final TreeMap<Double, Double> flywheelSpeedTable = new TreeMap<>();
 
-    static {
+    private final static double robotOffsetDistance = Units.inchesToMeters(25.0) / 2;
+    private final static double hubOffsetDistance = Units.inchesToMeters(23.0);
 
+    static {
+        flywheelSpeedTable.put(Units.inchesToMeters(72.0) + robotOffsetDistance + hubOffsetDistance, 350.0);
     }
 
     public static double getFlywheelSpeedAtDistance(double targetDistance) {
