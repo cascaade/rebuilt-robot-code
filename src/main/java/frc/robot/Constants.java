@@ -412,10 +412,6 @@ public class Constants {
                 .setS(0.18)
                 .setV(0.00209);
 
-        public static final double mmCruise = 80;
-        public static final double mmAcceleration = 160;
-        public static final double mmJerk = 1600;
-
         public static final SparkMaxConfig feederConfig = new SparkMaxConfig();
         public static final SparkMaxConfig indexConfig = new SparkMaxConfig();
         public static final TalonFXConfiguration talonFlywheelConfigs = new TalonFXConfiguration();
@@ -490,10 +486,6 @@ public class Constants {
             slot0.kD = flywheelConstants.kD();
             slot0.kS = flywheelConstants.kS();
             slot0.kV = flywheelConstants.kV();
-            var motionMagicConfigs = talonFlywheelConfigs.MotionMagic;
-            motionMagicConfigs.MotionMagicCruiseVelocity = ShooterConstants.mmCruise;
-            motionMagicConfigs.MotionMagicAcceleration = ShooterConstants.mmAcceleration;
-            motionMagicConfigs.MotionMagicJerk = ShooterConstants.mmJerk;
         }
     }
     
