@@ -486,6 +486,10 @@ public class Constants {
             slot0.kD = flywheelConstants.kD();
             slot0.kS = flywheelConstants.kS();
             slot0.kV = flywheelConstants.kV();
+            talonFlywheelConfigs.CurrentLimits.StatorCurrentLimit = 100;
+            talonFlywheelConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
+            talonFlywheelConfigs.CurrentLimits.SupplyCurrentLimit = 60;
+            talonFlywheelConfigs.CurrentLimits.SupplyCurrentLimitEnable = true;
         }
     }
     
