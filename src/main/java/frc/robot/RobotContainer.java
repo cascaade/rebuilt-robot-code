@@ -245,6 +245,7 @@ public class RobotContainer {
         AutoRoutine auto = autoFactory.newRoutine("auto");
 
         if (pathName.isEmpty()) {
+            // CHANGE SHOOTER LOGIC
             AutoTrajectory path = auto.trajectory(autoNum+"__1_Preload");
             auto.active().onTrue(Commands.sequence(
                 path.resetOdometry(),
@@ -279,6 +280,7 @@ public class RobotContainer {
 
         auto.active().onTrue(Commands.sequence(
             paths[0].resetOdometry(),
+            shooter.toggleRunShooter(),
             paths[0].cmd()
         ));
 
@@ -291,8 +293,8 @@ public class RobotContainer {
                     new WaitCommand(5),
                     shooter.toggleRunIndex(),
                     new WaitCommand(5),
-                    shooter.toggleRunIndex(),
-                    shooter.toggleRunShooter(),
+                    // shooter.toggleRunIndex(),
+                    // shooter.toggleRunShooter(),
                     paths[i+1].cmd()
                 ));
             } 
@@ -313,11 +315,14 @@ public class RobotContainer {
         String lastPathName = pathNames[pathNames.length-1];
 
         if (shouldShootAfter(lastEP)) {
+            // NEW SHOOTER LOGIC
             paths[paths.length - 1].done().onTrue(Commands.sequence(
-                shooter.toggleRunShooter(),
-                new WaitCommand(5),
+                swerve.runToggleToXPosition(),
+                swerve.runToggleAimHub(),
+                new WaitCommand(1),
                 shooter.toggleRunIndex(),
-                new WaitCommand(5),
+                new WaitCommand(2),
+                swerve.runToggleToXPosition(),
                 shooter.toggleRunIndex(),
                 shooter.toggleRunShooter()
             ));
