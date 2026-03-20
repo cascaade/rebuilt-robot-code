@@ -12,14 +12,14 @@ public class HubShootLUT {
     private final static double hubOffsetDistance = Units.inchesToMeters(23.0);
 
     static {    
-        flywheelSpeedTable.put(Units.inchesToMeters(90) + robotOffsetDistance + hubOffsetDistance, 395.0);
-        flywheelSpeedTable.put(Units.inchesToMeters(80) + robotOffsetDistance + hubOffsetDistance, 380.0);
-        flywheelSpeedTable.put(Units.inchesToMeters(70) + robotOffsetDistance + hubOffsetDistance, 360.0);
-        flywheelSpeedTable.put(Units.inchesToMeters(60) + robotOffsetDistance + hubOffsetDistance, 345.0);
-        flywheelSpeedTable.put(Units.inchesToMeters(50) + robotOffsetDistance + hubOffsetDistance, 325.0);
-        flywheelSpeedTable.put(Units.inchesToMeters(40) + robotOffsetDistance + hubOffsetDistance, 310.0);
-        flywheelSpeedTable.put(Units.inchesToMeters(30) + robotOffsetDistance + hubOffsetDistance, 290.0);
-        flywheelSpeedTable.put(Units.inchesToMeters(20) + robotOffsetDistance + hubOffsetDistance, 275.0);
+        flywheelSpeedTable.put(Units.inchesToMeters(90) + robotOffsetDistance + hubOffsetDistance, 395.0 - 10.0);
+        flywheelSpeedTable.put(Units.inchesToMeters(80) + robotOffsetDistance + hubOffsetDistance, 380.0 - 10.0);
+        flywheelSpeedTable.put(Units.inchesToMeters(70) + robotOffsetDistance + hubOffsetDistance, 360.0 - 10.0);
+        flywheelSpeedTable.put(Units.inchesToMeters(60) + robotOffsetDistance + hubOffsetDistance, 345.0 - 10.0);
+        flywheelSpeedTable.put(Units.inchesToMeters(50) + robotOffsetDistance + hubOffsetDistance, 325.0 - 10.0);
+        flywheelSpeedTable.put(Units.inchesToMeters(40) + robotOffsetDistance + hubOffsetDistance, 310.0 - 10.0);
+        flywheelSpeedTable.put(Units.inchesToMeters(30) + robotOffsetDistance + hubOffsetDistance, 290.0 - 10.0);
+        flywheelSpeedTable.put(Units.inchesToMeters(20) + robotOffsetDistance + hubOffsetDistance, 275.0 - 10.0);
     }
 
     public static double getFlywheelSpeedAtDistance(double targetDistance) {
