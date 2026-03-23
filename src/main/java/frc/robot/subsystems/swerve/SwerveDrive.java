@@ -8,13 +8,6 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 
-import java.util.Arrays;
-import java.util.function.DoubleSupplier;
-
-import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.LoggedRobot;
-import org.littletonrobotics.junction.Logger;
-
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
@@ -52,7 +45,8 @@ public class SwerveDrive extends SubsystemBase {
     private final SwerveDriveKinematics kinematics;
     private final SwerveDrivePoseEstimator poseEstimator;
 
-    private boolean toX;
+    private boolean toCrossbuck;
+    private boolean crossbuckOverride;
     private double lastMove;
 
     private final AtomicBoolean aimHubFlag;
@@ -75,7 +69,7 @@ public class SwerveDrive extends SubsystemBase {
         this.gyroIO = gyroIO;
         this.gyroIOInputs = new GyroIOInputsAutoLogged();
 
-        toX = true;
+        toCrossbuck = true;
 
         modules = new SDSSwerveModule[] {
             new SDSSwerveModule("Module 0", flModuleIO),
@@ -201,7 +195,7 @@ public class SwerveDrive extends SubsystemBase {
 
     private void submitChassisSpeeds(
         ChassisSpeeds chassisSpeeds,
-        boolean flipToFieldCentric,
+        boolean isFieldCentric,
         boolean isRedFlipped
     ) {
         if (
@@ -212,14 +206,14 @@ public class SwerveDrive extends SubsystemBase {
             lastMove = Timer.getFPGATimestamp();
         }
 
-        if (toX && Timer.getFPGATimestamp() - lastMove > SwerveConstants.toXDelaySeconds) {
-            toXPosition(true);
+        if (crossbuckOverride || (toCrossbuck && Timer.getFPGATimestamp() - lastMove > SwerveConstants.crossbuckDelaySeconds)) {
+            setModulesToCrossbuckPosition(true);
             return;
         }
 
         ChassisSpeeds adjustedSpeeds = chassisSpeeds;
 
-        if (flipToFieldCentric) {
+        if (isFieldCentric) {
             adjustedSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                 chassisSpeeds,
                 getPose().getRotation().rotateBy(new Rotation2d(Constants.isRed() && !isRedFlipped ? Math.PI : 0))
@@ -243,7 +237,13 @@ public class SwerveDrive extends SubsystemBase {
         }
     }
 
-    private void toXPosition(boolean optimize) {
+    public Command setImmediateCrossbuckOverride(boolean on) {
+        return runOnce(() -> {
+            crossbuckOverride = on;
+        });
+    }
+
+    private void setModulesToCrossbuckPosition(boolean optimize) {
         setRawModuleSetpoints(new SwerveModuleState[] {
             new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
             new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
@@ -252,10 +252,10 @@ public class SwerveDrive extends SubsystemBase {
         }, optimize);
     }
 
-    public Command runToggleToXPosition() {
+    public Command runToggleCrossbuckPosition() {
         return runOnce(() -> {
-            toX = !toX;
-            Logger.recordOutput("Swerve/toX", toX);
+            toCrossbuck = !toCrossbuck;
+            Logger.recordOutput("Swerve/CrossbuckEnabled", toCrossbuck);
         });
     }
 
