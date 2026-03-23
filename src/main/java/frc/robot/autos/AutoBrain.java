@@ -63,10 +63,12 @@ public class AutoBrain {
             auto.active().onTrue(Commands.sequence(
                 path.resetOdometry(),
                 path.cmd(),
-                shooterSubsystem.toggleRunShooter(),
-                new WaitCommand(5),
+                swerveSubsystem.setImmediateCrossbuckOverride(true),
+                swerveSubsystem.runToggleAimHub(),
+                new WaitCommand(1),
                 shooterSubsystem.toggleRunIndex(),
-                new WaitCommand(5),
+                new WaitCommand(2),
+                swerveSubsystem.setImmediateCrossbuckOverride(false),
                 shooterSubsystem.toggleRunIndex(),
                 shooterSubsystem.toggleRunShooter()
             ));
@@ -102,12 +104,14 @@ public class AutoBrain {
             String pathN = pathNames[i];
             if (shouldShootAfter(EP)) {
                 paths[i].done().onTrue(Commands.sequence(
-                    shooterSubsystem.toggleRunShooter(),
-                    new WaitCommand(5),
+                    swerveSubsystem.setImmediateCrossbuckOverride(true),
+                    swerveSubsystem.runToggleAimHub(),
+                    new WaitCommand(1),
                     shooterSubsystem.toggleRunIndex(),
-                    new WaitCommand(5),
-                    // shooterSubsystem.toggleRunIndex(),
-                    // shooterSubsystem.toggleRunShooter(),
+                    new WaitCommand(2),
+                    swerveSubsystem.setImmediateCrossbuckOverride(false),
+                    shooterSubsystem.toggleRunIndex(),
+                    shooterSubsystem.toggleRunShooter(),
                     paths[i+1].cmd()
                 ));
             }
@@ -146,45 +150,6 @@ public class AutoBrain {
         }
 
         return auto;
-
-        // pathNames = new String[pathName.length()-1];
-        // AutoTrajectory[] paths = new AutoTrajectory[pathName.length()-1];
-        // for (int i=0; i<pathName.length()-1; i++) {
-        //     AutoTrajectory path = auto.trajectory(autoNum+"__"+pathName.substring(i, i+1)+"_"+pathName.substring(i+1, i+2));
-        //     pathNames[i] = autoNum+"__"+pathName.substring(i, i+1)+"_"+pathName.substring(i+1, i+2);
-        //     paths[i] = path;
-        // }
-
-        // for(String s : pathNames) {
-        //     System.out.println(s);
-        // }
-
-        // auto.active().onTrue(Commands.sequence(
-        //     paths[0].resetOdometry(),
-        //     paths[0].cmd()
-        // ));
-        // for (int i=1; i<pathNames.length-1; i++) {
-        //     String EP = pathNames[i].substring(pathNames[i].length()-2);
-        //     if (EP.equals("4a") || EP.equals("4b") || EP.equals("_4") || EP.equals("_6")
-        //     || EP.equals("6a") || EP.equals("6b")) {
-        //         paths[i].done().onTrue(
-        //         Commands.sequence(
-        //             shooterSubsystem.toggleRunShooter(),
-        //             new WaitCommand(5),
-        //             shooter.toggleRunIndex(),
-        //             new WaitCommand(5),
-        //             shooter.toggleRunIndex(),
-        //             shooter.toggleRunShooter(),
-        //             paths[i+1].cmd()
-        //         )
-        //     );
-        //     }
-        //     else {
-        //         paths[i].done().onTrue(paths[i+1].cmd());
-        //     }
-        // }
-
-        // return auto;
     }
 
     private boolean shouldShootAfter(String EP) {
