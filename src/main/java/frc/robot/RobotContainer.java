@@ -1,4 +1,3 @@
-
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
@@ -64,7 +63,7 @@ public class RobotContainer {
         driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
         auxController = new CommandXboxController(OperatorConstants.kAuxControllerPort);
 
-        switch(Constants.currentMode) {
+        switch (Constants.currentMode) {
             case REAL:
                 swerve = new SwerveDrive(
                     new GyroIOPigeon(),
@@ -165,13 +164,13 @@ public class RobotContainer {
 
     private void configureBindings() {
         swerve.setDefaultCommand(swerve.runDriveInputs(
-            driverController::getLeftX, // vx
-            driverController::getLeftY, // vy
-            driverController::getRightX, // omega
+            driverController::getLeftX,          // vx
+            driverController::getLeftY,          // vy
+            driverController::getRightX,         // omega
             driverController::getLeftTriggerAxis // raw slow input
         ));
-       driverController.leftBumper().onTrue(swerve.runToggleAimHub());
-       driverController.leftBumper().onFalse(swerve.runToggleAimHub());
+        driverController.leftBumper().onTrue(swerve.runToggleAimHub());
+        driverController.leftBumper().onFalse(swerve.runToggleAimHub());
         driverController.y().onTrue(swerve.runZeroGyro());
 //        driverController.x().onTrue(swerve.runToggleToXPosition());
 //        driverController.b().onTrue(swerve.runReconfigure());
@@ -183,21 +182,21 @@ public class RobotContainer {
         auxController.y().onTrue(shooter.toggleRunShooter());
         driverController.rightTrigger(.5).onTrue(shooter.toggleRunIndex());
         driverController.rightTrigger(.5).onFalse(shooter.toggleRunIndex());
-    //    auxController.x().onTrue(shooter.incrementShooterDistanceAdjust(true));
-    //    auxController.y().onTrue(shooter.incrementShooterDistanceAdjust(false));
+//      auxController.x().onTrue(shooter.incrementShooterDistanceAdjust(true));
+//      auxController.y().onTrue(shooter.incrementShooterDistanceAdjust(false));
 
         // intake.setDefaultCommand(intake.runStopRollers());
-//         auxController.rightBumper().toggleOnFalse(intake.runRollers());
-        //        auxController.leftTrigger().onTrue(intake.toggleWristPose());
-//        auxController.x().onTrue(intake.moveWristWithVoltage(-1));
-//        auxController.a().onTrue(intake.moveWristWithVoltage(1));
+//      auxController.rightBumper().toggleOnFalse(intake.runRollers());
+//      auxController.leftTrigger().onTrue(intake.toggleWristPose());
+//      auxController.x().onTrue(intake.moveWristWithVoltage(-1));
+//      auxController.a().onTrue(intake.moveWristWithVoltage(1));
         auxController.x().onTrue(intake.toggleWristPosFlag(true));
         auxController.x().onFalse(intake.toggleWristPosFlag(false));
 
         auxController.a().onTrue(intake.toggleWristNegFlag(true));
         auxController.a().onFalse(intake.toggleWristNegFlag(false));
-//        auxController.a().onTrue(intake.incrementWristSetpointAdjust(false));
-//        auxController.leftBumper().onTrue(intake.resetPosition());
+//      auxController.a().onTrue(intake.incrementWristSetpointAdjust(false));
+//      auxController.leftBumper().onTrue(intake.resetPosition());
         auxController.b().onTrue(intake.toggleRollerDirection());
         auxController.rightBumper().onTrue(intake.toggleRollerFlag());
     }

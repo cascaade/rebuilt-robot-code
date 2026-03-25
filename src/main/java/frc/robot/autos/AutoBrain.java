@@ -57,17 +57,24 @@ public class AutoBrain {
 
         AutoRoutine auto = autoFactory.newRoutine("auto");
 
-        if (pathName.isEmpty()) {
-            // CHANGE SHOOTER LOGIC
-            AutoTrajectory path = auto.trajectory(autoNum+"__1_Preload");
+        // FIX: Trigger preload branch if path is empty OR only one waypoint provided
+        if (pathName.isEmpty() || points.length < 2) {
+            if (!pathName.isEmpty() && points.length < 2) {
+                System.out.println("Not enough points");
+                return auto;
+            }
+
+            AutoTrajectory path = auto.trajectory(autoNum + "__1_Preload");
             auto.active().onTrue(Commands.sequence(
                 path.resetOdometry(),
+                shooterSubsystem.toggleRunShooter(),       // FIX: start shooter before path
                 path.cmd(),
+                swerveSubsystem.runStopDrive(),            // FIX: explicitly stop drive after trajectory
                 swerveSubsystem.setImmediateCrossbuckOverride(true),
                 swerveSubsystem.runToggleAimHub(),
-                new WaitCommand(1),
+                new WaitCommand(1),                        // aim settling time
                 shooterSubsystem.toggleRunIndex(),
-                new WaitCommand(2),
+                new WaitCommand(6),                        // FIX: 6 seconds per path spec
                 swerveSubsystem.setImmediateCrossbuckOverride(false),
                 shooterSubsystem.toggleRunIndex(),
                 shooterSubsystem.toggleRunShooter()
@@ -75,21 +82,16 @@ public class AutoBrain {
             return auto;
         }
 
-        if (points.length < 2) {
-            System.out.println("Not enough points");
-            return auto;
-        }
+        String[] pathNames = new String[points.length - 1];
+        AutoTrajectory[] paths = new AutoTrajectory[points.length - 1];
 
-        String[] pathNames = new String[points.length-1];
-        AutoTrajectory[] paths = new AutoTrajectory[points.length-1];
-
-        for (int i=0; i<points.length-1; i++) {
-            pathNames[i] = autoNum+"__"+points[i]+"_"+points[i+1];
+        for (int i = 0; i < points.length - 1; i++) {
+            pathNames[i] = autoNum + "__" + points[i] + "_" + points[i + 1];
             paths[i] = auto.trajectory(pathNames[i]);
         }
 
         // Debug only
-        for(String s : pathNames) {
+        for (String s : pathNames) {
             System.out.println(s);
         }
 
@@ -100,53 +102,57 @@ public class AutoBrain {
         ));
 
         for (int i = 0; i < paths.length - 1; i++) {
-            String EP = points[i+1];
+            String EP = points[i + 1];
             String pathN = pathNames[i];
             if (shouldShootAfter(EP)) {
                 paths[i].done().onTrue(Commands.sequence(
+                    swerveSubsystem.runStopDrive(),        // FIX: stop before aiming at each shoot point
                     swerveSubsystem.setImmediateCrossbuckOverride(true),
                     swerveSubsystem.runToggleAimHub(),
                     new WaitCommand(1),
                     shooterSubsystem.toggleRunIndex(),
-                    new WaitCommand(2),
+                    new WaitCommand(6),                    // FIX: 6 seconds per path spec
                     swerveSubsystem.setImmediateCrossbuckOverride(false),
                     shooterSubsystem.toggleRunIndex(),
                     shooterSubsystem.toggleRunShooter(),
-                    paths[i+1].cmd()
+                    paths[i + 1].cmd()
                 ));
-            }
-            else if (shouldIntakeDuring(pathN)) {
+            } else if (shouldIntakeDuring(pathN)) {
                 paths[i].active().onTrue(intakeSubsystem.toggleRollerFlag());
                 paths[i].done().onTrue(Commands.sequence(
                     intakeSubsystem.toggleRollerFlag(),
-                    paths[i+1].cmd()
+                    paths[i + 1].cmd()
                 ));
-            }
-            else {
-                paths[i].done().onTrue(paths[i+1].cmd());
+            } else {
+                paths[i].done().onTrue(paths[i + 1].cmd());
             }
         }
 
-        String lastEP = points[points.length-1];
-        AutoTrajectory lastPath = paths[paths.length-1];
-        String lastPathName = pathNames[pathNames.length-1];
+        String lastEP = points[points.length - 1];
+        AutoTrajectory lastPath = paths[paths.length - 1];
+        String lastPathName = pathNames[pathNames.length - 1];
 
         if (shouldShootAfter(lastEP)) {
-            // NEW SHOOTER LOGIC
             paths[paths.length - 1].done().onTrue(Commands.sequence(
+                swerveSubsystem.runStopDrive(),            // FIX: stop before final shot
                 swerveSubsystem.setImmediateCrossbuckOverride(true),
                 swerveSubsystem.runToggleAimHub(),
                 new WaitCommand(1),
                 shooterSubsystem.toggleRunIndex(),
-                new WaitCommand(2),
+                new WaitCommand(6),                        // FIX: 6 seconds per path spec
                 swerveSubsystem.setImmediateCrossbuckOverride(false),
                 shooterSubsystem.toggleRunIndex(),
                 shooterSubsystem.toggleRunShooter()
             ));
-        }
-        else if (shouldIntakeDuring(lastPathName)) {
+        } else if (shouldIntakeDuring(lastPathName)) {
             lastPath.active().onTrue(intakeSubsystem.toggleRollerFlag());
-            lastPath.done().onTrue(intakeSubsystem.toggleRollerFlag());
+            lastPath.done().onTrue(Commands.sequence(
+                intakeSubsystem.toggleRollerFlag(),
+                swerveSubsystem.runStopDrive()             // FIX: stop after final intake path
+            ));
+        } else {
+            // FIX: catch-all stop for any path that doesn't shoot or intake at the end
+            lastPath.done().onTrue(swerveSubsystem.runStopDrive());
         }
 
         return auto;
