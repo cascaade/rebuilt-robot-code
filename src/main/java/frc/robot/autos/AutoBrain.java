@@ -9,6 +9,7 @@ import edu.wpi.first.networktables.StringSubscriber;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
@@ -114,8 +115,7 @@ public class AutoBrain {
                     swerveSubsystem.runStopDrive(),
                     swerveSubsystem.setImmediateCrossbuckOverride(true),
                     swerveSubsystem.runToggleAimHub(),       // aim ON
-                    shooterSubsystem.toggleRunShooter(),
-                    new WaitCommand(5),
+                    new WaitCommand(1),
                     shooterSubsystem.toggleRunIndex(),
                     new WaitCommand(6),
                     shooterSubsystem.toggleRunIndex(),
@@ -148,8 +148,7 @@ public class AutoBrain {
                 swerveSubsystem.runStopDrive(),
                 swerveSubsystem.setImmediateCrossbuckOverride(true),
                 swerveSubsystem.runToggleAimHub(),       // aim ON
-                shooterSubsystem.toggleRunShooter(),
-                new WaitCommand(5),
+                new WaitCommand(1),
                 shooterSubsystem.toggleRunIndex(),
                 new WaitCommand(6),
                 shooterSubsystem.toggleRunIndex(),

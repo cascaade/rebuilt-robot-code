@@ -208,12 +208,13 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return Commands.sequence(
-            intake.toggleRollerFlag(),
-            intake.toggleWristPosFlag(true),
-            new WaitCommand(1),
-            intake.toggleWristPosFlag(false),
-            autoBrain.buildAuto().cmd()
-        );
+        // return Commands.sequence(
+        //     intake.toggleRollerFlag(),
+        //     intake.toggleWristPosFlag(true),
+        //     new WaitCommand(1),
+        //     intake.toggleWristPosFlag(false),
+        //     autoBrain.buildAuto().cmd()
+        // );
+        return autoBrain.buildAuto().cmd();
     }
 }
