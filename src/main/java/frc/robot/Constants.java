@@ -254,13 +254,13 @@ public class Constants {
                 "shooter_left",
                 new Transform3d(
                     new Translation3d(
-                        Units.inchesToMeters(-11.5),
+                        Units.inchesToMeters(-11.493),
                         Units.inchesToMeters(-7.75),
-                        Units.inchesToMeters(7.75)
+                        Units.inchesToMeters(7.92)
                     ),
                     new Rotation3d(
                         0,
-                        Units.degreesToRadians(-15),
+                        Units.degreesToRadians(-15 - 7.5),
                         Units.degreesToRadians(180)
                     )
                 ),

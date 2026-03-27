@@ -448,5 +448,9 @@ public class SwerveDrive extends SubsystemBase {
         poseEstimator.update(rawGyroRotation, updatedModulePositions);
 
         field.setRobotPose(getPose());
+
+        if (DriverStation.isDisabled()) {
+            aimHubFlag.set(false);
+        }
     }
 }

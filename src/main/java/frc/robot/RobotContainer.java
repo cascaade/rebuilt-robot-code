@@ -181,6 +181,7 @@ public class RobotContainer {
         auxController.povLeft().onTrue(swerve.runOmegaSetTime(0.05));
         auxController.povRight().onTrue(swerve.runOmegaSetTime(-0.05));
 
+        // shooter.setDefaultCommand(shooter.runShooter);
         auxController.y().onTrue(shooter.toggleRunShooter());
         driverController.rightTrigger(.5).onTrue(shooter.toggleRunIndex());
         driverController.rightTrigger(.5).onFalse(shooter.toggleRunIndex());
