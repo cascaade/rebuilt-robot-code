@@ -186,6 +186,9 @@ public class RobotContainer {
         auxController.b().onFalse(intake.toggleRollerDirection(false));
         auxController.rightBumper().onTrue(intake.toggleRollerFlag(true));
         auxController.rightBumper().onFalse(intake.toggleRollerFlag(false));
+
+        driverController.povDown().onTrue(shooter.runToggleReverseBelts(true));
+        driverController.povDown().onFalse(shooter.runToggleReverseBelts(false));
     }
 
     public void testPeriodic() {

@@ -128,9 +128,9 @@ public class Intake extends SubsystemBase {
         });
     }
 
-    public Command toggleRollerDirection(boolean ehehehehehehh) {
+    public Command toggleRollerDirection(boolean on) {
         return runOnce(() -> {
-            isDirectionReversed = ehehehehehehh;
+            isDirectionReversed = on;
         });
     }
 

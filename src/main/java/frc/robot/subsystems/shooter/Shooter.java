@@ -33,6 +33,7 @@ public class Shooter extends SubsystemBase {
 
     private double shooterDistanceAdjust = 0;
     private boolean runShooterFlag = false;
+    private boolean reverseBelts = false;
     private boolean runIndexFlag = false;
     private boolean isAutonomous = true;
 
@@ -204,6 +205,12 @@ public class Shooter extends SubsystemBase {
         });
     }
 
+    public Command runToggleReverseBelts(boolean on) {
+        return runOnce(() -> {
+            reverseBelts = on;
+        });
+    }
+
     public Command runShooterOff() {
         return runOnce(() -> {
             runShooterFlag = false;
@@ -251,32 +258,32 @@ public class Shooter extends SubsystemBase {
 
         // Logger.recordOutput("Shooter/OrchestraPlaying", orchestra.isPlaying());
         // Logger.recordOutput("Shooter/DisabledTimer", (int) disabledTimer.get());
-        if(!isAutonomous || !DriverStation.isAutonomous()){
-            isAutonomous = false;
-            if (runShooterFlag) {
-                // shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
-                // shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
-                // shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
 
-                Pose2d robotPose = robotPoseSupplier.get();
-                Pose2d hubPose = FieldConstants.getHubCenter();
-                
-                double hubDistance = robotPose.getTranslation().getDistance(hubPose.getTranslation());
+        if (runShooterFlag) {
+            // shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            // shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            // shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
 
-                shootWithDistance(hubDistance);
-            } else {
-                shooterIOL.stop();
-                shooterIOM.stop();
-                shooterIOR.stop();
-            }
-            if (runIndexFlag) {
-                double voltageMult = ((int) (8 * Timer.getFPGATimestamp())) % 8 == 0 ? -1 : 1;
-                feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
-                indexIO.setVelocityClosedLoop(voltageMult * loggedIndexRadPerSec.get());
-            } else {
-                feederIO.setOpenLoop(0);
-                indexIO.setOpenLoop(0);
-            }
+            Pose2d robotPose = robotPoseSupplier.get();
+            Pose2d hubPose = FieldConstants.getHubCenter();
+
+            double hubDistance = robotPose.getTranslation().getDistance(hubPose.getTranslation());
+
+            shootWithDistance(hubDistance);
+        } else {
+            shooterIOL.stop();
+            shooterIOM.stop();
+            shooterIOR.stop();
+        }
+        if (runIndexFlag) {
+            double voltageMult =
+                (((int) (8 * Timer.getFPGATimestamp())) % 8 == 0) || reverseBelts
+                ? -1 : 1;
+            feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
+            indexIO.setVelocityClosedLoop(voltageMult * loggedIndexRadPerSec.get());
+        } else {
+            feederIO.setOpenLoop(0);
+            indexIO.setOpenLoop(0);
         }
 
         Logger.recordOutput("Shooter/ShooterRunning", runShooterFlag);
