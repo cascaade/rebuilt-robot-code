@@ -5,7 +5,6 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
-import edu.wpi.first.hal.simulation.DriverStationDataJNI;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
@@ -33,7 +32,7 @@ public class Shooter extends SubsystemBase {
 
     private double shooterDistanceAdjust = 0;
     private boolean runShooterFlag = false;
-    private boolean reverseBelts = false;
+    private boolean reverseFeeder = false;
     private boolean runIndexFlag = false;
     private boolean isAutonomous = true;
 
@@ -205,9 +204,9 @@ public class Shooter extends SubsystemBase {
         });
     }
 
-    public Command runToggleReverseBelts(boolean on) {
+    public Command runToggleReverseFeeder(boolean on) {
         return runOnce(() -> {
-            reverseBelts = on;
+            reverseFeeder = on;
         });
     }
 
@@ -277,9 +276,9 @@ public class Shooter extends SubsystemBase {
         }
         if (runIndexFlag) {
             double voltageMult =
-                (((int) (8 * Timer.getFPGATimestamp())) % 8 == 0) || reverseBelts
+                (((int) (8 * Timer.getFPGATimestamp())) % 8 == 0)
                 ? -1 : 1;
-            feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
+            feederIO.setVelocityClosedLoop(reverseFeeder ? -loggedFeederRadPerSec.get() : loggedFeederRadPerSec.get());
             indexIO.setVelocityClosedLoop(voltageMult * loggedIndexRadPerSec.get());
         } else {
             feederIO.setOpenLoop(0);

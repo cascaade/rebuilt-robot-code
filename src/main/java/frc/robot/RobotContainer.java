@@ -4,15 +4,9 @@
 
 package frc.robot;
 
-import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
-
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ShooterConstants;
@@ -189,8 +183,8 @@ public class RobotContainer {
         auxController.rightBumper().onTrue(intake.toggleRollerFlag(true));
         auxController.rightBumper().onFalse(intake.toggleRollerFlag(false));
 
-        driverController.povDown().onTrue(shooter.runToggleReverseBelts(true));
-        driverController.povDown().onFalse(shooter.runToggleReverseBelts(false));
+        driverController.povDown().onTrue(shooter.runToggleReverseFeeder(true));
+        driverController.povDown().onFalse(shooter.runToggleReverseFeeder(false));
     }
 
     public void testPeriodic() {
