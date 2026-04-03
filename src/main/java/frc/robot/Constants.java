@@ -97,7 +97,7 @@ public class Constants {
         public static final double kMagVelLimit = 4.5; // m/s
         public static final double kRotVelLimit = 2 * (2 * Math.PI); // rad/s
 
-        public static final double crossbuckDelaySeconds = 1;
+        public static final double crossbuckDelaySeconds = .3;
 
         // https://firstfrc.blob.core.windows.net/frc2026/FieldAssets/2026-field-dimension-dwgs.pdf
         /**
