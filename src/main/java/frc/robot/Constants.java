@@ -15,11 +15,14 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.util.LoggedTunableControlConstants;
+
+import static edu.wpi.first.units.Units.Radians;
 
 public class Constants {
     public static enum RobotMode {
@@ -334,18 +337,18 @@ public class Constants {
 
     public static class ClimbConstants {
         public static enum ClimbPose {
-            RETRACTED(2 * Math.PI),
-            EXTENDED(0);
+            RETRACTED(Radians.of(2 * Math.PI)),
+            EXTENDED(Radians.of(0));
 
             // radians
-            private final double setpoint;
+            private final Angle setpointAngle;
 
-            ClimbPose(double setpoint) {
-                this.setpoint = setpoint;
+            ClimbPose(Angle setpointAngle) {
+                this.setpointAngle = setpointAngle;
             }
 
-            public double getSetpoint() {
-                return setpoint;
+            public Angle getSetpoint() {
+                return setpointAngle;
             }
         }
 

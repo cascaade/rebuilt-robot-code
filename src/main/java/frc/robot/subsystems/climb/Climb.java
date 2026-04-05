@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimbConstants.ClimbPose;
 
+import static edu.wpi.first.units.Units.Volts;
+
 public class Climb extends SubsystemBase {
     public final ClimbIO climbIO;
     public final ClimbIOInputsAutoLogged inputs = new ClimbIOInputsAutoLogged();
@@ -37,16 +39,16 @@ public class Climb extends SubsystemBase {
     ) {
         return run(() -> {
              if (posSupplier.getAsBoolean() && negSupplier.getAsBoolean()) {
-                 climbIO.setOpenLoop(0);
+                 climbIO.setOpenLoop(Volts.of(0));
                  Logger.recordOutput("Climber/SetpointVolts", 0);
              } else if (posSupplier.getAsBoolean()) {
-                 climbIO.setOpenLoop(volts.get());
+                 climbIO.setOpenLoop(Volts.of(volts.get()));
                  Logger.recordOutput("Climber/SetpointVolts", volts.get());
              } else if (negSupplier.getAsBoolean()) {
-                 climbIO.setOpenLoop(-volts.get());
+                 climbIO.setOpenLoop(Volts.of(-volts.get()));
                  Logger.recordOutput("Climber/SetpointVolts", -volts.get());
              } else {
-                 climbIO.setOpenLoop(0);
+                 climbIO.setOpenLoop(Volts.of(0));
                  Logger.recordOutput("Climber/SetpointVolts", 0);
              }
         });

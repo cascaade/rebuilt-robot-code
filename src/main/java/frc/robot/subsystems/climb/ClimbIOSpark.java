@@ -8,7 +8,11 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.ClimbConstants;
+
+import static edu.wpi.first.units.Units.*;
 
 public class ClimbIOSpark implements ClimbIO {
     private final SparkMax climbMotor;
@@ -36,12 +40,12 @@ public class ClimbIOSpark implements ClimbIO {
     }
 
     @Override
-    public void setClosedLoop(double radians) {
-        climbController.setSetpoint(radians, ControlType.kPosition);
+    public void setClosedLoop(Angle targetAngle) {
+        climbController.setSetpoint(targetAngle.in(Radians), ControlType.kPosition);
     }
 
     @Override
-    public void setOpenLoop(double voltage) {
+    public void setOpenLoop(Voltage voltage) {
         climbMotor.setVoltage(voltage);
     }
 }

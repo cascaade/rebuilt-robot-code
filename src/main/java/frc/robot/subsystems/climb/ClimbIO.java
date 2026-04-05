@@ -1,5 +1,8 @@
 package frc.robot.subsystems.climb;
 
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
+
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ClimbIO {
@@ -14,7 +17,7 @@ public interface ClimbIO {
 
     public default void updateInputs(ClimbIOInputs inputs) {}
 
-    public default void setClosedLoop(double radians) {}
+    public default void setClosedLoop(Angle targetAngle) {}
 
-    public default void setOpenLoop(double voltage) {}
+    public default void setOpenLoop(Voltage voltage) {}
 }
