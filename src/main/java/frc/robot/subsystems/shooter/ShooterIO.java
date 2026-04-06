@@ -1,27 +1,31 @@
 package frc.robot.subsystems.shooter;
 
+import edu.wpi.first.units.measure.*;
+
 import org.littletonrobotics.junction.AutoLog;
+
+import static edu.wpi.first.units.Units.*;
 
 public interface ShooterIO {
 
     @AutoLog
     public static class ShooterIOInputs {
         // Currents shooter speed in radians/sec
-        public double velocityRadPerSec = 0;
+        public MutAngularVelocity velocity = RadiansPerSecond.mutable(0);
 
         // Motor applied voltage and current
-        public double appliedVolts = 0;
-        public double supplyCurrentAmps = 0;
+        public MutVoltage appliedVolts = Volts.mutable(0);
+        public MutCurrent supplyCurrentAmps = Amps.mutable(0);
     }
 
     public default void periodic() {}
 
     // public default void addToOrchestra(Orchestra orchestra, int track) {}
 
-    public default void setVelocityClosedLoop(double velocityRadPerSec) {}
+    public default void setVelocityClosedLoop(AngularVelocity velocity) {}
 
     //Set the shooter motor voltage input 
-    public default void setOpenLoop(double voltage) {} 
+    public default void setOpenLoop(Voltage voltage) {}
 
     //Stops the shooter from moving
     public default void stop() {}; 

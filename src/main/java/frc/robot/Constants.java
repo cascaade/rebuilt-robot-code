@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Preferences;
@@ -23,6 +24,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.util.LoggedTunableControlConstants;
 
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 public class Constants {
     public static enum RobotMode {
@@ -406,15 +408,15 @@ public class Constants {
         public static final int indexMotorCANID = 24;
 
         // TODO test check theoretical limits
-        public static final double shooterMaxSpeed = 340; // rad/sec
-        public static final double feederMaxSpeed = 5000; // rad/sec
-        public static final double indexMaxSpeed = 600; // rad/sec
+        public static final AngularVelocity shooterMaxSpeed = RadiansPerSecond.of(340);
+        public static final AngularVelocity feederMaxSpeed = RadiansPerSecond.of(5000);
+        public static final AngularVelocity indexMaxSpeed = RadiansPerSecond.of(600);
         public static final double idleMult = 0.8;
         public static final double feederMotorMult = 1;
         
-        public static final double shooterRunSpeed = 340; // rad/sec
-        public static final double feederRunSpeed = 5000; // rad/sec
-        public static final double indexRunSpeed = 5000; // rad/sec
+        public static final AngularVelocity shooterRunSpeed = RadiansPerSecond.of(340);
+        public static final AngularVelocity feederRunSpeed = RadiansPerSecond.of(5000);
+        public static final AngularVelocity indexRunSpeed = RadiansPerSecond.of(5000);
 
         public static final LoggedTunableControlConstants flywheelConstants =
             new LoggedTunableControlConstants("Shooter/Flywheel")

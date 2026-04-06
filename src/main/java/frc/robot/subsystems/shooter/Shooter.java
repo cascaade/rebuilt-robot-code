@@ -6,6 +6,10 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.MutDistance;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -14,6 +18,8 @@ import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.util.ShooterLUT;
 
+import static edu.wpi.first.units.Units.*;
+
 public class Shooter extends SubsystemBase {
     private final ShooterIO shooterIOL;
     private final ShooterIO shooterIOM;
@@ -21,16 +27,16 @@ public class Shooter extends SubsystemBase {
     private final ShooterIO feederIO;
     private final ShooterIO indexIO;
 
-    private final LoggedNetworkNumber loggedFlywheelRadPerSec = new LoggedNetworkNumber("Shooter/Flywheel/Tuning/Setpoint", ShooterConstants.shooterRunSpeed);
-    private final LoggedNetworkNumber loggedFeederRadPerSec = new LoggedNetworkNumber("Shooter/Feeder/Tuning/Setpoint", ShooterConstants.feederRunSpeed);
-    private final LoggedNetworkNumber loggedIndexRadPerSec = new LoggedNetworkNumber("Shooter/Index/Tuning/Setpoint", ShooterConstants.indexRunSpeed);
+    private final LoggedNetworkNumber loggedFlywheelRadPerSec = new LoggedNetworkNumber("Shooter/Flywheel/Tuning/Setpoint", ShooterConstants.shooterRunSpeed.in(RadiansPerSecond));
+    private final LoggedNetworkNumber loggedFeederRadPerSec = new LoggedNetworkNumber("Shooter/Feeder/Tuning/Setpoint", ShooterConstants.feederRunSpeed.in(RadiansPerSecond));
+    private final LoggedNetworkNumber loggedIndexRadPerSec = new LoggedNetworkNumber("Shooter/Index/Tuning/Setpoint", ShooterConstants.indexRunSpeed.in(RadiansPerSecond));
 
     private final ShooterIOInputsAutoLogged[] shooterInputs = new ShooterIOInputsAutoLogged[5];
 
     // private final Orchestra orchestra;
     // private final Timer disabledTimer = new Timer();
 
-    private double shooterDistanceAdjust = 0;
+    private final MutDistance shooterDistanceAdjust = Meters.mutable(0);
     private boolean runShooterFlag = false;
     private boolean reverseFeeder = false;
     public boolean runIndexFlag = false;
@@ -60,13 +66,13 @@ public class Shooter extends SubsystemBase {
         // orchestra.loadMusic("fugue.chrp");
     }
 
-    private void shootWithDistance(double distanceMeters) {
-        double shooterVelocityRadPerSec = ShooterLUT.getFlywheelSpeedAtDistance(distanceMeters + shooterDistanceAdjust);
+    private void shootWithDistance(Distance distance) {
+        AngularVelocity shooterVelocity = ShooterLUT.getFlywheelSpeedAtDistance(distance.plus(shooterDistanceAdjust));
 //        double feederVelocityRadPerSec = shooterVelocityRadPerSec * ShooterConstants.feederMotorMult;
 
-        shooterIOL.setVelocityClosedLoop(shooterVelocityRadPerSec);
-        shooterIOM.setVelocityClosedLoop(shooterVelocityRadPerSec);
-        shooterIOR.setVelocityClosedLoop(shooterVelocityRadPerSec);
+        shooterIOL.setVelocityClosedLoop(shooterVelocity);
+        shooterIOM.setVelocityClosedLoop(shooterVelocity);
+        shooterIOR.setVelocityClosedLoop(shooterVelocity);
 
 //        if (
 //            shooterInputs[0].velocityRadPerSec > shooterVelocityRadPerSec * 0.95 &&
@@ -81,9 +87,9 @@ public class Shooter extends SubsystemBase {
     public Command incrementShooterDistanceAdjust(boolean positive) {
         return runOnce(() -> {
             if (positive) {
-                shooterDistanceAdjust += 0.2;
+                shooterDistanceAdjust.mut_plus(0.2, Meters);
             } else {
-                shooterDistanceAdjust -= 0.2;
+                shooterDistanceAdjust.mut_minus(0.2, Meters);
             }
         });
     }
@@ -110,19 +116,19 @@ public class Shooter extends SubsystemBase {
 
     public Command runAllNominalSpeed() {
         return run(() -> {
-            shooterIOL.setOpenLoop(24);
+            shooterIOL.setOpenLoop(Volts.of(24));
 //            shooterIOM.setOpenLoop(12);
 //            shooterIOR.setOpenLoop(12);
-            feederIO.setOpenLoop(12);
-            indexIO.setOpenLoop(12);
+            feederIO.setOpenLoop(Volts.of(12));
+            indexIO.setOpenLoop(Volts.of(12));
         });
     }
 
     public Command runShooterIdle() {
         return run(() -> {
-            shooterIOL.setVelocityClosedLoop(ShooterConstants.shooterRunSpeed * ShooterConstants.idleMult);
-            shooterIOM.setVelocityClosedLoop(ShooterConstants.shooterRunSpeed * ShooterConstants.idleMult);
-            shooterIOR.setVelocityClosedLoop(ShooterConstants.shooterRunSpeed * ShooterConstants.idleMult);
+            shooterIOL.setVelocityClosedLoop(ShooterConstants.shooterRunSpeed.times(ShooterConstants.idleMult));
+            shooterIOM.setVelocityClosedLoop(ShooterConstants.shooterRunSpeed.times(ShooterConstants.idleMult));
+            shooterIOR.setVelocityClosedLoop(ShooterConstants.shooterRunSpeed.times(ShooterConstants.idleMult));
             // shooterIOL.setVelocityClosedLoop(200);
             // shooterIOM.setVelocityClosedLoop(200);
             // shooterIOR.setVelocityClosedLoop(200);
@@ -136,7 +142,7 @@ public class Shooter extends SubsystemBase {
             Pose2d robotPose = poseSupplier.get();
             Pose2d hubPose = FieldConstants.getHubCenter();
 
-            double hubDistance = robotPose.getTranslation().getDistance(hubPose.getTranslation());
+            Distance hubDistance = Meters.of(robotPose.getTranslation().getDistance(hubPose.getTranslation()));
 
             shootWithDistance(hubDistance);
         });
@@ -144,19 +150,19 @@ public class Shooter extends SubsystemBase {
 
     public Command runAllFromNetworkSpeed() {
         return run(() -> {
-            shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
-            shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
-            shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
-            feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
-            indexIO.setVelocityClosedLoop(loggedIndexRadPerSec.get());
+            shooterIOL.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFlywheelRadPerSec.get()));
+            shooterIOM.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFlywheelRadPerSec.get()));
+            shooterIOR.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFlywheelRadPerSec.get()));
+            feederIO.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFeederRadPerSec.get()));
+            indexIO.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedIndexRadPerSec.get()));
         });
     }
 
     public Command runShooterFromNetworkSpeed() {
         return run(() -> {
-            shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
-            shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
-            shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
+            shooterIOL.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFlywheelRadPerSec.get()));
+            shooterIOM.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFlywheelRadPerSec.get()));
+            shooterIOR.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFlywheelRadPerSec.get()));
             // feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
             // indexIO.setVelocityClosedLoop(loggedIndexRadPerSec.get());
         });
@@ -167,16 +173,16 @@ public class Shooter extends SubsystemBase {
             // shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
             // shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
             // shooterIOR.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
-            feederIO.setVelocityClosedLoop(loggedFeederRadPerSec.get());
-            indexIO.setVelocityClosedLoop(loggedIndexRadPerSec.get());
+            feederIO.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFeederRadPerSec.get()));
+            indexIO.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedIndexRadPerSec.get()));
         });
     }
 
     public Command runShootOneShooter() {
         return run(() -> {
-            shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
-            feederIO.setVelocityClosedLoop(loggedFlywheelRadPerSec.get() * ShooterConstants.feederMotorMult);
-            indexIO.setVelocityClosedLoop(loggedFlywheelRadPerSec.get() * ShooterConstants.feederMotorMult);
+            shooterIOL.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFlywheelRadPerSec.get()));
+            feederIO.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFlywheelRadPerSec.get()).mut_times(ShooterConstants.feederMotorMult));
+            indexIO.setVelocityClosedLoop(RadiansPerSecond.mutable(loggedFlywheelRadPerSec.get()).mut_times(ShooterConstants.feederMotorMult));
         });
     }
 
@@ -222,7 +228,7 @@ public class Shooter extends SubsystemBase {
         });
     }
 
-    public Command runShooterAutonomous(double velocity) {
+    public Command runShooterAutonomous(AngularVelocity velocity) {
         return runOnce(() -> {
             shooterIOL.setVelocityClosedLoop(velocity);
             shooterIOM.setVelocityClosedLoop(velocity);
@@ -230,7 +236,7 @@ public class Shooter extends SubsystemBase {
         });
     }
 
-    public Command runOtherAutonomous(double feederVel, double indexVel) {
+    public Command runOtherAutonomous(AngularVelocity feederVel, AngularVelocity indexVel) {
         return runOnce(() -> {
             feederIO.setVelocityClosedLoop(feederVel);
             indexIO.setVelocityClosedLoop(indexVel);
@@ -266,7 +272,7 @@ public class Shooter extends SubsystemBase {
             Pose2d robotPose = robotPoseSupplier.get();
             Pose2d hubPose = FieldConstants.getHubCenter();
 
-            double hubDistance = robotPose.getTranslation().getDistance(hubPose.getTranslation());
+            Distance hubDistance = Meters.of(robotPose.getTranslation().getDistance(hubPose.getTranslation()));
 
             shootWithDistance(hubDistance);
         } else {
@@ -278,11 +284,11 @@ public class Shooter extends SubsystemBase {
             double voltageMult =
                 (((int) (8 * Timer.getFPGATimestamp())) % 8 == 0)
                 ? -1 : 1;
-            feederIO.setVelocityClosedLoop(reverseFeeder ? -loggedFeederRadPerSec.get() : loggedFeederRadPerSec.get());
-            indexIO.setVelocityClosedLoop(reverseFeeder ? 0 : voltageMult * loggedIndexRadPerSec.get());
+            feederIO.setVelocityClosedLoop(RadiansPerSecond.of(reverseFeeder ? -loggedFeederRadPerSec.get() : loggedFeederRadPerSec.get()));
+            indexIO.setVelocityClosedLoop(RadiansPerSecond.of(reverseFeeder ? 0 : voltageMult * loggedIndexRadPerSec.get()));
         } else {
-            feederIO.setOpenLoop(0);
-            indexIO.setOpenLoop(0);
+            feederIO.setOpenLoop(Volts.zero());
+            indexIO.setOpenLoop(Volts.zero());
         }
 
         Logger.recordOutput("Shooter/ShooterRunning", runShooterFlag);

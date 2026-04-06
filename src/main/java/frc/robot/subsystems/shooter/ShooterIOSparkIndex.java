@@ -11,8 +11,12 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.util.LoggedTunableControlConstants;
+
+import static edu.wpi.first.units.Units.*;
 
 public class ShooterIOSparkIndex implements ShooterIO {
 
@@ -48,18 +52,18 @@ public class ShooterIOSparkIndex implements ShooterIO {
     }
 
     @Override 
-    public void setVelocityClosedLoop(double velocityRadPerSec) {
-        Logger.recordOutput("Shooter/Index/Setpoint", velocityRadPerSec);
+    public void setVelocityClosedLoop(AngularVelocity velocity) {
+        Logger.recordOutput("Shooter/Index/Setpoint", velocity);
 
         // feedforward should already be accounted for
         indexController.setSetpoint(
-            velocityRadPerSec,
+            velocity.in(RadiansPerSecond),
             ControlType.kVelocity
         );
     }
 
     @Override 
-    public void setOpenLoop(double voltage) {
+    public void setOpenLoop(Voltage voltage) {
         indexMotor.setVoltage(voltage);
     }
 
@@ -69,9 +73,9 @@ public class ShooterIOSparkIndex implements ShooterIO {
     }
     
     public void updateInputs(ShooterIOInputs inputs){
-        inputs.velocityRadPerSec = indexEncoder.getVelocity();
+        inputs.velocity.mut_replace(indexEncoder.getVelocity(), RadiansPerSecond);
 
-        inputs.appliedVolts = indexMotor.getBusVoltage() * indexMotor.getAppliedOutput();
-        inputs.supplyCurrentAmps = indexMotor.getOutputCurrent();
+        inputs.appliedVolts.mut_replace(indexMotor.getBusVoltage() * indexMotor.getAppliedOutput(), Volts);
+        inputs.supplyCurrentAmps.mut_replace(indexMotor.getOutputCurrent(), Amps);
     }
 }

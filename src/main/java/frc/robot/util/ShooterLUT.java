@@ -1,9 +1,14 @@
 package frc.robot.util;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 
 import java.util.Map;
 import java.util.TreeMap;
+
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 public class ShooterLUT {
     private static final TreeMap<Double, Double> flywheelSpeedTable = new TreeMap<>();
@@ -22,20 +27,20 @@ public class ShooterLUT {
         flywheelSpeedTable.put(Units.inchesToMeters(20) + robotOffsetDistance + hubOffsetDistance, 275.0 - 10.0);
     }
 
-    public static double getFlywheelSpeedAtDistance(double targetDistance) {
+    public static AngularVelocity getFlywheelSpeedAtDistance(Distance targetDistance) {
         if (flywheelSpeedTable.isEmpty()) {
-            return 0.0;
+            return RadiansPerSecond.of(0.0);
         }
 
-        Map.Entry<Double, Double> lowerPoint = flywheelSpeedTable.floorEntry(targetDistance);
-        Map.Entry<Double, Double> upperPoint = flywheelSpeedTable.ceilingEntry(targetDistance);
+        Map.Entry<Double, Double> lowerPoint = flywheelSpeedTable.floorEntry(targetDistance.in(Meters));
+        Map.Entry<Double, Double> upperPoint = flywheelSpeedTable.ceilingEntry(targetDistance.in(Meters));
 
         // if the point is out of bounds, return nearest point
-        if (lowerPoint == null) return upperPoint.getValue();
-        if (upperPoint == null) return lowerPoint.getValue();
+        if (lowerPoint == null) return RadiansPerSecond.of(upperPoint.getValue());
+        if (upperPoint == null) return RadiansPerSecond.of(lowerPoint.getValue());
 
         // if the target distance was directly in the data, and hence the two nearest points are the same, return one of the two
-        if (lowerPoint.getKey().equals(upperPoint.getKey())) return lowerPoint.getValue();
+        if (lowerPoint.getKey().equals(upperPoint.getKey())) return RadiansPerSecond.of(lowerPoint.getValue());
 
         // standard interpolation
         double x1 = lowerPoint.getKey();
@@ -43,6 +48,6 @@ public class ShooterLUT {
         double x2 = upperPoint.getKey();
         double y2 = upperPoint.getValue();
 
-        return y1 + (targetDistance - x1) * ((y2 - y1) / (x2 - x1));
+        return RadiansPerSecond.of(y1 + (targetDistance.in(Meters) - x1) * ((y2 - y1) / (x2 - x1)));
     }
 }
