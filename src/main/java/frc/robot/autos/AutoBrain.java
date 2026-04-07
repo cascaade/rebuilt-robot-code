@@ -71,7 +71,7 @@ public class AutoBrain {
                 path.cmd().withName("preloadPathSequence"),
                 swerveSubsystem.runStopDrive(),
                 swerveSubsystem.runToggleAimHub(true),
-                new WaitCommand(1),                        // aim settling time
+                new WaitCommand(0.5),                        // aim settling time
                 shooterSubsystem.toggleRunIndex(true)
             ));
             return auto;
