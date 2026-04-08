@@ -1,13 +1,16 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Volts;
+
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
-import frc.robot.Constants.IntakeConstants.IntakeWristPose;
 
 public class Intake extends SubsystemBase {
     private final RollerIO rollerIO;
@@ -21,7 +24,7 @@ public class Intake extends SubsystemBase {
     private boolean isWristMovingUp = false;
     private boolean isWristMovingDown = false;
 
-    private double wristSetpointAdjust = 0.0;
+    private Angle pivotSetpointAdjust = Radians.mutable(0.0);
 
     private final RollerIOInputsAutoLogged rollerInputs = new RollerIOInputsAutoLogged();
     private final WristIOInputsAutoLogged wristInputs = new WristIOInputsAutoLogged();
@@ -79,17 +82,17 @@ public class Intake extends SubsystemBase {
 //        return run(() -> wristIO.setOpenLoop(voltage));
 //    }
 
-    public Command runStopWrist() {
-        return run(() -> {
-            wristIO.setOpenLoop(0);
-        });
-    }
-
-    public Command runStopRollers() {
-        return run(() -> {
-            rollerIO.setOpenLoop(0);
-        });
-    }
+//    public Command runStopWrist() {
+//        return run(() -> {
+//            wristIO.setOpenLoop(0);
+//        });
+//    }
+//
+//    public Command runStopRollers() {
+//        return run(() -> {
+//            rollerIO.setOpenLoop(0);
+//        });
+//    }
 
 //    public Command runHomingRoutine() {
 //        return run(() -> {
@@ -144,22 +147,22 @@ public class Intake extends SubsystemBase {
 //            }
 //        }
         if (isWristMovingDown && isWristMovingUp) {
-            wristIO.setOpenLoop(0);
+            wristIO.setOpenLoop(Volts.zero());
         } else if (isWristMovingDown) {
-            wristIO.setOpenLoop(5);
+            wristIO.setOpenLoop(Volts.of(5));
         } else if (isWristMovingUp) {
-            wristIO.setOpenLoop(-5);
+            wristIO.setOpenLoop(Volts.of(-5));
         } else if(DriverStation.isAutonomous()){
-            wristIO.setOpenLoop(0.5);
+            wristIO.setOpenLoop(Volts.of(0.5));
         } else {
-            wristIO.setOpenLoop(0);
+            wristIO.setOpenLoop(Volts.zero());
         }
 
         if (isRollingFlag && !isWristMovingDown) {
             // rollerIO.setClosedLoop(isDirectionReversed ? -speed.get() : speed.get());
-            rollerIO.setOpenLoop(isDirectionReversed ? -voltage.get() : voltage.get());
+            rollerIO.setOpenLoop(Volts.of(isDirectionReversed ? -voltage.get() : voltage.get()));
         } else {
-            rollerIO.setOpenLoop(0);
+            rollerIO.setOpenLoop(Volts.zero());
         }
 
         Logger.recordOutput("Intake/Wrist/Deployed", isDeployedFlag);
@@ -170,7 +173,7 @@ public class Intake extends SubsystemBase {
         Logger.recordOutput("Intake/Rollers/IsMovingPos", isWristMovingDown);
         Logger.recordOutput("Intake/Rollers/IsMovingNeg", isWristMovingUp);
 
-        Logger.recordOutput("Intake/Wrist/SetpointAdjust", wristSetpointAdjust);
+        Logger.recordOutput("Intake/Wrist/SetpointAdjust", pivotSetpointAdjust);
 
         rollerIO.periodic();
         wristIO.periodic();

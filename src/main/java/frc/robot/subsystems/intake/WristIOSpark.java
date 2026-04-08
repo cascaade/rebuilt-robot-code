@@ -1,5 +1,9 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -13,6 +17,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.IntakeConstants;
 
 public class WristIOSpark implements WristIO {
@@ -79,20 +84,20 @@ public class WristIOSpark implements WristIO {
     @Override
     public void updateInputs(WristIOInputs inputs) {
         inputs.position = new Rotation2d(wristEncoder.getPosition());
-        inputs.velocityRadPerSec = wristEncoder.getVelocity();
+        inputs.velocity.mut_replace(wristEncoder.getVelocity(), RadiansPerSecond);
 
-        inputs.appliedVolts = wristMotor.getBusVoltage() * wristMotor.getAppliedOutput();
-        inputs.currentAmps = wristMotor.getOutputCurrent();
+        inputs.appliedVolts.mut_replace(wristMotor.getBusVoltage() * wristMotor.getAppliedOutput(), Volts);
+        inputs.currentAmps.mut_replace(wristMotor.getOutputCurrent(), Amps);
     }
 
     @Override
-    public void setSetpoint(double angle) {
+    public void setSetpoint(Rotation2d angle) {
 //        wristController.setSetpoint(angle, ControlType.kPosition);
         Logger.recordOutput("Intake/Wrist/HardwareSetpointAngle", angle);
     }
 
     @Override
-    public void setOpenLoop(double voltage) {
+    public void setOpenLoop(Voltage voltage) {
         wristMotor.setVoltage(voltage);
     }
 }

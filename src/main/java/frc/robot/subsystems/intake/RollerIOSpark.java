@@ -1,5 +1,10 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -13,6 +18,8 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants.IntakeConstants;
 
@@ -74,23 +81,23 @@ public class RollerIOSpark implements RollerIO {
 
     @Override
     public void updateInputs(RollerIOInputs inputs) {
-        inputs.positionRad = intakeEncoder.getPosition();
-        inputs.velocityRadPerSec = intakeEncoder.getVelocity();
+        inputs.position.mut_replace(intakeEncoder.getPosition(), Radians);
+        inputs.velocity.mut_replace(intakeEncoder.getVelocity(), RadiansPerSecond);
 
-        inputs.appliedVolts = intakeMotor.getBusVoltage() * intakeMotor.getAppliedOutput();
-        inputs.currentAmps = intakeMotor.getOutputCurrent();
+        inputs.appliedVolts.mut_replace(intakeMotor.getBusVoltage() * intakeMotor.getAppliedOutput(), Volts);
+        inputs.currentAmps.mut_replace(intakeMotor.getOutputCurrent(), Amps);
     }
 
     @Override
-    public void setClosedLoop(double velocityRadPerSec) {
-        intakeController.setSetpoint(velocityRadPerSec, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+    public void setClosedLoop(AngularVelocity velocity) {
+        intakeController.setSetpoint(velocity.in(RadiansPerSecond), ControlType.kVelocity, ClosedLoopSlot.kSlot0);
 
-        Logger.recordOutput("Intake/Roller/Setpoint", velocityRadPerSec);
+        Logger.recordOutput("Intake/Roller/Setpoint", velocity);
         Logger.recordOutput("Intake/Roller/SetpointUpdate", Timer.getFPGATimestamp());
     }
 
     @Override
-    public void setOpenLoop(double voltage) {
+    public void setOpenLoop(Voltage voltage) {
         intakeMotor.setVoltage(voltage);
         Logger.recordOutput("Intake/Roller/Voltage", voltage);
         Logger.recordOutput("Intake/Roller/VoltageUpdate", Timer.getFPGATimestamp());
