@@ -89,8 +89,6 @@ public class AutoBrain {
             return auto;
         }
 
-        System.out.println(1);
-
         String[] pathNames = new String[points.length - 1];
         AutoTrajectory[] paths = new AutoTrajectory[points.length - 1];
 
@@ -99,15 +97,10 @@ public class AutoBrain {
             paths[i] = auto.trajectory(pathNames[i]);
         }
 
-        System.out.println(2);
-
         // Debug only
         for (String s : pathNames) {
             System.out.println(s);
         }
-
-
-        System.out.println(3);
 
         auto.active().onTrue(Commands.sequence(
             paths[0].resetOdometry(),
@@ -122,8 +115,6 @@ public class AutoBrain {
                 paths[0].cmd()
             )
         ));
-
-        System.out.println(4);
 
         for (int i = 0; i < paths.length - 1; i++) {
             String EP = points[i + 1];
@@ -161,8 +152,6 @@ public class AutoBrain {
             }
         }
 
-        System.out.println(5);
-
         String lastEP = points[points.length - 1];
         AutoTrajectory lastPath = paths[paths.length - 1];
         String lastPathName = pathNames[pathNames.length - 1];
@@ -178,8 +167,6 @@ public class AutoBrain {
         else {
             lastPath.done().onTrue(swerveSubsystem.runStopDrive());
         }
-
-        System.out.println(6);
 
         return auto;
     }
