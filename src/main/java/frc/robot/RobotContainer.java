@@ -195,6 +195,6 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return autoBrain.buildAuto().cmd();
+        return autoBrain.fetchAuto().cmd();
     }
 }

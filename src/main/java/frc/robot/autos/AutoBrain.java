@@ -6,9 +6,11 @@ import choreo.auto.AutoTrajectory;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StringSubscriber;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.intake.Intake;
@@ -25,6 +27,8 @@ public class AutoBrain {
     private final Shooter shooterSubsystem;
     private final Intake intakeSubsystem;
 
+    private AutoRoutine cachedAuto;
+
     public AutoBrain(SwerveDrive swerveSubsystem, Shooter shooterSubsystem, Intake intakeSubsystem) {
         this.swerveSubsystem = swerveSubsystem;
         this.shooterSubsystem = shooterSubsystem;
@@ -40,6 +44,11 @@ public class AutoBrain {
         autoPathPublisher = topic.publish();
         autoPathPublisher.set("1,2,9,4"); // default shown in textbox
         autoPathSubscriber = topic.subscribe("1,2,9,4");
+
+        SmartDashboard.putData("Rebuild Auto", new InstantCommand(() -> {
+            this.cachedAuto = buildAuto();
+            System.out.println("Successfully built auto.");
+        }).ignoringDisable(true));
 
         autoFactory = new AutoFactory(
             swerveSubsystem::getPose,
@@ -157,6 +166,13 @@ public class AutoBrain {
         }
 
         return auto;
+    }
+
+    public AutoRoutine fetchAuto() {
+        if (cachedAuto == null) {
+            cachedAuto = buildAuto();
+        }
+        return cachedAuto;
     }
 
     /**
