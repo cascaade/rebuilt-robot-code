@@ -46,9 +46,15 @@ public class AutoBrain {
         autoPathSubscriber = topic.subscribe("1,2,9,4");
 
         SmartDashboard.putData("Rebuild Auto", new InstantCommand(() -> {
-            this.cachedAuto = buildAuto();
-            System.out.println("Tried to build auto!");
-            updateBuiltBoolean();
+            /* note from testing:
+             * this thing will not work without creating a new thread or scheduling
+             * a command because of ConcurrentModificationExceptions
+             */
+            new Thread(() -> {
+                this.cachedAuto = buildAuto();
+                System.out.println("Tried to build auto!");
+                updateBuiltBoolean();
+            }).start();
         }).ignoringDisable(true));
 
         updateBuiltBoolean();
