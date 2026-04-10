@@ -8,6 +8,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.IntakeConstants;
@@ -163,6 +164,19 @@ public class Intake extends SubsystemBase {
             rollerIO.setOpenLoop(Volts.of(isDirectionReversed ? -voltage.get() : voltage.get()));
         } else {
             rollerIO.setOpenLoop(Volts.zero());
+        }
+
+        if(DriverStation.isAutonomous()) {
+            double time = Timer.getFPGATimestamp();
+            double timeUp = 0.5;
+            double timeDown = 0.5;
+            time /= (timeUp + timeDown);
+            if(time - Math.floor(time) > 0.5) {
+                wristIO.setOpenLoop(Volts.of(5));
+            }
+            else {
+                wristIO.setOpenLoop(Volts.of(-5));
+            }
         }
 
         Logger.recordOutput("Intake/Wrist/Deployed", isDeployedFlag);
