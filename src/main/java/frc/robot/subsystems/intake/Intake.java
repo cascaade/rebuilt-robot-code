@@ -24,6 +24,7 @@ public class Intake extends SubsystemBase {
 
     private boolean isWristMovingUp = false;
     private boolean isWristMovingDown = false;
+    private boolean isAutoPulsing = false;
 
     private Angle pivotSetpointAdjust = Radians.mutable(0.0);
 
@@ -166,16 +167,16 @@ public class Intake extends SubsystemBase {
             rollerIO.setOpenLoop(Volts.zero());
         }
 
-        if(DriverStation.isAutonomous()) {
+        if(DriverStation.isAutonomous() && isAutoPulsing) {
             double time = Timer.getFPGATimestamp();
-            double timeUp = 0.5;
-            double timeDown = 0.5;
-            time /= (timeUp + timeDown);
-            if(time - Math.floor(time) > 0.5) {
-                wristIO.setOpenLoop(Volts.of(5));
-            }
-            else {
+            double upTime = 0.5;
+            double downTime = 0.5;
+            time/= (upTime + downTime);
+            upTime/= (upTime + downTime);
+            if(time - Math.floor(time) < upTime) {
                 wristIO.setOpenLoop(Volts.of(-5));
+            } else {
+                wristIO.setOpenLoop(Volts.of(5));
             }
         }
 

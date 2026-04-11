@@ -36,7 +36,7 @@ public class Shooter extends SubsystemBase {
     // private final Timer disabledTimer = new Timer();
 
     private final MutDistance shooterDistanceAdjust = Meters.mutable(0);
-    private boolean runShooterFlag = false;
+    private boolean runShooterFlag = true;
     private boolean reverseFeeder = false;
     public boolean runIndexFlag = false;
     private boolean isAutonomous = true;
@@ -313,7 +313,7 @@ public class Shooter extends SubsystemBase {
         Logger.processInputs("Shooter/Indexer", shooterInputs[4]);
 
         if (DriverStation.isDisabled()) {
-            runShooterFlag = false;
+            // runShooterFlag = false;
             runIndexFlag = false;
         }
     }
