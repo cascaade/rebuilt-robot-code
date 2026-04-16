@@ -531,7 +531,7 @@ public class Constants {
 
         public static final double autoHomeCurrentThreshold = 30;
         public static final int wristCurrentLimit = 40;
-        public static final int rollerCurrentLimit = 30;
+        public static final int rollerCurrentLimit = 40;
 
         public static final double wristMotorReduction = 32.0 / 1.0;
         public static final double rollerMotorReduction = 2.0 / 1.0;

@@ -179,17 +179,18 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     private void adjustSpeedsForPresetRotation(ChassisSpeeds speeds) {
+        Pose2d robotPose = getPose();
+        Pose2d hubPose = FieldConstants.getHubCenter();
+
+        Translation2d robotToHub = hubPose.getTranslation().minus(robotPose.getTranslation());
+        Rotation2d targetHeading = robotToHub.getAngle().minus(Rotation2d.k180deg);
+
+        Logger.recordOutput("Swerve/AutoAlignTargetPose", new Pose2d(robotPose.getTranslation(), targetHeading));
+        Logger.recordOutput("Swerve/DistanceToHub", robotToHub.getNorm());
+        Logger.recordOutput("Field/HubPose", hubPose);
+        Logger.recordOutput("Swerve/AutoAlignUpdate", Timer.getFPGATimestamp());
+
         if (aimHubFlag.get()) {
-            Pose2d robotPose = getPose();
-            Pose2d hubPose = FieldConstants.getHubCenter();
-
-            Translation2d robotToHub = hubPose.getTranslation().minus(robotPose.getTranslation());
-            Rotation2d targetHeading = robotToHub.getAngle().minus(Rotation2d.k180deg);
-
-            Logger.recordOutput("Swerve/TargetHeading", targetHeading);
-            Logger.recordOutput("Field/HubPose", hubPose);
-            Logger.recordOutput("Swerve/AutoAlignUpdate", Timer.getFPGATimestamp());
-
             speeds.omegaRadiansPerSecond = trajHeadingController.calculate(
                 robotPose.getRotation().getRadians(),
                 targetHeading.getRadians()
