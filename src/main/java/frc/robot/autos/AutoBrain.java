@@ -111,7 +111,7 @@ public class AutoBrain {
         auto.active().onTrue(Commands.sequence(
             paths[0].resetOdometry(),
             Commands.parallel(
-                shooterSubsystem.toggleRunShooter(),
+                shooterSubsystem.runShooterOn(),
                 Commands.sequence(
                     intakeSubsystem.toggleWristPosFlag(true),
                     intakeSubsystem.toggleRollerFlag(true),
