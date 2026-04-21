@@ -1,0 +1,119 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
+package frc.robot;
+
+import org.littletonrobotics.junction.LogFileUtil;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.util.LoggedTunableControlConstants;
+
+public class Robot extends LoggedRobot {
+    private Command m_autonomousCommand;
+
+    private final RobotContainer m_robotContainer;
+
+    public Robot() {
+        Logger.recordMetadata("Robot", "CompBot");
+        Logger.recordMetadata("Season", "2026 REBUILT");
+        Logger.recordMetadata("RobotMode", Constants.currentMode.equals(Constants.RobotMode.REAL) ? "REAL" : (
+            Constants.currentMode.equals(Constants.RobotMode.SIM) ? "SIM" : "REPLAY"
+        ));
+
+        Logger.recordMetadata("EventName",      DriverStation.getEventName());
+        Logger.recordMetadata("MatchType",      DriverStation.getMatchType().toString());
+        Logger.recordMetadata("MatchNumber",    String.valueOf(DriverStation.getMatchNumber()));
+        Logger.recordMetadata("ReplayNumber",   String.valueOf(DriverStation.getReplayNumber()));
+        Logger.recordMetadata("Alliance", DriverStation.getAlliance().isPresent() ? DriverStation.getAlliance().get().toString() : "Unknown");
+        Logger.recordMetadata("AllianceStation", DriverStation.getLocation().isPresent() ? String.valueOf(DriverStation.getLocation().getAsInt()) : "Unknown");
+        Logger.recordMetadata("GameSpecificMessage", DriverStation.getGameSpecificMessage());
+
+        Logger.recordMetadata("StationNumber", DriverStation.getLocation().isPresent() ? String.valueOf(DriverStation.getLocation().getAsInt()) : "Unknown");
+
+        Logger.recordMetadata("FMSAttached",   String.valueOf(DriverStation.isFMSAttached()));
+        Logger.recordMetadata("DSAttached",    String.valueOf(DriverStation.isDSAttached()));
+        Logger.recordMetadata("BatteryVoltage", String.format("%.2fV", RobotController.getBatteryVoltage()));
+
+        if (
+            Constants.currentMode.equals(Constants.RobotMode.REAL) ||
+            Constants.currentMode.equals(Constants.RobotMode.SIM)
+        ) {
+            Logger.addDataReceiver(new WPILOGWriter());
+            Logger.addDataReceiver(new NT4Publisher());
+        } else {
+            setUseTiming(false); // Run as fast as possible
+            String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
+            Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
+            Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+        }
+
+        Logger.start();
+
+        m_robotContainer = new RobotContainer();
+    }
+
+    @Override
+    public void robotPeriodic() {
+        LoggedTunableControlConstants.tuningPeriodic();
+        CommandScheduler.getInstance().run();
+    }
+
+    @Override
+    public void disabledInit() {}
+
+    @Override
+    public void disabledPeriodic() {}
+
+    @Override
+    public void disabledExit() {}
+
+    @Override
+    public void autonomousInit() {
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+
+        if (m_autonomousCommand != null) {
+            CommandScheduler.getInstance().schedule(m_autonomousCommand);
+        }
+    }
+
+    @Override
+    public void autonomousPeriodic() {}
+
+    @Override
+    public void autonomousExit() {}
+
+    @Override
+    public void teleopInit() {
+        if (m_autonomousCommand != null) {
+            m_autonomousCommand.cancel();
+        }
+    }
+
+    @Override
+    public void teleopPeriodic() {}
+
+    @Override
+    public void teleopExit() {}
+
+    @Override
+    public void testInit() {
+        CommandScheduler.getInstance().cancelAll();
+    }
+
+    @Override
+    public void testPeriodic() {
+        m_robotContainer.testPeriodic();
+    }
+
+    @Override
+    public void testExit() {}
+}
