@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.util.Units;
+import frc.robot.Constants.FieldType;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -33,7 +35,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
-import frc.robot.Constants.SwerveConstants;
 
 public class SwerveDrive extends SubsystemBase {
     private final GyroIO gyroIO;
@@ -88,7 +89,7 @@ public class SwerveDrive extends SubsystemBase {
         rawGyroRotation = new Rotation2d();
         modulePositions = Arrays.stream(modules).map(module -> module.getPosition()).toArray(SwerveModulePosition[]::new);
 
-        poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, modulePositions, SwerveConstants.getInitialPose());
+        poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, modulePositions, Constants.getInitialPose());
 
         aimHubFlag = new AtomicBoolean(false);
 

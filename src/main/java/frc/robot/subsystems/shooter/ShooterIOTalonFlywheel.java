@@ -12,7 +12,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants.ShooterConstants;
 import frc.robot.util.LoggedTunableControlConstants;
 
 import static edu.wpi.first.units.Units.*;

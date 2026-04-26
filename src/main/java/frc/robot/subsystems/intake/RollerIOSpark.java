@@ -21,7 +21,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Timer;
-import frc.robot.Constants.IntakeConstants;
 
 public class RollerIOSpark implements RollerIO {
     private final SparkMax intakeMotor;

@@ -2,12 +2,12 @@ package frc.robot.subsystems.climb;
 
 import java.util.function.BooleanSupplier;
 
+import frc.robot.subsystems.climb.ClimbConstants.ClimbPose;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.ClimbConstants.ClimbPose;
 
 import static edu.wpi.first.units.Units.Volts;
 

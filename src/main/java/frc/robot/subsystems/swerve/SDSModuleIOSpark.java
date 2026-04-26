@@ -23,8 +23,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
-import frc.robot.Constants.SwerveConstants;
-import frc.robot.Constants.SwerveModuleConstants;
 
 public class SDSModuleIOSpark implements SDSModuleIO {
     private final Rotation2d zeroRotation;
@@ -53,13 +51,13 @@ public class SDSModuleIOSpark implements SDSModuleIO {
 
     public SDSModuleIOSpark(int index) {
         this.index = index;
-        this.zeroRotation = SwerveModuleConstants.zeroRotations[index];
+        this.zeroRotation = SwerveConstants.zeroRotations[index];
 
-        driveKs = SwerveModuleConstants.driveKs;
-        driveKv = SwerveModuleConstants.driveKv;
+        driveKs = SwerveConstants.driveKs;
+        driveKv = SwerveConstants.driveKv;
 
-        SparkMaxConfig turnConfig = SwerveModuleConstants.turnConfig;
-        SparkMaxConfig driveConfig = SwerveModuleConstants.driveConfig;
+        SparkMaxConfig turnConfig = SwerveConstants.turnConfig;
+        SparkMaxConfig driveConfig = SwerveConstants.driveConfig;
 
         turnMotor = new SparkMax(SwerveConstants.turnCANIDs[index], MotorType.kBrushless);
         driveMotor = new SparkMax(SwerveConstants.driveCANIDs[index], MotorType.kBrushless);
@@ -104,7 +102,7 @@ public class SDSModuleIOSpark implements SDSModuleIO {
         inputs.driveConnected = driveConnected;
         inputs.drivePositionRad = driveEncoder.getPosition();
         inputs.driveVelocityRadPerSec = driveEncoder.getVelocity();
-        inputs.driveVelocityWheelMetersPerSec = inputs.driveVelocityRadPerSec * SwerveModuleConstants.kSwerveWheelDiameter / 2.0;
+        inputs.driveVelocityWheelMetersPerSec = inputs.driveVelocityRadPerSec * SwerveConstants.kSwerveWheelDiameter / 2.0;
         inputs.driveAppliedVolts = RobotController.getBatteryVoltage() * driveMotor.getAppliedOutput();
         inputs.driveCurrentAmps = driveMotor.getOutputCurrent();
     }
@@ -120,11 +118,11 @@ public class SDSModuleIOSpark implements SDSModuleIO {
         double turnI = Preferences.getDouble("turnI", 0.0);
         double turnD = Preferences.getDouble("turnD", 0.0);
 
-        SwerveModuleConstants.turnConfig.closedLoop.pid(turnP, turnI, turnD);
-        SwerveModuleConstants.driveConfig.closedLoop.pid(driveP, driveI, driveD);
+        SwerveConstants.turnConfig.closedLoop.pid(turnP, turnI, turnD);
+        SwerveConstants.driveConfig.closedLoop.pid(driveP, driveI, driveD);
 
-        turnMotor.configure(SwerveModuleConstants.turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        driveMotor.configure(SwerveModuleConstants.driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        turnMotor.configure(SwerveConstants.turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        driveMotor.configure(SwerveConstants.driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
     
 
@@ -132,7 +130,7 @@ public class SDSModuleIOSpark implements SDSModuleIO {
     public void setTurnPosition(Rotation2d position) {
         double setpoint = MathUtil.inputModulus(
             position.plus(zeroRotation).getRadians(),
-            SwerveModuleConstants.turnPIDMinInput, SwerveModuleConstants.turnPIDMaxInput
+            SwerveConstants.turnPIDMinInput, SwerveConstants.turnPIDMaxInput
         );
         turnController.setSetpoint(setpoint, ControlType.kPosition);
 

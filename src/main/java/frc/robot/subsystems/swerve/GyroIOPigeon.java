@@ -10,7 +10,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import frc.robot.Constants.SwerveConstants;
 
 public class GyroIOPigeon implements GyroIO {
     private final Pigeon2 pigeon;

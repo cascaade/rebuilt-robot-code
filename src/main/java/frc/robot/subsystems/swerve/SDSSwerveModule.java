@@ -1,6 +1,11 @@
 
 package frc.robot.subsystems.swerve;
 
+import com.revrobotics.spark.FeedbackSensor;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.util.Units;
+import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -9,7 +14,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Preferences;
-import frc.robot.Constants.SwerveModuleConstants;
 
 public class SDSSwerveModule {
     public static final NetworkTable constantPreferences = NetworkTableInstance.getDefault().getTable("Swerve Modules");
@@ -41,7 +45,7 @@ public class SDSSwerveModule {
         }
         desiredModuleState = state;
         io.setTurnPosition(state.angle);
-        io.setDriveVelocityRadPerSec(state.speedMetersPerSecond / SwerveModuleConstants.kSwerveWheelDiameter * 2);
+        io.setDriveVelocityRadPerSec(state.speedMetersPerSecond / SwerveConstants.kSwerveWheelDiameter * 2);
     }
 
     /** sets a preset state on the module of 0deg at 1rot/sec */
@@ -77,7 +81,7 @@ public class SDSSwerveModule {
 
     public SwerveModulePosition getPosition() {
         return new SwerveModulePosition(
-            inputs.drivePositionRad * SwerveModuleConstants.kSwerveWheelDiameter / 2,
+            inputs.drivePositionRad * SwerveConstants.kSwerveWheelDiameter / 2,
             inputs.turnPosition
         );
     }
