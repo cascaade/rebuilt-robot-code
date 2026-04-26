@@ -1,10 +1,15 @@
 package frc.robot.subsystems.shooter;
 
-import edu.wpi.first.units.measure.*;
-
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutCurrent;
+import edu.wpi.first.units.measure.MutVoltage;
+import edu.wpi.first.units.measure.Voltage;
 import org.littletonrobotics.junction.AutoLog;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 public interface ShooterIO {
 

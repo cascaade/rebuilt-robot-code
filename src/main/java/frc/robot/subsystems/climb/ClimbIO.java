@@ -2,7 +2,6 @@ package frc.robot.subsystems.climb;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
-
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ClimbIO {

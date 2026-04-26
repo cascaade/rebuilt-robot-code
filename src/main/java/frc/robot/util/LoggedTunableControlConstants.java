@@ -1,11 +1,11 @@
 package frc.robot.util;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class LoggedTunableControlConstants {
     private static final Set<LoggedTunableControlConstants> INSTANCES = new HashSet<>();

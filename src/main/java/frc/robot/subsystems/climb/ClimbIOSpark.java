@@ -7,11 +7,10 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Radians;
 
 public class ClimbIOSpark implements ClimbIO {
     private final SparkMax climbMotor;
