@@ -5,14 +5,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import frc.robot.subsystems.vision.VisionConstants.CameraConfig;
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import frc.robot.Constants.VisionConstants;
-import frc.robot.Constants.VisionConstants.CameraConfig;
 
 public class VisionIOPhoton implements VisionIO {
     private final PhotonCamera camera;

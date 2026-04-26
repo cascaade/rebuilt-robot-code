@@ -6,7 +6,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.Constants.SwerveModuleConstants;
 
 // sim based on the advantagekit 2026 swerve example
 public class SDSModuleIOSim implements SDSModuleIO {
@@ -20,14 +19,14 @@ public class SDSModuleIOSim implements SDSModuleIO {
     private boolean turnClosedLoop = false;
 
     private PIDController driveController = new PIDController(
-        SwerveModuleConstants.driveSimP,
-        SwerveModuleConstants.driveSimI,
-        SwerveModuleConstants.driveSimD
+        SwerveConstants.driveSimP,
+        SwerveConstants.driveSimI,
+        SwerveConstants.driveSimD
     );
     private PIDController turnController = new PIDController(
-        SwerveModuleConstants.turnSimP,
-        SwerveModuleConstants.turnSimI,
-        SwerveModuleConstants.turnSimD
+        SwerveConstants.turnSimP,
+        SwerveConstants.turnSimI,
+        SwerveConstants.turnSimD
     );
 
     // to be updated by sim
@@ -37,11 +36,11 @@ public class SDSModuleIOSim implements SDSModuleIO {
 
     public SDSModuleIOSim() {
         driveSim = new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(driveGearbox, 0.025, SwerveModuleConstants.driveMotorReduction),
+            LinearSystemId.createDCMotorSystem(driveGearbox, 0.025, SwerveConstants.driveMotorReduction),
             driveGearbox
         );
         turnSim = new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(turnGearbox, 0.004, SwerveModuleConstants.turnMotorReduction),
+            LinearSystemId.createDCMotorSystem(turnGearbox, 0.004, SwerveConstants.turnMotorReduction),
             turnGearbox
         );
 
@@ -95,7 +94,7 @@ public class SDSModuleIOSim implements SDSModuleIO {
     @Override
     public void setDriveVelocityRadPerSec(double velocityRadPerSec) {
         driveClosedLoop = true;
-        driveFFVolts = SwerveModuleConstants.driveSimKs * Math.signum(velocityRadPerSec) + SwerveModuleConstants.driveSimKv * velocityRadPerSec;
+        driveFFVolts = SwerveConstants.driveSimKs * Math.signum(velocityRadPerSec) + SwerveConstants.driveSimKv * velocityRadPerSec;
         driveController.setSetpoint(velocityRadPerSec);
     }
 

@@ -13,7 +13,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants.ShooterConstants;
 import frc.robot.util.LoggedTunableControlConstants;
 
 import static edu.wpi.first.units.Units.*;
