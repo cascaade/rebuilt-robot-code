@@ -1,15 +1,5 @@
 package frc.robot.subsystems.swerve;
 
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.DoubleSupplier;
-
-import edu.wpi.first.math.util.Units;
-import frc.robot.Constants.FieldType;
-import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.LoggedRobot;
-import org.littletonrobotics.junction.Logger;
-
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
@@ -35,6 +25,13 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.DoubleSupplier;
 
 public class SwerveDrive extends SubsystemBase {
     private final GyroIO gyroIO;

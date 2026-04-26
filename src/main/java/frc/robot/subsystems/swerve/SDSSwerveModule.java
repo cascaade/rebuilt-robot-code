@@ -1,19 +1,13 @@
 
 package frc.robot.subsystems.swerve;
 
-import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.util.Units;
-import frc.robot.Constants;
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Preferences;
+import org.littletonrobotics.junction.Logger;
 
 public class SDSSwerveModule {
     public static final NetworkTable constantPreferences = NetworkTableInstance.getDefault().getTable("Swerve Modules");

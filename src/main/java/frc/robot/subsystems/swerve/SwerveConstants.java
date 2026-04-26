@@ -3,12 +3,10 @@ package frc.robot.subsystems.swerve;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Preferences;
 import frc.robot.Constants;
-import frc.robot.Constants.FieldType;
 
 public class SwerveConstants {
     public static final int[] turnCANIDs = { 1, 2, 3, 4 };
