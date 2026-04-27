@@ -14,14 +14,14 @@ import org.littletonrobotics.junction.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Vision extends SubsystemBase {
+public class VisionSubsystem extends SubsystemBase {
     public final VisionConsumer consumer;
     public final VisionIO[] ios;
     public final VisionIOInputsAutoLogged[] inputs;
 
     // private final LoggedNetworkBoolean recordingRequest = new LoggedNetworkBoolean("SmartDashboard/Enable Recording", false);
 
-    public Vision(VisionConsumer consumer, VisionIO... ios) {
+    public VisionSubsystem(VisionConsumer consumer, VisionIO... ios) {
         this.consumer = consumer;
         this.ios = ios;
         this.inputs = new VisionIOInputsAutoLogged[ios.length];

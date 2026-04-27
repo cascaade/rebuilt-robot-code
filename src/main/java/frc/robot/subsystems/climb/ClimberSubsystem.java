@@ -10,13 +10,13 @@ import java.util.function.BooleanSupplier;
 
 import static edu.wpi.first.units.Units.Volts;
 
-public class Climb extends SubsystemBase {
+public class ClimberSubsystem extends SubsystemBase {
     public final ClimbIO climbIO;
     public final ClimbIOInputsAutoLogged inputs = new ClimbIOInputsAutoLogged();
 
     LoggedNetworkNumber volts = new LoggedNetworkNumber("Climber/Volts", 0);
 
-    public Climb(ClimbIO climbIO) {
+    public ClimberSubsystem(ClimbIO climbIO) {
         this.climbIO = climbIO;
     }
 

@@ -36,7 +36,7 @@ import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.units.Units.Seconds;
 
-public class SwerveDrive extends SubsystemBase {
+public class SwerveSubsystem extends SubsystemBase {
     private final GyroIO gyroIO;
     private final GyroIOInputsAutoLogged gyroIOInputs;
     
@@ -59,7 +59,7 @@ public class SwerveDrive extends SubsystemBase {
 
     private final Field2d field;
 
-    public SwerveDrive(
+    public SwerveSubsystem(
         GyroIO gyroIO,
         SDSModuleIO flModuleIO,
         SDSModuleIO frModuleIO,

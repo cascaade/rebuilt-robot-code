@@ -11,7 +11,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
 
-public class Intake extends SubsystemBase {
+public class IntakeSubsystem extends SubsystemBase {
     private final RollerIO rollerIO;
     private final WristIO wristIO;
 
@@ -39,7 +39,7 @@ public class Intake extends SubsystemBase {
     LoggedNetworkNumber voltage = new LoggedNetworkNumber("Intake/Roller/Voltage", 12);
     LoggedNetworkNumber position = new LoggedNetworkNumber("Intake/Wrist/Pose", 0);
 
-    public Intake(RollerIO rollerIO, WristIO wristIO) {
+    public IntakeSubsystem(RollerIO rollerIO, WristIO wristIO) {
         this.rollerIO = rollerIO;
         this.wristIO = wristIO;
     }

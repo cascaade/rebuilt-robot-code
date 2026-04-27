@@ -11,9 +11,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.swerve.SwerveDrive;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
+import frc.robot.subsystems.swerve.SwerveSubsystem;
 
 public class AutoBrain {
     private final AutoFactory autoFactory;
@@ -21,14 +21,14 @@ public class AutoBrain {
     private final StringSubscriber autoPathSubscriber;
     private final SendableChooser<String> autoMode = new SendableChooser<>();
 
-    private final SwerveDrive swerveSubsystem;
-    private final Shooter shooterSubsystem;
-    private final Intake intakeSubsystem;
+    private final SwerveSubsystem swerveSubsystem;
+    private final ShooterSubsystem shooterSubsystem;
+    private final IntakeSubsystem intakeSubsystem;
 
     private AutoRoutine cachedAuto;
     private String autoThatIsCached;
 
-    public AutoBrain(SwerveDrive swerveSubsystem, Shooter shooterSubsystem, Intake intakeSubsystem) {
+    public AutoBrain(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem, IntakeSubsystem intakeSubsystem) {
         this.swerveSubsystem = swerveSubsystem;
         this.shooterSubsystem = shooterSubsystem;
         this.intakeSubsystem = intakeSubsystem;

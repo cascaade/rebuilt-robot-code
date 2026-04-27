@@ -18,7 +18,7 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
-public class Shooter extends SubsystemBase {
+public class ShooterSubsystem extends SubsystemBase {
     private final ShooterIO shooterIOL;
     private final ShooterIO shooterIOM;
     private final ShooterIO shooterIOR;
@@ -42,7 +42,7 @@ public class Shooter extends SubsystemBase {
 
     private final Supplier<Pose2d> robotPoseSupplier;
 
-    public Shooter(ShooterIO shooterIOL, ShooterIO shooterIOM, ShooterIO shooterIOR, ShooterIO feederIO, ShooterIO indexIO, Supplier<Pose2d> robotPoseSupplier) {
+    public ShooterSubsystem(ShooterIO shooterIOL, ShooterIO shooterIOM, ShooterIO shooterIOR, ShooterIO feederIO, ShooterIO indexIO, Supplier<Pose2d> robotPoseSupplier) {
         this.shooterIOL = shooterIOL;
         this.shooterIOM = shooterIOM;
         this.shooterIOR = shooterIOR;
