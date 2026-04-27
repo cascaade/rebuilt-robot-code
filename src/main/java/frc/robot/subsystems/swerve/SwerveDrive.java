@@ -15,6 +15,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.measure.MutTime;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -33,6 +34,8 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.DoubleSupplier;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 public class SwerveDrive extends SubsystemBase {
     private final GyroIO gyroIO;
     private final GyroIOInputsAutoLogged gyroIOInputs;
@@ -44,8 +47,7 @@ public class SwerveDrive extends SubsystemBase {
     private final SwerveDrivePoseEstimator poseEstimator;
 
     private boolean toCrossbuck;
-    private boolean crossbuckOverride;
-    private double lastMove;
+    private final MutTime lastMove;
 
     private final AtomicBoolean aimHubFlag;
 
@@ -77,10 +79,10 @@ public class SwerveDrive extends SubsystemBase {
         };
 
         kinematics = new SwerveDriveKinematics(
-            new Translation2d( SwerveConstants.kWheelDistanceMetersX / 2,  SwerveConstants.kWheelDistanceMetersY / 2),
-            new Translation2d( SwerveConstants.kWheelDistanceMetersX / 2, -SwerveConstants.kWheelDistanceMetersY / 2),
-            new Translation2d(-SwerveConstants.kWheelDistanceMetersX / 2,  SwerveConstants.kWheelDistanceMetersY / 2),
-            new Translation2d(-SwerveConstants.kWheelDistanceMetersX / 2, -SwerveConstants.kWheelDistanceMetersY / 2)
+            new Translation2d(SwerveConstants.kWheelDistanceX.div(2), SwerveConstants.kWheelDistanceY.div(2)),
+            new Translation2d(SwerveConstants.kWheelDistanceX.div(2), SwerveConstants.kWheelDistanceY.div(-2)),
+            new Translation2d(SwerveConstants.kWheelDistanceX.div(-2), SwerveConstants.kWheelDistanceY.div(2)),
+            new Translation2d(SwerveConstants.kWheelDistanceX.div(-2), SwerveConstants.kWheelDistanceY.div(-2))
         );
 
         rawGyroRotation = new Rotation2d();
@@ -95,7 +97,7 @@ public class SwerveDrive extends SubsystemBase {
         trajHeadingController = new PIDController(3, 0, 0);
         trajHeadingController.enableContinuousInput(0, 2 * Math.PI);
 
-        lastMove = Timer.getFPGATimestamp();
+        lastMove = Seconds.mutable(Timer.getFPGATimestamp());
 
         field = new Field2d();
         SmartDashboard.putData("Odometry/Field", field);
@@ -165,18 +167,23 @@ public class SwerveDrive extends SubsystemBase {
             double steepness = 1.8; // more precision on lower values
             
             mag = adjustAxisInput(mag, deadband, minThreshold, steepness);
-            mag *= SwerveConstants.kMagVelLimit * speedFactor;
+            mag *= speedFactor;
             omega = adjustAxisInput(omega, deadband, minThreshold, steepness + 1);
-            omega *= SwerveConstants.kRotVelLimit * speedFactor;
+            omega *= speedFactor;
 
-            ChassisSpeeds chassisSpeeds = new ChassisSpeeds(mag * Math.cos(dir), mag * Math.sin(dir), omega);    
+            OrientedChassisSpeeds chassisSpeeds = new OrientedChassisSpeeds(
+                SwerveConstants.kMagVelLimit.times(mag * Math.cos(dir)),
+                SwerveConstants.kMagVelLimit.times(mag * Math.sin(dir)),
+                SwerveConstants.kRotVelLimit.times(omega),
+                false, true
+            );
 
             adjustSpeedsForPresetRotation(chassisSpeeds);
-            submitChassisSpeeds(chassisSpeeds, true, false);
+            submitChassisSpeeds(chassisSpeeds);
         }).withName("Teleop Drive default");
     }
 
-    private void adjustSpeedsForPresetRotation(ChassisSpeeds speeds) {
+    private void adjustSpeedsForPresetRotation(OrientedChassisSpeeds speeds) {
         Pose2d robotPose = getPose();
         Pose2d hubPose = FieldConstants.getHubCenter();
 
@@ -197,21 +204,18 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     private void submitChassisSpeeds(
-        ChassisSpeeds chassisSpeeds,
-        boolean isFieldCentric,
-        boolean isRedFlipped
+        OrientedChassisSpeeds chassisSpeeds
     ) {
         if (
             chassisSpeeds.vxMetersPerSecond != 0 ||
             chassisSpeeds.vyMetersPerSecond != 0 ||
             chassisSpeeds.omegaRadiansPerSecond != 0
         ) {
-            lastMove = Timer.getFPGATimestamp();
+            lastMove.mut_replace(Timer.getFPGATimestamp(), Seconds);
         }
 
         if (
-            crossbuckOverride && DriverStation.isAutonomous() ||
-            (toCrossbuck && Timer.getFPGATimestamp() - lastMove > SwerveConstants.crossbuckDelaySeconds)
+            (toCrossbuck && Seconds.of(Timer.getFPGATimestamp()).minus(lastMove).gt(SwerveConstants.crossbuckDelay))
         ) {
             setModulesToCrossbuckPosition(true);
             return;
@@ -219,10 +223,10 @@ public class SwerveDrive extends SubsystemBase {
 
         ChassisSpeeds adjustedSpeeds = chassisSpeeds;
 
-        if (isFieldCentric) {
+        if (chassisSpeeds.fieldCentric) {
             adjustedSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
                 chassisSpeeds,
-                getPose().getRotation().rotateBy(new Rotation2d(Constants.isRed() && !isRedFlipped ? Math.PI : 0))
+                getPose().getRotation().rotateBy(new Rotation2d(Constants.isRed() && !chassisSpeeds.allianceFlipped ? Math.PI : 0))
             );
         }
 
@@ -243,12 +247,6 @@ public class SwerveDrive extends SubsystemBase {
         }
     }
 
-    public Command setImmediateCrossbuckOverride(boolean on) {
-        return runOnce(() -> {
-            crossbuckOverride = on;
-        });
-    }
-
     private void setModulesToCrossbuckPosition(boolean optimize) {
         setRawModuleSetpoints(new SwerveModuleState[] {
             new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
@@ -256,33 +254,6 @@ public class SwerveDrive extends SubsystemBase {
             new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
             new SwerveModuleState(0, Rotation2d.fromDegrees(45))
         }, optimize);
-    }
-
-    public Command runToggleCrossbuckPosition() {
-        return runOnce(() -> {
-            toCrossbuck = !toCrossbuck;
-        });
-    }
-
-    public Command runXSetTime(double speedMult) {
-        return run(() -> {
-            ChassisSpeeds speeds = new ChassisSpeeds(SwerveConstants.kMagVelLimit * speedMult, 0, 0);
-            submitChassisSpeeds(speeds, false, false);
-        }).until(() -> false).withTimeout(0.2);
-    }
-
-    public Command runXSetTime(double speedMult, double time) {
-        return run(() -> {
-            ChassisSpeeds speeds = new ChassisSpeeds(SwerveConstants.kMagVelLimit * speedMult, 0, 0);
-            submitChassisSpeeds(speeds, false, false);
-        }).until(() -> false).withTimeout(time);
-    }
-
-    public Command runOmegaSetTime(double speedMult) {
-        return run(() -> {
-            ChassisSpeeds speeds = new ChassisSpeeds(0, 0, SwerveConstants.kRotVelLimit * speedMult);
-            submitChassisSpeeds(speeds, false, false);
-        }).until(() -> false).withTimeout(0.2);
     }
 
     public Command runZeroGyro() {
@@ -312,11 +283,11 @@ public class SwerveDrive extends SubsystemBase {
         });
     }
 
-    public Command runOnlyAimHubBoomBoomBoomWowCommand() {
+    public Command runSpeedAdjustOnly() {
         return run(() -> {
-            var cs = new ChassisSpeeds();
+            var cs = new OrientedChassisSpeeds();
             adjustSpeedsForPresetRotation(cs);
-            submitChassisSpeeds(cs, false, false);
+            submitChassisSpeeds(cs);
         });
     }
 
@@ -324,14 +295,6 @@ public class SwerveDrive extends SubsystemBase {
     public Pose2d getPose() {
         return poseEstimator.getEstimatedPosition();
     }
-
-    // ============================================================
-    // METHOD 1: resetOdometry(Pose2d)
-    // Resets the pose estimator to a known pose.
-    // Called by ChoreoLib at the start of every auto routine
-    // to align the robot's internal odometry with the trajectory
-    // start position.
-    // ============================================================
 
     /**
      * Resets the robot's odometry to the given pose.
@@ -347,19 +310,6 @@ public class SwerveDrive extends SubsystemBase {
         );
     }
 
-
-    // ============================================================
-    // METHOD 2: followTrajectory(SwerveSample)
-    // Called every scheduler cycle while a Choreo trajectory
-    // is active. Applies the sample's feedforward velocities
-    // plus PID correction based on how far off the robot is
-    // from the sample's expected pose.
-    //
-    // This mirrors the pattern from ChoreoLib's documentation
-    // and is consistent with your existing runChassisSpeeds()
-    // infrastructure.
-    // ============================================================
-
     /**
      * Follows a Choreo swerve trajectory sample.
      * Combines feedforward chassis speeds from the sample with
@@ -370,55 +320,26 @@ public class SwerveDrive extends SubsystemBase {
     public void followTrajectory(SwerveSample sample) {
         Pose2d currentPose = getPose();
 
-        // Build chassis speeds from the sample's feedforward velocities
-        // plus PID correction for x, y, and heading error
-        ChassisSpeeds speeds = new ChassisSpeeds(
+        OrientedChassisSpeeds speeds = new OrientedChassisSpeeds(
             sample.vx + trajVXController.calculate(currentPose.getX(), sample.x),
             sample.vy + trajVYController.calculate(currentPose.getY(), sample.y),
             sample.omega + trajHeadingController.calculate(
                 currentPose.getRotation().getRadians(),
                 sample.heading
-            )
+            ),
+            true, true
         );
 
-        // Log the auto chassis speeds for debugging in AdvantageScope
         Logger.recordOutput("Swerve/ChassisSpeeds/Auto", speeds);
 
-        // Drive field-relative using the existing discretize + kinematics pipeline.
-        // NOTE: We call runChassisSpeeds() directly so that the existing
-        // ChassisSpeeds.fromFieldRelativeSpeeds() and discretize() logic applies,
-        // matching exactly how teleop driving works.
         adjustSpeedsForPresetRotation(speeds);
-        submitChassisSpeeds(speeds, true, true);
+        submitChassisSpeeds(speeds);
     }
 
     public void addVisionMeasurement(Pose2d visionMeasurement, double timestamp, Matrix<N3,N1> stdDevs) {
         // higher standard deviations means vision measurements are trusted less
         poseEstimator.addVisionMeasurement(visionMeasurement, timestamp, stdDevs);
         getPose();
-    }
-
-    /** function that tests module motor controllers by giving them a preset state */
-    public Command goofyFunction() {
-        return run(() -> {
-            for (SDSSwerveModule module : modules) {
-                module.setGoofyState();
-            }
-            // setRawModuleSetpoints(new SwerveModuleState[] {
-            //     new SwerveModuleState(0.2, new Rotation2d()),
-            //     new SwerveModuleState(0.2, new Rotation2d()),
-            //     new SwerveModuleState(0.2, new Rotation2d()),
-            //     new SwerveModuleState(0.2, new Rotation2d())
-            // }, true);
-        });
-    }
-
-    public Command runReconfigure() {
-        return runOnce(() -> {
-            for (SDSSwerveModule module : modules) {
-                module.reconfigure();
-            }
-        });
     }
 
     @Override

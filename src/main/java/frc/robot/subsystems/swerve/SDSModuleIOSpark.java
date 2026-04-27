@@ -17,10 +17,16 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
+
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 public class SDSModuleIOSpark implements SDSModuleIO {
     private final Rotation2d zeroRotation;
@@ -85,44 +91,24 @@ public class SDSModuleIOSpark implements SDSModuleIO {
     public void updateInputs(SDSModuleIOInputs inputs) {
         BaseStatusSignal.refreshAll(turnCANCoderPositionSignal);
 
-        double canCoderPosition = turnCANCoderPositionSignal.getValueAsDouble();
+        Angle canCoderPosition = turnCANCoderPositionSignal.getValue();
 
-        turnEncoder.setPosition(canCoderPosition * (2 * Math.PI));
+        turnEncoder.setPosition(canCoderPosition.in(Radians));
 
         // TODO why dont any electrical signals read? (i.e. appliedvolts & currentamps)
         inputs.turnConnected = turnConnected;
         inputs.turnPosition = new Rotation2d(turnEncoder.getPosition()).minus(zeroRotation);
-        inputs.turnVelocityRadPerSec = turnEncoder.getVelocity();
-        inputs.canCoderPosition = canCoderPosition;
-        inputs.turnAppliedVolts = RobotController.getBatteryVoltage() * turnMotor.getAppliedOutput();
-        inputs.turnCurrentAmps = turnMotor.getOutputCurrent();
+        inputs.turnVelocity.mut_replace(turnEncoder.getVelocity(), RadiansPerSecond);
+        inputs.canCoderPosition.mut_replace(canCoderPosition);
+        inputs.turnAppliedVolts.mut_replace(RobotController.getBatteryVoltage() * turnMotor.getAppliedOutput(), Volts);
+        inputs.turnCurrentAmps.mut_replace(turnMotor.getOutputCurrent(), Amps);
 
         inputs.driveConnected = driveConnected;
-        inputs.drivePositionRad = driveEncoder.getPosition();
-        inputs.driveVelocityRadPerSec = driveEncoder.getVelocity();
-        inputs.driveVelocityWheelMetersPerSec = inputs.driveVelocityRadPerSec * SwerveConstants.kSwerveWheelDiameter / 2.0;
-        inputs.driveAppliedVolts = RobotController.getBatteryVoltage() * driveMotor.getAppliedOutput();
-        inputs.driveCurrentAmps = driveMotor.getOutputCurrent();
+        inputs.driveDistance.mut_replace(driveEncoder.getPosition(), Meters);
+        inputs.driveLinearVelocity.mut_replace(driveEncoder.getVelocity(), MetersPerSecond);
+        inputs.driveAppliedVolts.mut_replace(RobotController.getBatteryVoltage() * driveMotor.getAppliedOutput(), Volts);
+        inputs.driveCurrentAmps.mut_replace(driveMotor.getOutputCurrent(), Amps);
     }
-
-    /** dont spam run */
-    public void reconfigure() {
-        double driveP = Preferences.getDouble("driveP", 0.0);
-        double driveI = Preferences.getDouble("driveI", 0.0);
-        double driveD = Preferences.getDouble("driveD", 0.0);
-        driveKs = Preferences.getDouble("driveKs", 0);
-        driveKv = Preferences.getDouble("driveKv", 0);
-        double turnP = Preferences.getDouble("turnP", 0.0);
-        double turnI = Preferences.getDouble("turnI", 0.0);
-        double turnD = Preferences.getDouble("turnD", 0.0);
-
-        SwerveConstants.turnConfig.closedLoop.pid(turnP, turnI, turnD);
-        SwerveConstants.driveConfig.closedLoop.pid(driveP, driveI, driveD);
-
-        turnMotor.configure(SwerveConstants.turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        driveMotor.configure(SwerveConstants.driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-    }
-    
 
     // TODO make sure that zero rotation is applied correctly, ensure logic is correct
     public void setTurnPosition(Rotation2d position) {

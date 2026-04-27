@@ -144,7 +144,7 @@ public class AutoBrain {
                         shooterSubsystem.toggleRunIndex(false)
                     ).deadlineFor(Commands.sequence(
                         swerveSubsystem.runToggleAimHub(true),
-                        swerveSubsystem.runOnlyAimHubBoomBoomBoomWowCommand()
+                        swerveSubsystem.runSpeedAdjustOnly()
                     )),
 
                     swerveSubsystem.runToggleAimHub(false),
@@ -159,28 +159,7 @@ public class AutoBrain {
                 paths[i].done().onTrue(paths[i + 1].cmd());
             }
             else if (shouldWaitfor5After(EP)) {
-                paths[i].done().onTrue(/*Commands.sequence(
-                    Commands.sequence(
-                        new WaitCommand(1),
-                        shooterSubsystem.toggleRunIndex(true),
-                        new WaitCommand(1),
-                        intakeSubsystem.toggleWristNegFlag(true),
-                        new WaitCommand(0.4),
-                        intakeSubsystem.toggleWristNegFlag(false),
-                        intakeSubsystem.toggleWristPosFlag(true),
-                        new WaitCommand(0.6),
-                        intakeSubsystem.toggleWristPosFlag(false),
-                        new WaitCommand(1),
-                        shooterSubsystem.toggleRunIndex(false)
-                    ).deadlineFor(Commands.sequence(
-                        swerveSubsystem.runToggleAimHub(true),
-                        swerveSubsystem.runOnlyAimHubBoomBoomBoomWowCommand()
-                    )),
-
-                    swerveSubsystem.runToggleAimHub(false),
-                
-                    paths[i + 1].cmd()
-                )*/
+                paths[i].done().onTrue(
                     Commands.sequence(
                         new WaitCommand(5),
                         paths[i+ 1].cmd()
@@ -209,7 +188,7 @@ public class AutoBrain {
                     new WaitCommand(0.6)
                 ).deadlineFor(Commands.sequence(
                     swerveSubsystem.runToggleAimHub(true),
-                    swerveSubsystem.runOnlyAimHubBoomBoomBoomWowCommand()
+                    swerveSubsystem.runSpeedAdjustOnly()
                 )),
 
                 swerveSubsystem.runToggleAimHub(false)

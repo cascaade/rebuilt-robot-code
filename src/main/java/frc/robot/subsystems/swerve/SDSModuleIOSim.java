@@ -5,7 +5,16 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.units.measure.MutVoltage;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 // sim based on the advantagekit 2026 swerve example
 public class SDSModuleIOSim implements SDSModuleIO {
@@ -30,9 +39,9 @@ public class SDSModuleIOSim implements SDSModuleIO {
     );
 
     // to be updated by sim
-    private double driveFFVolts = 0.0;
-    private double driveAppliedVolts = 0.0;
-    private double turnAppliedVolts = 0.0;
+    private final MutVoltage driveFFVolts = Volts.mutable(0);
+    private final MutVoltage driveAppliedVolts = Volts.mutable(0);
+    private final MutVoltage turnAppliedVolts = Volts.mutable(0);
 
     public SDSModuleIOSim() {
         driveSim = new DCMotorSim(
@@ -50,52 +59,50 @@ public class SDSModuleIOSim implements SDSModuleIO {
     @Override
     public void updateInputs(SDSModuleIOInputs inputs) {
         if (driveClosedLoop) {
-            driveAppliedVolts = driveFFVolts + driveController.calculate(driveSim.getAngularVelocityRadPerSec());
+            driveAppliedVolts.mut_replace(driveFFVolts.in(Volts) + driveController.calculate(driveSim.getAngularVelocityRadPerSec()), Volts);
         } else {
             driveController.reset();
         }
 
         if (turnClosedLoop) {
-            turnAppliedVolts = turnController.calculate(turnSim.getAngularPositionRad());
+            turnAppliedVolts.mut_replace(turnController.calculate(turnSim.getAngularPositionRad()), Volts);
         } else {
             turnController.reset();
         }
 
-        driveSim.setInputVoltage(MathUtil.clamp(driveAppliedVolts, -12.0, 12.0));
-        turnSim.setInputVoltage(MathUtil.clamp(turnAppliedVolts, -12.0, 12.0));
+        driveSim.setInputVoltage(MathUtil.clamp(driveAppliedVolts.in(Volts), -12.0, 12.0));
+        turnSim.setInputVoltage(MathUtil.clamp(turnAppliedVolts.in(Volts), -12.0, 12.0));
         driveSim.update(0.02);
         turnSim.update(0.02);
 
         inputs.driveConnected = true;
-        inputs.drivePositionRad = driveSim.getAngularPositionRad();
-        inputs.driveVelocityRadPerSec = driveSim.getAngularVelocityRadPerSec();
-        inputs.driveAppliedVolts = driveAppliedVolts;
-        inputs.driveCurrentAmps = Math.abs(driveSim.getCurrentDrawAmps());
+        inputs.driveDistance.mut_replace(
+            SwerveConstants.kSwerveWheelRadius.times(driveSim.getAngularPosition().in(Radians))
+        );
+        inputs.driveLinearVelocity.mut_replace(
+            SwerveConstants.kSwerveWheelRadius.in(Meters) * driveSim.getAngularVelocity().in(RadiansPerSecond),
+            MetersPerSecond
+        );
+        inputs.driveAppliedVolts.mut_replace(driveAppliedVolts);
+        inputs.driveCurrentAmps.mut_replace(Math.abs(driveSim.getCurrentDrawAmps()), Amps);
 
         inputs.turnConnected = true;
-        inputs.turnPosition = new Rotation2d(turnSim.getAngularPositionRad());
-        inputs.turnVelocityRadPerSec = turnSim.getAngularVelocityRadPerSec();
-        inputs.turnAppliedVolts = turnAppliedVolts;
-        inputs.turnCurrentAmps = Math.abs(turnSim.getCurrentDrawAmps());
+        inputs.turnPosition = new Rotation2d(turnSim.getAngularPosition());
+        inputs.turnVelocity.mut_replace(turnSim.getAngularVelocity());
+        inputs.turnAppliedVolts.mut_replace(turnAppliedVolts);
+        inputs.turnCurrentAmps.mut_replace(Math.abs(turnSim.getCurrentDrawAmps()), Amps);
     }
 
     @Override
-    public void setDriveOpenLoop(double output) {
+    public void setDriveOpenLoop(Voltage output) {
         driveClosedLoop = false;
-        driveAppliedVolts = output;
+        driveAppliedVolts.mut_replace(output);
     }
 
     @Override
-    public void setTurnOpenLoop(double output) {
+    public void setTurnOpenLoop(Voltage output) {
         turnClosedLoop = false;
-        turnAppliedVolts = output;
-    }
-
-    @Override
-    public void setDriveVelocityRadPerSec(double velocityRadPerSec) {
-        driveClosedLoop = true;
-        driveFFVolts = SwerveConstants.driveSimKs * Math.signum(velocityRadPerSec) + SwerveConstants.driveSimKv * velocityRadPerSec;
-        driveController.setSetpoint(velocityRadPerSec);
+        turnAppliedVolts.mut_replace(output);
     }
 
     @Override

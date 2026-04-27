@@ -5,8 +5,20 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Preferences;
 import frc.robot.Constants;
+
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
 
 public class SwerveConstants {
     public static final int[] turnCANIDs = { 1, 2, 3, 4 };
@@ -14,27 +26,27 @@ public class SwerveConstants {
     public static final int[] canCoderCANIDs = { 9, 10, 11, 12 };
     public static final int pigeonCANID = 13;
 
-    public static final double kWheelDistanceMetersX = Units.inchesToMeters(25 - 5.25); // forward/back
-    public static final double kWheelDistanceMetersY = Units.inchesToMeters(29 - 5.25); // left/right
+    public static final Distance kWheelDistanceX = Inches.of(25 - 5.25); // forward/back
+    public static final Distance kWheelDistanceY = Inches.of(29 - 5.25); // left/right
 
     public static final double kSlowedMult = 0.12;
 
-    public static final double kMaxWheelSpeed = 20; // m/s?
-    public static final double kMagVelLimit = 4.5; // m/s
-    public static final double kRotVelLimit = 2 * (2 * Math.PI); // rad/s
+    public static final LinearVelocity kMaxWheelSpeed = MetersPerSecond.of(4.6);
+    public static final LinearVelocity kMagVelLimit = MetersPerSecond.of(4.5);
+    public static final AngularVelocity kRotVelLimit = RotationsPerSecond.of(2);
 
-    public static final double crossbuckDelaySeconds = .3;
+    public static final Time crossbuckDelay = Seconds.of(.3);
 
-    public static final double kSwerveWheelDiameter = Units.inchesToMeters(4);
+    public static final Distance kSwerveWheelRadius = Inches.of(2);
 
     public static final SparkMaxConfig driveConfig = new SparkMaxConfig();
 
     public static final double driveMotorReduction = 6.75; // l2 mk4i gear set
 
-    public static final int driveMotorCurrentLimit = 30;
+    public static final Current driveMotorCurrentLimit = Amps.of(30);
 
-    public static final double driveEncoderPositionFactor = 2 * Math.PI / driveMotorReduction; // Rotor Rotations -> Wheel Radians
-    public static final double driveEncoderVelocityFactor = (2 * Math.PI) / 60.0 / driveMotorReduction; // Rotor RPM -> Wheel Rad/Sec
+    public static final double driveEncoderPositionFactor = 2 * Math.PI * kSwerveWheelRadius.in(Meters) / driveMotorReduction; // Rotor Rotations -> Wheel Radians
+    public static final double driveEncoderVelocityFactor = (2 * Math.PI * kSwerveWheelRadius.in(Meters)) / 60.0 / driveMotorReduction; // Rotor RPM -> Wheel Rad/Sec
 
     public static final double driveP = 0.0001;
     public static final double driveI = 0;
@@ -53,7 +65,7 @@ public class SwerveConstants {
 
     public static final double turnMotorReduction = 150 / 7;
 
-    public static final int turnMotorCurrentLimit = 20;
+    public static final Current turnMotorCurrentLimit = Amps.of(20);
 
     public static final double turnEncoderPositionFactor = 2 * Math.PI / turnMotorReduction;
     public static final double turnEncoderVelocityFactor = (2 * Math.PI) / 60.0 / turnMotorReduction;
@@ -93,8 +105,8 @@ public class SwerveConstants {
 
         turnConfig
             .idleMode(IdleMode.kBrake)
-            .smartCurrentLimit(turnMotorCurrentLimit)
-            .voltageCompensation(12)
+            .smartCurrentLimit((int) turnMotorCurrentLimit.in(Amps))
+            .voltageCompensation(12.0)
             .inverted(true);
         turnConfig.encoder
             .positionConversionFactor(turnEncoderPositionFactor)
@@ -117,7 +129,7 @@ public class SwerveConstants {
 
         driveConfig
             .idleMode(IdleMode.kBrake)
-            .smartCurrentLimit(driveMotorCurrentLimit)
+            .smartCurrentLimit((int) driveMotorCurrentLimit.in(Amps))
             .voltageCompensation(12.0)
             .closedLoopRampRate(0.01);
         driveConfig.encoder
