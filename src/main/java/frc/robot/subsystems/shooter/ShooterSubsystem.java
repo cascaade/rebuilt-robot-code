@@ -31,9 +31,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private final ShooterIOInputsAutoLogged[] shooterInputs = new ShooterIOInputsAutoLogged[5];
 
-    // private final Orchestra orchestra;
-    // private final Timer disabledTimer = new Timer();
-
     private final MutDistance shooterDistanceAdjust = Meters.mutable(0);
     private boolean runShooterFlag = true;
     private boolean reverseFeeder = false;
@@ -50,18 +47,10 @@ public class ShooterSubsystem extends SubsystemBase {
         this.indexIO = indexIO;
 
         this.robotPoseSupplier = robotPoseSupplier;
-
-        // orchestra = new Orchestra();
-
+        
         for (int i = 0; i < shooterInputs.length; i++) {
             shooterInputs[i] = new ShooterIOInputsAutoLogged();
         }
-
-        // shooterIOL.addToOrchestra(orchestra, 2);
-        // shooterIOM.addToOrchestra(orchestra, 1);
-        // shooterIOR.addToOrchestra(orchestra, 0);
-
-        // orchestra.loadMusic("fugue.chrp");
     }
 
     private void shootWithDistance(Distance distance) {
@@ -249,25 +238,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // if (RobotState.isDisabled()) {
-        //     if (!disabledTimer.isRunning()) {
-        //         disabledTimer.start();
-        //     }
-
-        //     if (disabledTimer.get() >= 30.0) {
-        //         if (!orchestra.isPlaying()) {
-        //             orchestra.play();
-        //         }
-        //     }
-        // } else {
-        //     orchestra.stop();
-        //     disabledTimer.stop();
-        //     disabledTimer.reset();
-        // }
-
-        // Logger.recordOutput("Shooter/OrchestraPlaying", orchestra.isPlaying());
-        // Logger.recordOutput("Shooter/DisabledTimer", (int) disabledTimer.get());
-        
         if (runShooterFlag) {
             // shooterIOL.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
             // shooterIOM.setVelocityClosedLoop(loggedFlywheelRadPerSec.get());
