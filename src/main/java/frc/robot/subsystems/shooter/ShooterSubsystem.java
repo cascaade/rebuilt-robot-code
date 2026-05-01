@@ -47,7 +47,7 @@ public class ShooterSubsystem extends SubsystemBase {
         this.indexIO = indexIO;
 
         this.robotPoseSupplier = robotPoseSupplier;
-        
+
         for (int i = 0; i < shooterInputs.length; i++) {
             shooterInputs[i] = new ShooterIOInputsAutoLogged();
         }
