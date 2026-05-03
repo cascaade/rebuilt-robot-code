@@ -12,6 +12,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Preferences;
 import frc.robot.Constants;
+import frc.robot.util.SparkMaxCompanion;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Inches;
@@ -40,6 +41,7 @@ public class SwerveConstants {
     public static final Distance kSwerveWheelRadius = Inches.of(2);
 
     public static final SparkMaxConfig driveConfig = new SparkMaxConfig();
+    public static final SparkMaxCompanion driveCompanion = new SparkMaxCompanion(driveConfig, "Swerve/Drive");
 
     public static final double driveMotorReduction = 6.75; // l2 mk4i gear set
 
@@ -62,6 +64,7 @@ public class SwerveConstants {
 
     // turn config
     public static final SparkMaxConfig turnConfig = new SparkMaxConfig();
+    public static final SparkMaxCompanion turnCompanion = new SparkMaxCompanion(turnConfig, "Swerve/Turn");
 
     public static final double turnMotorReduction = 150 / 7;
 

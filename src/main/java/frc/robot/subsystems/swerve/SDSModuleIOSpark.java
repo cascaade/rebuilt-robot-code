@@ -17,6 +17,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
@@ -46,9 +48,6 @@ public class SDSModuleIOSpark implements SDSModuleIO {
     private final boolean driveConnected;
     private final boolean turnConnected;
 
-    private double driveKs;
-    private double driveKv;
-
     private final SlewRateLimiter rateLimiter = new SlewRateLimiter(0.00005);
 
     private final int index;
@@ -57,14 +56,14 @@ public class SDSModuleIOSpark implements SDSModuleIO {
         this.index = index;
         this.zeroRotation = SwerveConstants.zeroRotations[index];
 
-        driveKs = SwerveConstants.driveKs;
-        driveKv = SwerveConstants.driveKv;
-
         SparkMaxConfig turnConfig = SwerveConstants.turnConfig;
         SparkMaxConfig driveConfig = SwerveConstants.driveConfig;
 
         turnMotor = new SparkMax(SwerveConstants.turnCANIDs[index], MotorType.kBrushless);
         driveMotor = new SparkMax(SwerveConstants.driveCANIDs[index], MotorType.kBrushless);
+
+        SwerveConstants.turnCompanion.setMotor(turnMotor);
+        SwerveConstants.driveCompanion.setMotor(driveMotor);
 
         turnMotor.setCANTimeout(0);
         driveMotor.setCANTimeout(0);
@@ -87,7 +86,8 @@ public class SDSModuleIOSpark implements SDSModuleIO {
         driveConnected = driveMotor.getFirmwareVersion() != 0;
         turnConnected = turnMotor.getFirmwareVersion() != 0;
     }
-    
+
+    @Override
     public void updateInputs(SDSModuleIOInputs inputs) {
         BaseStatusSignal.refreshAll(turnCANCoderPositionSignal);
 
@@ -111,6 +111,7 @@ public class SDSModuleIOSpark implements SDSModuleIO {
     }
 
     // TODO make sure that zero rotation is applied correctly, ensure logic is correct
+    @Override
     public void setTurnPosition(Rotation2d position) {
         double setpoint = MathUtil.inputModulus(
             position.plus(zeroRotation).getRadians(),
@@ -122,10 +123,13 @@ public class SDSModuleIOSpark implements SDSModuleIO {
         Logger.recordOutput("Swerve/AppliedData/Module " + index + "/atTurnSetpoint", turnController.isAtSetpoint());
     }
 
-    public void setDriveVelocityRadPerSec(double velocityRadPerSec) {
+    @Override
+    public void setDriveVelocity(AngularVelocity velocity) {
+        double velocityRadPerSec = velocity.in(RadiansPerSecond);
+
         if (Math.abs(velocityRadPerSec) < 0.01) velocityRadPerSec = 0;
         double setpointRadPerSec = rateLimiter.calculate(velocityRadPerSec);
-        double ffVolts = driveKs * Math.signum(velocityRadPerSec) + driveKv * velocityRadPerSec;
+        double ffVolts = SwerveConstants.driveKs * Math.signum(velocityRadPerSec) + SwerveConstants.driveKv * velocityRadPerSec;
         driveController.setSetpoint(
             setpointRadPerSec,
             ControlType.kVelocity,
@@ -138,11 +142,13 @@ public class SDSModuleIOSpark implements SDSModuleIO {
         Logger.recordOutput("Swerve/AppliedData/Module " + index + "/atDriveSetpoint", driveController.isAtSetpoint());
     }
 
-    public void setTurnOpenLoop(double output) {
+    @Override
+    public void setTurnOpenLoop(Voltage output) {
         turnMotor.setVoltage(output);
     }
 
-    public void setDriveOpenLoop(double output) {
+    @Override
+    public void setDriveOpenLoop(Voltage output) {
         driveMotor.setVoltage(output);
     }
 }

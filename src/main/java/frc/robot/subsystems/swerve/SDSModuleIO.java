@@ -19,23 +19,20 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 public interface SDSModuleIO {
-    /** Set drive velocity setpoint */
-    default void setDriveVelocity(AngularVelocity velocity) {
-    }
-
     /** Updates loggable inputs. */
     public default void updateInputs(SDSModuleIOInputs inputs) {}
+
+    /** Set drive velocity setpoint */
+    public default void setDriveVelocity(AngularVelocity velocity) {}
 
     /** Set turn position setpoint */
     public default void setTurnPosition(Rotation2d position) {}
 
     /** Run turn motor at specified open loop value. */
-    default void setTurnOpenLoop(Voltage output) {
-    }
+    public default void setTurnOpenLoop(Voltage output) {}
 
     /** Run drive motor at specified open loop value. */
-    default void setDriveOpenLoop(Voltage output) {
-    }
+    public default void setDriveOpenLoop(Voltage output) {}
 
     @AutoLog
     class SDSModuleIOInputs {

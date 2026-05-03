@@ -389,6 +389,9 @@ public class SwerveSubsystem extends SubsystemBase {
             aimHubFlag.set(false);
         }
 
+        SwerveConstants.driveCompanion.update();
+        SwerveConstants.turnCompanion.update();
+
         Logger.recordOutput("Swerve/Drive_Command", this.getCurrentCommand() == null ? "null" : this.getCurrentCommand().getName());
     }
 }
