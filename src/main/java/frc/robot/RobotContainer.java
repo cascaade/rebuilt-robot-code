@@ -15,6 +15,9 @@ import frc.robot.subsystems.intake.RollerIO;
 import frc.robot.subsystems.intake.RollerIOSpark;
 import frc.robot.subsystems.intake.WristIO;
 import frc.robot.subsystems.intake.WristIOSpark;
+import frc.robot.subsystems.led.LEDControllerIO;
+import frc.robot.subsystems.led.LEDControllerIOSim;
+import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIO;
@@ -40,6 +43,7 @@ public class RobotContainer {
     private final VisionSubsystem visionSubsystem;
     private final ShooterSubsystem shooterSubsystem;
     private final IntakeSubsystem intakeSubsystem;
+    private final LEDSubsystem ledSubsystem;
 
     private final AutoBrain autoBrain;
 
@@ -136,6 +140,10 @@ public class RobotContainer {
                 );
                 break;
         }
+
+        ledSubsystem = new LEDSubsystem(
+            new LEDControllerIOSim()
+        );
         
         configureBindings();
 
