@@ -4,6 +4,7 @@ public record LEDAnimation(LEDAnimationType animationType, int startIndex, int e
     public enum LEDAnimationType {
         BLINK,
         FLOW,
-        LARSON
+        LARSON,
+        ROTATION
     }
 }

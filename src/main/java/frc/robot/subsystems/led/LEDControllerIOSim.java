@@ -1,5 +1,6 @@
 package frc.robot.subsystems.led;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Timer;
 import org.littletonrobotics.junction.Logger;
 
@@ -37,10 +38,14 @@ public class LEDControllerIOSim implements LEDControllerIO {
 
     @Override
     public void setLEDs(int r, int g, int b) {
-        for (int i = 0; i < buffer.length; i++) {
+        for (int i = 0; i < buffer.length; i++)
             buffer[i] = String.format("#%02X%02X%02X", r, g, b);
+        updateNTBuffer();
+    }
+
+    private void updateNTBuffer() {
+        for (int i = 0; i < buffer.length; i++)
             Logger.recordOutput("lights/split/" + i, buffer[i]);
-        }
         Logger.recordOutput("lights/buffer", buffer);
     }
 
@@ -51,17 +56,35 @@ public class LEDControllerIOSim implements LEDControllerIO {
         switch (animation.animationType()) {
             case BLINK:
                 if ((int) (Timer.getFPGATimestamp() * animation.frameRate()) % 2 == 0) {
-                    setLEDs(
-                        animation.colors()[0][0],
-                        animation.colors()[0][1],
-                        animation.colors()[0][2]
-                    );
+                    for (int i = 0; i < buffer.length; i++)
+                        buffer[i] = String.format(
+                            "#%02X%02X%02X",
+                            animation.colors()[0][0],
+                            animation.colors()[0][1],
+                            animation.colors()[0][2]
+                        );
                 } else {
-                    setLEDs(0, 0, 0);
+                    for (int i = 0; i < buffer.length; i++)
+                        buffer[i] = "#000000";
                 }
                 break;
+            case ROTATION:
+                int len = animation.colors().length;
+                int offset = (int) MathUtil.inputModulus(Timer.getFPGATimestamp() * animation.frameRate(), 0, len);
+
+                for (int i = 0; i < buffer.length; i++)
+                    buffer[i] = String.format("#%02X%02X%02X",
+                        animation.colors()[(i + offset) % len][0],
+                        animation.colors()[(i + offset) % len][1],
+                        animation.colors()[(i + offset) % len][2]
+                    );
+
+                break;
             default:
-                setLEDs(0, 0, 0);
+                for (int i = 0; i < buffer.length; i++)
+                    buffer[i] = "#000000";
         }
+
+        updateNTBuffer();
     }
 }

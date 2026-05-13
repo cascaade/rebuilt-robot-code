@@ -1,6 +1,7 @@
 package frc.robot.subsystems.led;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import lombok.Setter;
 
@@ -13,7 +14,8 @@ public class LEDSubsystem extends SubsystemBase {
         DISABLED,
         DISCONNECTED,
         AUTONOMOUS,
-        ENABLED
+        ENABLED,
+        BOOT
     }
 
     public enum SystemState {
@@ -21,7 +23,8 @@ public class LEDSubsystem extends SubsystemBase {
         DISABLED,
         DISCONNECTED,
         AUTONOMOUS,
-        ENABLED
+        ENABLED,
+        BOOT
     }
 
     @Setter
@@ -44,6 +47,7 @@ public class LEDSubsystem extends SubsystemBase {
             case DISCONNECTED -> SystemState.DISCONNECTED;
             case AUTONOMOUS -> SystemState.AUTONOMOUS;
             case ENABLED -> SystemState.ENABLED;
+            case BOOT -> SystemState.BOOT;
         };
     }
 
@@ -84,6 +88,18 @@ public class LEDSubsystem extends SubsystemBase {
                     new int[] { 0, 255, 0 }
                 ));
                 break;
+            case BOOT:
+                controllerIO.setAnimation(new LEDAnimation(
+                    ROTATION,
+                    0,
+                    BUFFER_LENGTH,
+                    -4,
+                    new int[] { 0, 0, 255 },
+                    new int[] { 0, 0, 255 },
+                    new int[] { 255, 225, 0 },
+                    new int[] { 255, 225, 0 }
+                ));
+                break;
             default:
                 System.out.println("Couldn't find match for LEDSubsystem.SystemState");
         }
@@ -97,14 +113,15 @@ public class LEDSubsystem extends SubsystemBase {
         applyStates();
 
         // sample use cases
-        if (DriverStation.isDSAttached()) {
+        if (Timer.getFPGATimestamp() < 10) {
+            setWantedState(WantedState.BOOT);
+        } else if (DriverStation.isDSAttached()) {
             if (DriverStation.isAutonomous())
                 setWantedState(WantedState.AUTONOMOUS);
             else if (DriverStation.isEnabled())
                 setWantedState(WantedState.ENABLED);
             else
                 setWantedState(WantedState.DISABLED);
-
         } else {
             setWantedState(WantedState.DISCONNECTED);
         }
