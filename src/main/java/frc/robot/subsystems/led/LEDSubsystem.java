@@ -1,20 +1,30 @@
 package frc.robot.subsystems.led;
 
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.littletonrobotics.junction.Logger;
+import lombok.Setter;
+
+import static frc.robot.subsystems.led.LEDAnimation.LEDAnimationType.*;
+import static frc.robot.subsystems.led.LEDConstants.*;
 
 public class LEDSubsystem extends SubsystemBase {
     public enum WantedState {
         DISPLAY_OFF,
-        BLINK
+        DISABLED,
+        DISCONNECTED,
+        AUTONOMOUS,
+        ENABLED
     }
 
     public enum SystemState {
         DISPLAYING_OFF,
-        BLINK
+        DISABLED,
+        DISCONNECTED,
+        AUTONOMOUS,
+        ENABLED
     }
 
+    @Setter
     private WantedState wantedState = WantedState.DISPLAY_OFF;
     private WantedState previousWantedState = WantedState.DISPLAY_OFF;
     private SystemState systemState = SystemState.DISPLAYING_OFF;
@@ -30,7 +40,10 @@ public class LEDSubsystem extends SubsystemBase {
     public SystemState handleStateTransitions() {
         return switch (wantedState) {
             case DISPLAY_OFF -> SystemState.DISPLAYING_OFF;
-            case BLINK -> SystemState.BLINK;
+            case DISABLED -> SystemState.DISABLED;
+            case DISCONNECTED -> SystemState.DISCONNECTED;
+            case AUTONOMOUS -> SystemState.AUTONOMOUS;
+            case ENABLED -> SystemState.ENABLED;
         };
     }
 
@@ -40,21 +53,40 @@ public class LEDSubsystem extends SubsystemBase {
                 controllerIO.clearAnimation();
                 controllerIO.setLEDs(0, 0, 0);
                 break;
-            case BLINK:
+            case DISABLED:
                 controllerIO.clearAnimation();
-                if ((int) Timer.getFPGATimestamp() % 2 == 0) {
-                    controllerIO.setLEDs(255, 255, 255);
-                } else {
-                    controllerIO.setLEDs(0, 0, 0);
-                }
+                controllerIO.setLEDs(255, 0, 0);
+                break;
+            case DISCONNECTED:
+                controllerIO.setAnimation(new LEDAnimation(
+                    BLINK,
+                    0,
+                    BUFFER_LENGTH,
+                        1,
+                    new int[] { 255, 0, 0 }
+                ));
+                break;
+            case AUTONOMOUS:
+                controllerIO.setAnimation(new LEDAnimation(
+                    BLINK,
+                    0,
+                    BUFFER_LENGTH,
+                    2,
+                    new int[] { 255, 160, 0 }
+                ));
+                break;
+            case ENABLED:
+                controllerIO.setAnimation(new LEDAnimation(
+                    BLINK,
+                    0,
+                    BUFFER_LENGTH,
+                    2,
+                    new int[] { 0, 255, 0 }
+                ));
                 break;
             default:
                 System.out.println("Couldn't find match for LEDSubsystem.SystemState");
         }
-    }
-
-    public void setWantedState(WantedState wantedState) {
-        this.wantedState = wantedState;
     }
 
     @Override
@@ -64,6 +96,20 @@ public class LEDSubsystem extends SubsystemBase {
 
         applyStates();
 
-        setWantedState(WantedState.BLINK);
+        // sample use cases
+        if (DriverStation.isDSAttached()) {
+            if (DriverStation.isAutonomous())
+                setWantedState(WantedState.AUTONOMOUS);
+            else if (DriverStation.isEnabled())
+                setWantedState(WantedState.ENABLED);
+            else
+                setWantedState(WantedState.DISABLED);
+
+        } else {
+            setWantedState(WantedState.DISCONNECTED);
+        }
+
+        // needed for sim only
+        controllerIO.update();
     }
 }
