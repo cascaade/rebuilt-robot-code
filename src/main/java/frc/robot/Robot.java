@@ -4,7 +4,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -58,6 +60,11 @@ public class Robot extends LoggedRobot {
         Logger.start();
 
         m_robotContainer = new RobotContainer();
+    }
+
+    @Override
+    public void robotInit() {
+        WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
     }
 
     @Override
