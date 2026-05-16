@@ -25,6 +25,13 @@ public class ClimbConstants {
         }
     }
 
+    public static final double CLIMBER_ZERO_VELOCITY_THRESHOLD = 0;
+    public static final double CLIMBER_ZERO_VELOCITY_TEST_PERIOD = 0;
+    public static final double CLIMBER_SETPOINT_TOLERANCE = 0;
+    
+    public static final double CLIMBER_STOWED_SETPOINT = 0;
+    public static final double CLIMBER_READY_SETPOINT = 0;
+
     public static final int climberMotorCANID = 32;
 
     public static final double climbMotorReduction = 3.0 / 1.0;

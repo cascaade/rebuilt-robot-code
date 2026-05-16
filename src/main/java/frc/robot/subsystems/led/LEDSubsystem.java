@@ -9,7 +9,7 @@ import static frc.robot.subsystems.led.LEDAnimation.LEDAnimationType.*;
 import static frc.robot.subsystems.led.LEDConstants.*;
 
 public class LEDSubsystem extends SubsystemBase {
-    public enum WantedState {
+    private enum WantedState {
         DISPLAY_OFF,
         DISABLED,
         DISCONNECTED,
@@ -18,7 +18,7 @@ public class LEDSubsystem extends SubsystemBase {
         BOOT
     }
 
-    public enum SystemState {
+    private enum SystemState {
         DISPLAYING_OFF,
         DISABLED,
         DISCONNECTED,
@@ -108,9 +108,8 @@ public class LEDSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         this.systemState = handleStateTransitions();
-        this.previousWantedState = wantedState;
-
         applyStates();
+        this.previousWantedState = wantedState;
 
         // sample use cases
         if (Timer.getFPGATimestamp() < 10) {
