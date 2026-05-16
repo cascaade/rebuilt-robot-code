@@ -5,14 +5,17 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.intake.rollers.RollersIO;
+import frc.robot.subsystems.intake.wrist.WristIO;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.subsystems.intake.IntakeConstants.RollerConstants.ROLLERS_MAX_SPEED;
 
 public class IntakeSubsystem extends SubsystemBase {
-    private final RollerIO rollerIO;
+    private final RollersIO rollersIO;
     private final WristIO wristIO;
 
     private boolean isDeployedFlag = true;
@@ -35,12 +38,12 @@ public class IntakeSubsystem extends SubsystemBase {
     private final RollerIOInputsAutoLogged rollerInputs = new RollerIOInputsAutoLogged();
     private final WristIOInputsAutoLogged wristInputs = new WristIOInputsAutoLogged();
 
-    LoggedNetworkNumber speed = new LoggedNetworkNumber("Intake/Roller/Speed", IntakeConstants.intakeMaxSpeed);
+    LoggedNetworkNumber speed = new LoggedNetworkNumber("Intake/Roller/Speed", ROLLERS_MAX_SPEED);
     LoggedNetworkNumber voltage = new LoggedNetworkNumber("Intake/Roller/Voltage", 12);
     LoggedNetworkNumber position = new LoggedNetworkNumber("Intake/Wrist/Pose", 0);
 
-    public IntakeSubsystem(RollerIO rollerIO, WristIO wristIO) {
-        this.rollerIO = rollerIO;
+    public IntakeSubsystem(RollersIO rollersIO, WristIO wristIO) {
+        this.rollersIO = rollersIO;
         this.wristIO = wristIO;
     }
 
@@ -215,9 +218,9 @@ public class IntakeSubsystem extends SubsystemBase {
 
         if (isRollingFlag && !isWristMovingDown) {
             // rollerIO.setClosedLoop(isDirectionReversed ? -speed.get() : speed.get());
-            rollerIO.setOpenLoop(Volts.of(isDirectionReversed ? -voltage.get() : voltage.get()));
+            rollersIO.setOpenLoop(Volts.of(isDirectionReversed ? -voltage.get() : voltage.get()));
         } else {
-            rollerIO.setOpenLoop(Volts.zero());
+            rollersIO.setOpenLoop(Volts.zero());
         }
 
 
@@ -232,11 +235,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
         Logger.recordOutput("Intake/Wrist/SetpointAdjust", pivotSetpointAdjust);
 
-        rollerIO.periodic();
+        rollersIO.periodic();
         wristIO.periodic();
 
         wristIO.updateInputs(wristInputs);
-        rollerIO.updateInputs(rollerInputs);
+        rollersIO.updateInputs(rollerInputs);
 
         Logger.processInputs("Intake/Wrist", wristInputs);
         Logger.processInputs("Intake/Roller", rollerInputs);

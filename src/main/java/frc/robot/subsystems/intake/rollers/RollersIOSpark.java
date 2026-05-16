@@ -1,4 +1,4 @@
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intake.rollers;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
@@ -15,38 +15,36 @@ import edu.wpi.first.wpilibj.Timer;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.intake.IntakeConstants.RollerConstants.*;
 
-public class RollerIOSpark implements RollerIO {
+public class RollersIOSpark implements RollersIO {
     private final SparkMax intakeMotor;
     private final SparkClosedLoopController intakeController;
     private final RelativeEncoder intakeEncoder;
     private final SparkMaxConfig motorConfig;
 
-    private final LoggedNetworkNumber loggedKP = new LoggedNetworkNumber("Intake/Roller/kP", IntakeConstants.rollerP);
-    private final LoggedNetworkNumber loggedKD = new LoggedNetworkNumber("Intake/Roller/kD", IntakeConstants.rollerD);
-    private final LoggedNetworkNumber loggedKS = new LoggedNetworkNumber("Intake/Roller/kS", IntakeConstants.rollerS);
-    private final LoggedNetworkNumber loggedKV = new LoggedNetworkNumber("Intake/Roller/kV", IntakeConstants.rollerV);
+    private final LoggedNetworkNumber loggedKP = new LoggedNetworkNumber("Intake/Roller/kP", rollerP);
+    private final LoggedNetworkNumber loggedKD = new LoggedNetworkNumber("Intake/Roller/kD", rollerD);
+    private final LoggedNetworkNumber loggedKS = new LoggedNetworkNumber("Intake/Roller/kS", rollerS);
+    private final LoggedNetworkNumber loggedKV = new LoggedNetworkNumber("Intake/Roller/kV", rollerV);
 
     private double lastKp = 0.0;
     private double lastKd = 0.0;
     private double lastKs = 0.0;
     private double lastKv = 0.0;
 
-    public RollerIOSpark() {
-        intakeMotor = new SparkMax(IntakeConstants.kRollerCANID, MotorType.kBrushless);
+    public RollersIOSpark() {
+        intakeMotor = new SparkMax(ROLLERS_CAN_ID, MotorType.kBrushless);
         intakeController = intakeMotor.getClosedLoopController();
         intakeEncoder = intakeMotor.getEncoder();
 
-        motorConfig = IntakeConstants.rollerSparkConfig;
+        motorConfig = ROLLER_SPARK_CONFIG;
 
         motorConfig.closedLoop
-            .pid(IntakeConstants.rollerP, 0.0, IntakeConstants.rollerD);
+            .pid(rollerP, 0.0, rollerD);
         motorConfig.closedLoop.feedForward
-            .kV(IntakeConstants.rollerV).kS(IntakeConstants.rollerS);
+            .kV(rollerV).kS(rollerS);
 
         intakeMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }

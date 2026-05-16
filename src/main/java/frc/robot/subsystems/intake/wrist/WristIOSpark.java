@@ -1,4 +1,4 @@
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.intake.wrist;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
@@ -12,9 +12,8 @@ import edu.wpi.first.units.measure.Voltage;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.intake.IntakeConstants.WristConstants.*;
 
 public class WristIOSpark implements WristIO {
     private final SparkMax wristMotor;
@@ -22,10 +21,10 @@ public class WristIOSpark implements WristIO {
     private final RelativeEncoder wristEncoder;
     private final SparkMaxConfig motorConfig;
 
-    private final LoggedNetworkNumber loggedKP = new LoggedNetworkNumber("Intake/Wrist/kP", IntakeConstants.wristP);
-    private final LoggedNetworkNumber loggedKD = new LoggedNetworkNumber("Intake/Wrist/kD", IntakeConstants.wristD);
-    private final LoggedNetworkNumber loggedKS = new LoggedNetworkNumber("Intake/Wrist/kS", IntakeConstants.wristS);
-    private final LoggedNetworkNumber loggedKCos = new LoggedNetworkNumber("Intake/Wrist/kCos", IntakeConstants.wristCos);
+    private final LoggedNetworkNumber loggedKP = new LoggedNetworkNumber("Intake/Wrist/kP", wristP);
+    private final LoggedNetworkNumber loggedKD = new LoggedNetworkNumber("Intake/Wrist/kD", wristD);
+    private final LoggedNetworkNumber loggedKS = new LoggedNetworkNumber("Intake/Wrist/kS", wristS);
+    private final LoggedNetworkNumber loggedKCos = new LoggedNetworkNumber("Intake/Wrist/kCos", wristCos);
 
     private double lastKp = 0.0;
     private double lastKd = 0.0;
@@ -33,18 +32,18 @@ public class WristIOSpark implements WristIO {
     private double lastKcos = 0.0;
 
     public WristIOSpark() {
-        wristMotor = new SparkMax(IntakeConstants.kWristCANID, MotorType.kBrushless);
+        wristMotor = new SparkMax(WRIST_CAN_ID, MotorType.kBrushless);
         wristController = wristMotor.getClosedLoopController();
         wristEncoder = wristMotor.getEncoder();
 
-        motorConfig = IntakeConstants.wristSparkConfig;
+        motorConfig = WRIST_SPARK_CONFIG;
 
         motorConfig.closedLoop
-            .pid(IntakeConstants.wristP, 0.0, IntakeConstants.wristD);
+            .pid(wristP, 0.0, wristD);
         motorConfig.closedLoop.feedForward
-            .kCos(IntakeConstants.wristCos).kS(IntakeConstants.wristS);
+            .kCos(wristCos).kS(wristS);
 
-        wristMotor.configure(IntakeConstants.wristSparkConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        wristMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     @Override

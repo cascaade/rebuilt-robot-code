@@ -11,11 +11,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.autos.AutoBrain;
 import frc.robot.subsystems.intake.IntakeSubsystem;
-import frc.robot.subsystems.intake.RollerIO;
-import frc.robot.subsystems.intake.RollerIOSpark;
-import frc.robot.subsystems.intake.WristIO;
-import frc.robot.subsystems.intake.WristIOSpark;
-import frc.robot.subsystems.led.LEDControllerIO;
+import frc.robot.subsystems.intake.rollers.RollersIO;
+import frc.robot.subsystems.intake.rollers.RollersIOSpark;
+import frc.robot.subsystems.intake.wrist.WristIO;
+import frc.robot.subsystems.intake.wrist.WristIOSpark;
 import frc.robot.subsystems.led.LEDControllerIOSim;
 import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
@@ -79,7 +78,7 @@ public class RobotContainer {
                     swerveSubsystem::getPose
                 );
                 intakeSubsystem = new IntakeSubsystem(
-                    new RollerIOSpark(),
+                    new RollersIOSpark(),
                     new WristIOSpark()
                 );
                 break;
@@ -107,7 +106,7 @@ public class RobotContainer {
                     Pose2d::new
                 );
                 intakeSubsystem = new IntakeSubsystem(
-                    new RollerIO() {},
+                    new RollersIO() {},
                     new WristIO() {}
                 );
                 break;
@@ -135,7 +134,7 @@ public class RobotContainer {
                     Pose2d::new
                 );
                 intakeSubsystem = new IntakeSubsystem(
-                    new RollerIO() {},
+                    new RollersIO() {},
                     new WristIO() {}
                 );
                 break;
