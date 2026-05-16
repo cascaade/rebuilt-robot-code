@@ -75,7 +75,7 @@ public class RollersIOSpark implements RollersIO {
     }
 
     @Override
-    public void updateInputs(RollerIOInputs inputs) {
+    public void updateInputs(RollersIOInputs inputs) {
         inputs.position.mut_replace(intakeEncoder.getPosition(), Radians);
         inputs.velocity.mut_replace(intakeEncoder.getVelocity(), RadiansPerSecond);
 

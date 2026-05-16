@@ -8,6 +8,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -72,8 +73,8 @@ public class WristIOSpark implements WristIO {
     }
 
     @Override
-    public void resetPosition() {
-        wristEncoder.setPosition(0);
+    public void resetPosition(Angle angle) {
+        wristEncoder.setPosition(angle.in(Radians));
     }
 
     @Override

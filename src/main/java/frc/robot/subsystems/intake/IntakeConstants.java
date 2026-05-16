@@ -3,20 +3,38 @@ package frc.robot.subsystems.intake;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+
+import static edu.wpi.first.units.Units.*;
 
 public class IntakeConstants {
     public static class WristConstants {
         public static final int WRIST_CAN_ID = 28;
+
         public static final int WRIST_CURRENT_LIMIT = 40;
-        public static final double WRIST_ZERO_CURRENT_THRESHOLD = 30;
+
+        public static final AngularVelocity WRIST_ZERO_VELOCITY_THRESHOLD = RadiansPerSecond.of(2);
+        public static final Time WRIST_ZERO_VELOCITY_TIME_PERIOD = Seconds.of(.5);
+        public static final Voltage WRIST_HOMING_VOLTAGE = Volts.of(1);
+        public static final Angle WRIST_HOME_RESET_POSITION = Radians.of(0);
+
+        public static final Angle WRIST_SETPOINT_TOLERANCE = Radians.of(2);
+        public static final Angle WRIST_STOWED_SETPOINT = Radians.of(0);
+        public static final Angle WRIST_DEPLOYED_SETPOINT = Radians.of(Math.PI / 2);
+
         public static final double WRIST_MOTOR_REDUCTION = 32.0;
         public static final double WRIST_ENCODER_POSITION_FACTOR = 2 * Math.PI / WRIST_MOTOR_REDUCTION;
         public static final double WRIST_ENCODER_VELOCITY_FACTOR = (2 * Math.PI) / WRIST_MOTOR_REDUCTION / 60;
+
         public static final double wristP = 0.2;
         public static final double wristD = 0;
         public static final double wristCos = 0;
         public static final double wristS = 0;
+
         public static final SparkMaxConfig WRIST_SPARK_CONFIG = new SparkMaxConfig();
 
         static {
@@ -66,15 +84,12 @@ public class IntakeConstants {
     public static class RollerConstants {
         public static final int ROLLERS_CAN_ID = 29;
 
-        public static final SparkMaxConfig ROLLER_SPARK_CONFIG = new SparkMaxConfig();
-
-        public static final double ROLLERS_MAX_SPEED = 5000; // rad/sec
+        public static final AngularVelocity ROLLERS_INTAKE_SPEED = RadiansPerSecond.of(50);
+        public static final AngularVelocity ROLLERS_OUTTAKE_SPEED = RadiansPerSecond.of(50); // rad/sec
 
         public static final int ROLLER_CURRENT_LIMIT = 40;
 
         public static final double ROLLER_MOTOR_REDUCTION = 2.0;
-
-
         public static final double ROLLER_ENCODER_POSITION_FACTOR = 2 * Math.PI / ROLLER_MOTOR_REDUCTION;
         public static final double ROLLER_ENCODER_VELOCITY_FACTOR = (2 * Math.PI) / ROLLER_MOTOR_REDUCTION / 60;
 
@@ -82,6 +97,8 @@ public class IntakeConstants {
         public static final double rollerD = 0;
         public static final double rollerS = 0.23;
         public static final double rollerV = 0.0395;
+
+        public static final SparkMaxConfig ROLLER_SPARK_CONFIG = new SparkMaxConfig();
 
         static {
             ROLLER_SPARK_CONFIG

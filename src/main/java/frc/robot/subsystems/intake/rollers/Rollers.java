@@ -1,5 +1,67 @@
 package frc.robot.subsystems.intake.rollers;
 
-public class Rollers {
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import lombok.Setter;
 
+import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.subsystems.intake.IntakeConstants.RollerConstants.ROLLERS_INTAKE_SPEED;
+import static frc.robot.subsystems.intake.IntakeConstants.RollerConstants.ROLLERS_OUTTAKE_SPEED;
+
+public class Rollers extends SubsystemBase {
+    private enum WantedState {
+        IDLE,
+        INTAKE,
+        OUTTAKE
+    }
+
+    private enum SystemState {
+        IDLING,
+        INTAKING,
+        OUTTAKING
+    }
+
+    @Setter
+    private WantedState wantedState = WantedState.IDLE;
+    private WantedState previousWantedState = WantedState.IDLE;
+    private SystemState systemState = SystemState.IDLING;
+
+    private final RollersIO rollersIO;
+
+    public Rollers(RollersIO rollersIO) {
+        this.rollersIO = rollersIO;
+    }
+
+    private SystemState handleStateTransitions() {
+        switch (wantedState) {
+            case INTAKE -> {
+                return SystemState.INTAKING;
+            }
+            case OUTTAKE -> {
+                return SystemState.OUTTAKING;
+            }
+            default -> {
+                return SystemState.IDLING;
+            }
+        }
+    }
+
+    private void applyStates() {
+        switch (systemState) {
+            case INTAKING ->
+                rollersIO.setClosedLoop(ROLLERS_INTAKE_SPEED);
+
+            case OUTTAKING ->
+                rollersIO.setClosedLoop(ROLLERS_OUTTAKE_SPEED);
+
+            default ->
+                rollersIO.setOpenLoop(Volts.of(0));
+        }
+    }
+
+    @Override
+    public void periodic() {
+        this.systemState = handleStateTransitions();
+        applyStates();
+        this.previousWantedState = wantedState;
+    }
 }

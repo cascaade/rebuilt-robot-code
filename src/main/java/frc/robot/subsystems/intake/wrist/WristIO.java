@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake.wrist;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.MutCurrent;
 import edu.wpi.first.units.measure.MutVoltage;
@@ -25,7 +26,7 @@ public interface WristIO {
 
     public default void setSetpoint(Rotation2d angleSetpoint) {}
 
-    public default void resetPosition() {}
+    public default void resetPosition(Angle angle) {}
 
     public default void setOpenLoop(Voltage voltage) {}
 }

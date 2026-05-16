@@ -14,11 +14,7 @@ import java.util.function.BooleanSupplier;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.subsystems.climb.ClimbConstants.CLIMBER_READY_SETPOINT;
-import static frc.robot.subsystems.climb.ClimbConstants.CLIMBER_SETPOINT_TOLERANCE;
-import static frc.robot.subsystems.climb.ClimbConstants.CLIMBER_STOWED_SETPOINT;
-import static frc.robot.subsystems.climb.ClimbConstants.CLIMBER_ZERO_VELOCITY_TEST_PERIOD;
-import static frc.robot.subsystems.climb.ClimbConstants.CLIMBER_ZERO_VELOCITY_THRESHOLD;
+import static frc.robot.subsystems.climb.ClimbConstants.*;
 
 public class ClimberSubsystem extends SubsystemBase {
     private enum WantedState {
@@ -47,7 +43,7 @@ public class ClimberSubsystem extends SubsystemBase {
     private WantedState previousWantedState = WantedState.IDLE;
     private SystemState systemState = SystemState.IDLING;
 
-    private double climberZeroTimestamp = Double.NaN;
+    private double climberHomeTimestamp = Double.NaN;
     private boolean isClimberHomed = false;
 
     private double setpointPosition = 0;
@@ -100,7 +96,7 @@ public class ClimberSubsystem extends SubsystemBase {
         }
 
         if (previousWantedState == WantedState.HOME && wantedState != WantedState.HOME) {
-            climberZeroTimestamp = Double.NaN;
+            climberHomeTimestamp = Double.NaN;
         }
 
         switch (wantedState) {
@@ -111,20 +107,20 @@ public class ClimberSubsystem extends SubsystemBase {
 
                 if (DriverStation.isEnabled()) {
                     if (Math.abs(inputs.velocityRotPerSec) <= CLIMBER_ZERO_VELOCITY_THRESHOLD) {
-                        if (Double.isNaN(climberZeroTimestamp)) {
-                            climberZeroTimestamp = Timer.getFPGATimestamp();
+                        if (Double.isNaN(climberHomeTimestamp)) {
+                            climberHomeTimestamp = Timer.getFPGATimestamp();
                             return SystemState.HOMING;
-                        } else if (Timer.getFPGATimestamp() - climberZeroTimestamp >= CLIMBER_ZERO_VELOCITY_TEST_PERIOD) {
-                            climberZeroTimestamp = Double.NaN;
+                        } else if (Timer.getFPGATimestamp() - climberHomeTimestamp >= CLIMBER_ZERO_VELOCITY_TIME_PERIOD) {
+                            climberHomeTimestamp = Double.NaN;
                             isClimberHomed = true;
-                            // reset pos with io
+                            tareClimberPosition(CLIMBER_HOME_RESET_POSITION);
                             setWantedState(WantedState.IDLE);
                             return SystemState.IDLING;
                         } else {
                             return SystemState.HOMING;
                         }
                     } else {
-                        climberZeroTimestamp = Double.NaN;
+                        climberHomeTimestamp = Double.NaN;
                         return SystemState.HOMING;
                     }
                 }
@@ -183,14 +179,6 @@ public class ClimberSubsystem extends SubsystemBase {
         }
     }
 
-    private boolean isAtPosition(double position) {
-        return MathUtil.isNear(
-            position,
-            inputs.positionRadians,
-            CLIMBER_SETPOINT_TOLERANCE
-        );
-    }
-
     @Override
     public void periodic() {
         climbIO.updateInputs(inputs);
@@ -199,5 +187,17 @@ public class ClimberSubsystem extends SubsystemBase {
         this.systemState = handleStateTransitions();
         applyStates();
         this.previousWantedState = wantedState;
+    }
+
+    private void tareClimberPosition(double position) {
+
+    }
+
+    private boolean isAtPosition(double position) {
+        return MathUtil.isNear(
+            position,
+            inputs.positionRadians,
+            CLIMBER_SETPOINT_TOLERANCE
+        );
     }
 }

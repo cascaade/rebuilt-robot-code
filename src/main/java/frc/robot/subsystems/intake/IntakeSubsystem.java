@@ -5,14 +5,15 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.intake.rollers.RollersIOInputsAutoLogged;
 import frc.robot.subsystems.intake.rollers.RollersIO;
 import frc.robot.subsystems.intake.wrist.WristIO;
+import frc.robot.subsystems.intake.wrist.WristIOInputsAutoLogged;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.subsystems.intake.IntakeConstants.RollerConstants.ROLLERS_MAX_SPEED;
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.intake.IntakeConstants.RollerConstants.ROLLERS_INTAKE_SPEED;
 
 public class IntakeSubsystem extends SubsystemBase {
     private final RollersIO rollersIO;
@@ -35,10 +36,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private Angle pivotSetpointAdjust = Radians.mutable(0.0);
 
-    private final RollerIOInputsAutoLogged rollerInputs = new RollerIOInputsAutoLogged();
+    private final RollersIOInputsAutoLogged rollerInputs = new RollersIOInputsAutoLogged();
     private final WristIOInputsAutoLogged wristInputs = new WristIOInputsAutoLogged();
 
-    LoggedNetworkNumber speed = new LoggedNetworkNumber("Intake/Roller/Speed", ROLLERS_MAX_SPEED);
+    LoggedNetworkNumber speed = new LoggedNetworkNumber("Intake/Roller/Speed", ROLLERS_INTAKE_SPEED.in(RadiansPerSecond));
     LoggedNetworkNumber voltage = new LoggedNetworkNumber("Intake/Roller/Voltage", 12);
     LoggedNetworkNumber position = new LoggedNetworkNumber("Intake/Wrist/Pose", 0);
 

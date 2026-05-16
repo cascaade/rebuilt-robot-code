@@ -12,7 +12,7 @@ import static edu.wpi.first.units.Units.*;
 
 public interface RollersIO {
     @AutoLog
-    public static class RollerIOInputs {
+    public static class RollersIOInputs {
         public MutAngle position = Radians.mutable(0);
         public MutAngularVelocity velocity = RadiansPerSecond.mutable(0);
 
@@ -22,7 +22,7 @@ public interface RollersIO {
 
     public default void periodic() {}
 
-    public default void updateInputs(RollerIOInputs inputs) {}
+    public default void updateInputs(RollersIOInputs inputs) {}
 
     public default void setClosedLoop(AngularVelocity velocity) {}
 
