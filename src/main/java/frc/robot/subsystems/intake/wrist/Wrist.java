@@ -10,8 +10,8 @@ import lombok.Setter;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.intake.IntakeConstants.WristConstants.*;
 
-public class Wrist extends SubsystemBase {
-    private enum WantedState {
+public class Wrist {
+    public enum WantedState {
         IDLE,
         STOW,
         DEPLOY,
@@ -21,9 +21,7 @@ public class Wrist extends SubsystemBase {
     private enum SystemState {
         IDLING,
         STOWING,
-        STOWED,
         DEPLOYING,
-        DEPLOYED,
         HOMING
     }
 
@@ -32,11 +30,11 @@ public class Wrist extends SubsystemBase {
     private WantedState previousWantedState = WantedState.IDLE;
     private SystemState systemState = SystemState.IDLING;
 
-    private final WristIO wristIO;
-    private final WristIOInputsAutoLogged wristIOInputs;
-
     private double wristHomeTimestamp = Double.NaN;
     private boolean isWristHomed = false;
+
+    private final WristIO wristIO;
+    private final WristIOInputsAutoLogged wristIOInputs;
 
     public Wrist(WristIO wristIO) {
         this.wristIO = wristIO;
@@ -51,15 +49,9 @@ public class Wrist extends SubsystemBase {
 
         switch (wantedState) {
             case STOW -> {
-                if (isAtAngle(WRIST_STOWED_SETPOINT))
-                    return SystemState.STOWED;
-
                 return SystemState.STOWING;
             }
             case DEPLOY -> {
-                if (isAtAngle(WRIST_DEPLOYED_SETPOINT))
-                    return SystemState.DEPLOYED;
-
                 return SystemState.DEPLOYING;
             }
             case HOME -> {
@@ -93,10 +85,10 @@ public class Wrist extends SubsystemBase {
 
     private void applyStates() {
         switch (systemState) {
-            case STOWING, STOWED ->
+            case STOWING ->
                 moveToPosition(WRIST_STOWED_SETPOINT);
 
-            case DEPLOYING, DEPLOYED ->
+            case DEPLOYING ->
                 moveToPosition(WRIST_DEPLOYED_SETPOINT);
 
             case HOMING ->
@@ -106,13 +98,20 @@ public class Wrist extends SubsystemBase {
         }
     }
 
-    @Override
     public void periodic() {
         this.systemState = handleStateTransitions();
         applyStates();
         this.previousWantedState = wantedState;
 
         wristIO.updateInputs(wristIOInputs);
+    }
+
+    public boolean hasHomeCompleted() {
+        return isWristHomed;
+    }
+
+    public boolean hasWristDeployed() {
+        return isAtAngle(WRIST_DEPLOYED_SETPOINT);
     }
 
     private void moveToPosition(Angle angle) {

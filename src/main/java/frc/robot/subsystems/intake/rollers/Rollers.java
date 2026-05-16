@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake.rollers;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import lombok.Setter;
 
@@ -7,8 +8,8 @@ import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.intake.IntakeConstants.RollerConstants.ROLLERS_INTAKE_SPEED;
 import static frc.robot.subsystems.intake.IntakeConstants.RollerConstants.ROLLERS_OUTTAKE_SPEED;
 
-public class Rollers extends SubsystemBase {
-    private enum WantedState {
+public class Rollers {
+    public enum WantedState {
         IDLE,
         INTAKE,
         OUTTAKE
@@ -18,6 +19,7 @@ public class Rollers extends SubsystemBase {
         IDLING,
         INTAKING,
         OUTTAKING
+        // todo: add jam detection
     }
 
     @Setter
@@ -58,7 +60,6 @@ public class Rollers extends SubsystemBase {
         }
     }
 
-    @Override
     public void periodic() {
         this.systemState = handleStateTransitions();
         applyStates();
