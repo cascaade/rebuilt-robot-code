@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.intake.rollers.Rollers;
 import frc.robot.subsystems.intake.rollers.RollersIO;
@@ -8,21 +9,27 @@ import frc.robot.subsystems.intake.wrist.Wrist;
 import frc.robot.subsystems.intake.wrist.WristIO;
 import lombok.Setter;
 
+import static edu.wpi.first.units.Units.Seconds;
+import static frc.robot.subsystems.intake.IntakeConstants.WristConstants.WRIST_PULSE_DEPLOY_DURATION;
+import static frc.robot.subsystems.intake.IntakeConstants.WristConstants.WRIST_PULSE_STOW_DURATION;
+
 public class IntakeFSM extends SubsystemBase {
     private enum WantedState {
         IDLE,
         HOME,
         INTAKE,
         OUTTAKE,
+        PULSE,
         STOW
     }
 
     private enum SystemState {
         IDLING,
         HOMING_WRIST,
-        DEPLOYING_FOR_INTAKE,
+        DEPLOYING,
         INTAKING,
         OUTTAKING,
+        PULSING,
         STOWING
     }
 
@@ -58,17 +65,20 @@ public class IntakeFSM extends SubsystemBase {
             }
             case INTAKE -> {
                 if (!wrist.hasWristDeployed()) {
-                    return SystemState.DEPLOYING_FOR_INTAKE;
+                    return SystemState.DEPLOYING;
                 }
 
                 return SystemState.INTAKING;
             }
             case OUTTAKE -> {
                 if (!wrist.hasWristDeployed()) {
-                    return SystemState.DEPLOYING_FOR_INTAKE;
+                    return SystemState.DEPLOYING;
                 }
 
                 return SystemState.OUTTAKING;
+            }
+            case PULSE -> {
+                return SystemState.PULSING;
             }
             case STOW -> {
                 return SystemState.STOWING;
@@ -87,7 +97,7 @@ public class IntakeFSM extends SubsystemBase {
                 wrist.setWantedState(Wrist.WantedState.HOME);
                 rollers.setWantedState(Rollers.WantedState.IDLE);
             }
-            case DEPLOYING_FOR_INTAKE -> {
+            case DEPLOYING -> {
                 wrist.setWantedState(Wrist.WantedState.DEPLOY);
                 rollers.setWantedState(Rollers.WantedState.IDLE);
             }
@@ -98,6 +108,17 @@ public class IntakeFSM extends SubsystemBase {
             case OUTTAKING -> {
                 wrist.setWantedState(Wrist.WantedState.DEPLOY);
                 rollers.setWantedState(Rollers.WantedState.OUTTAKE);
+            }
+            case PULSING -> {
+                rollers.setWantedState(Rollers.WantedState.IDLE);
+
+                var completion = Timer.getFPGATimestamp() % WRIST_PULSE_DEPLOY_DURATION.plus(WRIST_PULSE_STOW_DURATION).in(Seconds);
+
+                if (completion < WRIST_PULSE_STOW_DURATION.in(Seconds)) {
+                    wrist.setWantedState(Wrist.WantedState.STOW);
+                } else {
+                    wrist.setWantedState(Wrist.WantedState.DEPLOY);
+                }
             }
             case STOWING -> {
                 rollers.setWantedState(Rollers.WantedState.IDLE);

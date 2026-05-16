@@ -110,7 +110,7 @@ public class ClimberSubsystem extends SubsystemBase {
                         if (Double.isNaN(climberHomeTimestamp)) {
                             climberHomeTimestamp = Timer.getFPGATimestamp();
                             return SystemState.HOMING;
-                        } else if (Timer.getFPGATimestamp() - climberHomeTimestamp >= CLIMBER_ZERO_VELOCITY_TIME_PERIOD) {
+                        } else if (Timer.getFPGATimestamp() - climberHomeTimestamp >= CLIMBER_ZERO_VELOCITY_DURATION) {
                             climberHomeTimestamp = Double.NaN;
                             isClimberHomed = true;
                             tareClimberPosition(CLIMBER_HOME_RESET_POSITION);

@@ -18,7 +18,7 @@ public class IntakeConstants {
         public static final int WRIST_CURRENT_LIMIT = 40;
 
         public static final AngularVelocity WRIST_ZERO_VELOCITY_THRESHOLD = RadiansPerSecond.of(2);
-        public static final Time WRIST_ZERO_VELOCITY_TIME_PERIOD = Seconds.of(.5);
+        public static final Time WRIST_ZERO_VELOCITY_DURATION = Seconds.of(.5);
         public static final Voltage WRIST_HOMING_VOLTAGE = Volts.of(1);
         public static final Angle WRIST_HOME_RESET_POSITION = Radians.of(0);
 
@@ -29,6 +29,9 @@ public class IntakeConstants {
         public static final double WRIST_MOTOR_REDUCTION = 32.0;
         public static final double WRIST_ENCODER_POSITION_FACTOR = 2 * Math.PI / WRIST_MOTOR_REDUCTION;
         public static final double WRIST_ENCODER_VELOCITY_FACTOR = (2 * Math.PI) / WRIST_MOTOR_REDUCTION / 60;
+
+        public static final Time WRIST_PULSE_STOW_DURATION = Seconds.of(.4);
+        public static final Time WRIST_PULSE_DEPLOY_DURATION = Seconds.of(.4);
 
         public static final double wristP = 0.2;
         public static final double wristD = 0;

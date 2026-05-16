@@ -63,7 +63,7 @@ public class Wrist {
                     if (wristIOInputs.velocity.isNear(RadiansPerSecond.of(0), WRIST_ZERO_VELOCITY_THRESHOLD)) {
                         if (Double.isNaN(wristHomeTimestamp)) {
                             wristHomeTimestamp = Timer.getFPGATimestamp();
-                        } else if (Seconds.of(Timer.getFPGATimestamp() - wristHomeTimestamp).gte(WRIST_ZERO_VELOCITY_TIME_PERIOD)) {
+                        } else if (Seconds.of(Timer.getFPGATimestamp() - wristHomeTimestamp).gte(WRIST_ZERO_VELOCITY_DURATION)) {
                             wristHomeTimestamp = Double.NaN;
                             isWristHomed = true;
                             tareWristPosition(WRIST_HOME_RESET_POSITION);
