@@ -173,6 +173,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
     private void applyStates() {
         switch (systemState) {
+            case HOMING -> climbIO.setOpenLoop(CLIMBER_HOMING_VOLTAGE);
             case MOVING_TO_POSITION -> {
                 climbIO.setClosedLoop(Radians.of(setpointPosition));
             }

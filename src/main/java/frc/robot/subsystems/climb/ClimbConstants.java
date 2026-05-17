@@ -4,9 +4,11 @@ import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
 
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Volts;
 
 public class ClimbConstants {
     public static enum ClimbPose {
@@ -27,6 +29,7 @@ public class ClimbConstants {
 
     public static final double CLIMBER_ZERO_VELOCITY_THRESHOLD = 0;
     public static final double CLIMBER_ZERO_VELOCITY_DURATION = 0;
+    public static final Voltage CLIMBER_HOMING_VOLTAGE = Volts.of(1);
     public static final double CLIMBER_HOME_RESET_POSITION = 0;
 
     public static final double CLIMBER_SETPOINT_TOLERANCE = 0;
