@@ -20,6 +20,9 @@ public class Constants {
 		REPLAY,
 	}
 
+    public static final boolean tuningMode = true;
+    public static final boolean disableHAL = false;
+
     public static final RobotMode simMode = RobotMode.SIM;
 	public static final RobotMode currentMode = RobotBase.isReal() ? RobotMode.REAL : simMode;
 
