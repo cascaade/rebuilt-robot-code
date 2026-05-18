@@ -20,9 +20,9 @@ public interface RollersIO {
         public MutCurrent currentAmps = Amps.mutable(0);
     }
 
-    public default void periodic() {}
-
     public default void updateInputs(RollersIOInputs inputs) {}
+
+    public default void syncControlConstants() {}
 
     public default void setClosedLoop(AngularVelocity velocity) {}
 

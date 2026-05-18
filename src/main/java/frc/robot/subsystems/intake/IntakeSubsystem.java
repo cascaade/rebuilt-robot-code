@@ -5,8 +5,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.intake.rollers.RollersIOInputsAutoLogged;
 import frc.robot.subsystems.intake.rollers.RollersIO;
+import frc.robot.subsystems.intake.rollers.RollersIOInputsAutoLogged;
 import frc.robot.subsystems.intake.wrist.WristIO;
 import frc.robot.subsystems.intake.wrist.WristIOInputsAutoLogged;
 import org.littletonrobotics.junction.Logger;
@@ -236,8 +236,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
         Logger.recordOutput("Intake/Wrist/SetpointAdjust", pivotSetpointAdjust);
 
-        rollersIO.periodic();
-        wristIO.periodic();
+//        rollersIO.periodic();
+//        wristIO.periodic();
 
         wristIO.updateInputs(wristInputs);
         rollersIO.updateInputs(rollerInputs);

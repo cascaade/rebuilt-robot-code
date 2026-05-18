@@ -16,6 +16,8 @@ public interface ClimbIO {
 
     public default void updateInputs(ClimbIOInputs inputs) {}
 
+    public default void syncControlConstants() {}
+
     public default void setClosedLoop(Angle targetAngle) {}
 
     public default void setOpenLoop(Voltage voltage) {}

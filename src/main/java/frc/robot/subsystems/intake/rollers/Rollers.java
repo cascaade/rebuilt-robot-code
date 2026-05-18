@@ -1,8 +1,7 @@
 package frc.robot.subsystems.intake.rollers;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import lombok.Setter;
+import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.intake.IntakeConstants.RollerConstants.ROLLERS_INTAKE_SPEED;
@@ -28,6 +27,7 @@ public class Rollers {
     private SystemState systemState = SystemState.IDLING;
 
     private final RollersIO rollersIO;
+    private final RollersIOInputsAutoLogged rollersIOInputs = new RollersIOInputsAutoLogged();
 
     public Rollers(RollersIO rollersIO) {
         this.rollersIO = rollersIO;
@@ -64,5 +64,9 @@ public class Rollers {
         this.systemState = handleStateTransitions();
         applyStates();
         this.previousWantedState = wantedState;
+
+        rollersIO.updateInputs(rollersIOInputs);
+        Logger.processInputs("Intake/Rollers", rollersIOInputs);
+        rollersIO.syncControlConstants();
     }
 }

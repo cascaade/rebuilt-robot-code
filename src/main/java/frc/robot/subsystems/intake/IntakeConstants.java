@@ -8,6 +8,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.util.TunableControlConstants;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -33,10 +34,8 @@ public class IntakeConstants {
         public static final Time WRIST_PULSE_STOW_DURATION = Seconds.of(.4);
         public static final Time WRIST_PULSE_DEPLOY_DURATION = Seconds.of(.4);
 
-        public static final double wristP = 0.2;
-        public static final double wristD = 0;
-        public static final double wristCos = 0;
-        public static final double wristS = 0;
+        public static final TunableControlConstants WRIST_CONTROL_CONSTANTS =
+            new TunableControlConstants("Intake/Wrist");
 
         public static final SparkMaxConfig WRIST_SPARK_CONFIG = new SparkMaxConfig();
 
@@ -52,12 +51,9 @@ public class IntakeConstants {
                 .uvwAverageDepth(2);
             WRIST_SPARK_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .pid(wristP, 0.0, wristD)
                 .positionWrappingEnabled(true)
                 .positionWrappingInputRange(0, 2 * Math.PI)
                 .outputRange(-1, 1);
-            WRIST_SPARK_CONFIG.closedLoop.feedForward
-                .kCos(wristCos).kS(wristS);
             WRIST_SPARK_CONFIG.signals
                 .absoluteEncoderPositionAlwaysOn(true)
                 .absoluteEncoderPositionPeriodMs((int) (1000.0 / Constants.odometryFrequency))
@@ -66,6 +62,8 @@ public class IntakeConstants {
                 .appliedOutputPeriodMs(20)
                 .busVoltagePeriodMs(20)
                 .outputCurrentPeriodMs(20);
+
+            WRIST_CONTROL_CONSTANTS.applyTo(WRIST_SPARK_CONFIG);
         }
 
         public enum IntakeWristPose {
@@ -90,37 +88,32 @@ public class IntakeConstants {
         public static final AngularVelocity ROLLERS_INTAKE_SPEED = RadiansPerSecond.of(50);
         public static final AngularVelocity ROLLERS_OUTTAKE_SPEED = RadiansPerSecond.of(50); // rad/sec
 
-        public static final int ROLLER_CURRENT_LIMIT = 40;
+        public static final int ROLLERS_CURRENT_LIMIT = 40;
 
-        public static final double ROLLER_MOTOR_REDUCTION = 2.0;
-        public static final double ROLLER_ENCODER_POSITION_FACTOR = 2 * Math.PI / ROLLER_MOTOR_REDUCTION;
-        public static final double ROLLER_ENCODER_VELOCITY_FACTOR = (2 * Math.PI) / ROLLER_MOTOR_REDUCTION / 60;
+        public static final double ROLLERS_MOTOR_REDUCTION = 2.0;
+        public static final double ROLLERS_ENCODER_POSITION_FACTOR = 2 * Math.PI / ROLLERS_MOTOR_REDUCTION;
+        public static final double ROLLERS_ENCODER_VELOCITY_FACTOR = (2 * Math.PI) / ROLLERS_MOTOR_REDUCTION / 60;
 
-        public static final double rollerP = 0.00025;
-        public static final double rollerD = 0;
-        public static final double rollerS = 0.23;
-        public static final double rollerV = 0.0395;
+        public static final TunableControlConstants ROLLERS_CONTROL_CONSTANTS =
+            new TunableControlConstants("Intake/Rollers");
 
-        public static final SparkMaxConfig ROLLER_SPARK_CONFIG = new SparkMaxConfig();
+        public static final SparkMaxConfig ROLLERS_SPARK_CONFIG = new SparkMaxConfig();
 
         static {
-            ROLLER_SPARK_CONFIG
+            ROLLERS_SPARK_CONFIG
                 .idleMode(IdleMode.kCoast)
                 .voltageCompensation(12)
-                .smartCurrentLimit(ROLLER_CURRENT_LIMIT)
+                .smartCurrentLimit(ROLLERS_CURRENT_LIMIT)
                 .closedLoopRampRate(0.02)
                 .inverted(true);
-            ROLLER_SPARK_CONFIG.encoder
-                .positionConversionFactor(ROLLER_ENCODER_POSITION_FACTOR)
-                .velocityConversionFactor(ROLLER_ENCODER_VELOCITY_FACTOR)
+            ROLLERS_SPARK_CONFIG.encoder
+                .positionConversionFactor(ROLLERS_ENCODER_POSITION_FACTOR)
+                .velocityConversionFactor(ROLLERS_ENCODER_VELOCITY_FACTOR)
                 .uvwAverageDepth(2);
-            ROLLER_SPARK_CONFIG.closedLoop
+            ROLLERS_SPARK_CONFIG.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .pid(rollerP, 0.0, rollerD)
                 .outputRange(-1, 1);
-            ROLLER_SPARK_CONFIG.closedLoop.feedForward
-                .kV(rollerV).kS(rollerS);
-            ROLLER_SPARK_CONFIG.signals
+            ROLLERS_SPARK_CONFIG.signals
                 .absoluteEncoderPositionAlwaysOn(true)
                 .absoluteEncoderPositionPeriodMs((int) (1000.0 / Constants.odometryFrequency))
                 .absoluteEncoderVelocityAlwaysOn(true)
@@ -128,6 +121,8 @@ public class IntakeConstants {
                 .appliedOutputPeriodMs(20)
                 .busVoltagePeriodMs(20)
                 .outputCurrentPeriodMs(20);
+
+            ROLLERS_CONTROL_CONSTANTS.applyTo(ROLLERS_SPARK_CONFIG);
         }
     }
 }

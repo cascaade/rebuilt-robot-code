@@ -6,6 +6,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants;
+import frc.robot.util.TunableControlConstants;
 
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
@@ -15,7 +16,6 @@ public class ClimbConstants {
         RETRACTED(Radians.of(2 * Math.PI)),
         EXTENDED(Radians.of(0));
 
-        // radians
         private final Angle setpointAngle;
 
         ClimbPose(Angle setpointAngle) {
@@ -36,37 +36,34 @@ public class ClimbConstants {
     public static final double CLIMBER_STOWED_SETPOINT = 0;
     public static final double CLIMBER_READY_SETPOINT = 0;
 
-    public static final int climberMotorCANID = 32;
+    public static final int CLIMBER_CAN_ID = 32;
 
-    public static final double climbMotorReduction = 3.0 / 1.0;
-    public static final double climbEncoderPositionFactor = 2 * Math.PI / climbMotorReduction;
-    public static final double climbEncoderVelocityFactor = (2 * Math.PI) / 60.0 / climbMotorReduction;
+    public static final double CLIMBER_MOTOR_REDUCTION = 3.0 / 1.0;
+    public static final double CLIMBER_ENCODER_POSITION_FACTOR = 2 * Math.PI / CLIMBER_MOTOR_REDUCTION;
+    public static final double CLIMBER_ENCODER_VELOCITY_FACTOR = (2 * Math.PI) / 60.0 / CLIMBER_MOTOR_REDUCTION;
 
-    public static final double kP = 5;
-    public static final double kI = 0;
-    public static final double kD = 0;
-    public static final double kS = 0;
-    public static final double kV = 0;
+    public static final TunableControlConstants CLIMBER_CONTROL_CONSTANTS =
+        new TunableControlConstants("Climber/Winch")
+            .withP(5)
+            .withI(0)
+            .withD(0);
 
-    public static final SparkMaxConfig climberConfig = new SparkMaxConfig();
+    public static final SparkMaxConfig CLIMBER_CONFIG = new SparkMaxConfig();
 
     static {
-        climberConfig
+        CLIMBER_CONFIG
             .idleMode(IdleMode.kBrake)
             .smartCurrentLimit(60)
             .voltageCompensation(12)
             .inverted(false);
-        climberConfig.encoder
-            .positionConversionFactor(climbEncoderPositionFactor)
-            .positionConversionFactor(climbEncoderVelocityFactor)
+        CLIMBER_CONFIG.encoder
+            .positionConversionFactor(CLIMBER_ENCODER_POSITION_FACTOR)
+            .positionConversionFactor(CLIMBER_ENCODER_VELOCITY_FACTOR)
             .uvwAverageDepth(2);
-        climberConfig.closedLoop
+        CLIMBER_CONFIG.closedLoop
             .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-            .pid(kP, kI, kD)
             .outputRange(-1,1);
-        climberConfig.closedLoop.feedForward
-            .kS(kS).kV(kV);
-        climberConfig.signals
+        CLIMBER_CONFIG.signals
             .absoluteEncoderPositionAlwaysOn(true)
             .absoluteEncoderPositionPeriodMs((int) (1000.0 / Constants.odometryFrequency))
             .absoluteEncoderVelocityAlwaysOn(true)
@@ -74,5 +71,7 @@ public class ClimbConstants {
             .appliedOutputPeriodMs(20)
             .busVoltagePeriodMs(20)
             .outputCurrentPeriodMs(20);
+
+        CLIMBER_CONTROL_CONSTANTS.applyTo(CLIMBER_CONFIG);
     }
 }

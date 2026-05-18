@@ -20,13 +20,13 @@ public interface WristIO {
         public MutCurrent currentAmps = Amps.mutable(0);
     }
 
-    public default void periodic() {}
-
     public default void updateInputs(WristIOInputs inputs) {}
 
-    public default void setSetpoint(Rotation2d angleSetpoint) {}
+    public default void syncControlConstants() {}
 
-    public default void resetPosition(Angle angle) {}
+    public default void setClosedLoop(Rotation2d angleSetpoint) {}
 
     public default void setOpenLoop(Voltage voltage) {}
+
+    public default void resetPosition(Angle angle) {}
 }

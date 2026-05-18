@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.subsystems.climb.ClimbConstants.ClimbPose;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -49,7 +48,7 @@ public class ClimberSubsystem extends SubsystemBase {
     private double setpointPosition = 0;
 
     public final ClimbIO climbIO;
-    public final ClimbIOInputsAutoLogged inputs = new ClimbIOInputsAutoLogged();
+    public final ClimbIOInputsAutoLogged climbIOInputs = new ClimbIOInputsAutoLogged();
 
     LoggedNetworkNumber volts = new LoggedNetworkNumber("Climber/Volts", 0);
 
@@ -106,7 +105,7 @@ public class ClimberSubsystem extends SubsystemBase {
                 }
 
                 if (DriverStation.isEnabled()) {
-                    if (Math.abs(inputs.velocityRotPerSec) <= CLIMBER_ZERO_VELOCITY_THRESHOLD) {
+                    if (Math.abs(climbIOInputs.velocityRotPerSec) <= CLIMBER_ZERO_VELOCITY_THRESHOLD) {
                         if (Double.isNaN(climberHomeTimestamp)) {
                             climberHomeTimestamp = Timer.getFPGATimestamp();
                             return SystemState.HOMING;
@@ -182,12 +181,13 @@ public class ClimberSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        climbIO.updateInputs(inputs);
-        Logger.processInputs("Climber", inputs);
-
         this.systemState = handleStateTransitions();
         applyStates();
         this.previousWantedState = wantedState;
+
+        climbIO.updateInputs(climbIOInputs);
+        Logger.processInputs("Climber", climbIOInputs);
+        climbIO.syncControlConstants();
     }
 
     private void tareClimberPosition(double position) {
@@ -197,7 +197,7 @@ public class ClimberSubsystem extends SubsystemBase {
     private boolean isAtPosition(double position) {
         return MathUtil.isNear(
             position,
-            inputs.positionRadians,
+            climbIOInputs.positionRadians,
             CLIMBER_SETPOINT_TOLERANCE
         );
     }

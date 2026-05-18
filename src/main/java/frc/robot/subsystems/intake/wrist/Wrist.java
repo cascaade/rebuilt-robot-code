@@ -4,8 +4,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import lombok.Setter;
+import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.intake.IntakeConstants.WristConstants.*;
@@ -34,11 +34,10 @@ public class Wrist {
     private boolean isWristHomed = false;
 
     private final WristIO wristIO;
-    private final WristIOInputsAutoLogged wristIOInputs;
+    private final WristIOInputsAutoLogged wristIOInputs = new WristIOInputsAutoLogged();
 
     public Wrist(WristIO wristIO) {
         this.wristIO = wristIO;
-        this.wristIOInputs = new WristIOInputsAutoLogged();
     }
 
     private SystemState handleStateTransitions() {
@@ -104,6 +103,8 @@ public class Wrist {
         this.previousWantedState = wantedState;
 
         wristIO.updateInputs(wristIOInputs);
+        Logger.processInputs("Intake/Wrist", wristIOInputs);
+        wristIO.syncControlConstants();
     }
 
     public boolean hasHomeCompleted() {
@@ -115,7 +116,7 @@ public class Wrist {
     }
 
     private void moveToPosition(Angle angle) {
-        wristIO.setSetpoint(new Rotation2d(angle));
+        wristIO.setClosedLoop(new Rotation2d(angle));
     }
 
     private void tareWristPosition(Angle position) {
