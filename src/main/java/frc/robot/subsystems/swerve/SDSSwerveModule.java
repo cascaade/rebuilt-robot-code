@@ -76,5 +76,7 @@ public class SDSSwerveModule {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Swerve/" + name, inputs);
+
+        io.syncControlConstants();
     }
 }

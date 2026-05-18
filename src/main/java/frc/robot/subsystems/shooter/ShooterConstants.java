@@ -7,7 +7,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.Constants;
-import frc.robot.util.LoggedTunableControlConstants;
+import frc.robot.util.TunableControlConstants;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -29,26 +29,23 @@ public class ShooterConstants {
     public static final AngularVelocity feederRunSpeed = RadiansPerSecond.of(5000);
     public static final AngularVelocity indexRunSpeed = RadiansPerSecond.of(7250);
 
-    public static final LoggedTunableControlConstants flywheelConstants =
-        new LoggedTunableControlConstants("Shooter/Flywheel")
-            .setP(0.34)
-            .setD(0)
-            .setS(0.18)
-            .setV(0.111);
+    public static final TunableControlConstants flywheelControlConstants =
+        new TunableControlConstants("Shooter/Flywheel")
+            .withP(0.34)
+            .withS(0.18)
+            .withV(0.111);
 
-    public static final LoggedTunableControlConstants feederConstants =
-        new LoggedTunableControlConstants("Shooter/Feeder")
-            .setP(0.000001)
-            .setD(0)
-            .setS(0.129)
-            .setV(0.00203);
+    public static final TunableControlConstants feederControlConstants =
+        new TunableControlConstants("Shooter/Feeder")
+            .withP(0.000001)
+            .withS(0.129)
+            .withV(0.00203);
 
-    public static final LoggedTunableControlConstants indexConstants =
-        new LoggedTunableControlConstants("Shooter/Index")
-            .setP(0.00001)
-            .setD(0)
-            .setS(0.18)
-            .setV(0.00209);
+    public static final TunableControlConstants indexControlConstants =
+        new TunableControlConstants("Shooter/Index")
+            .withP(0.00001)
+            .withS(0.18)
+            .withV(0.00209);
 
     public static final SparkMaxConfig feederConfig = new SparkMaxConfig();
     public static final SparkMaxConfig indexConfig = new SparkMaxConfig();
@@ -75,12 +72,9 @@ public class ShooterConstants {
             .uvwAverageDepth(2);
         feederConfig.closedLoop
             .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-            .pid(feederConstants.kP(), 0, feederConstants.kD())
             .positionWrappingEnabled(true)
             .positionWrappingInputRange(0, 2 * Math.PI)
             .outputRange(-1,1);
-        feederConfig.closedLoop.feedForward
-            .kS(feederConstants.kS()).kV(feederConstants.kV());
         feederConfig.signals
             .absoluteEncoderPositionAlwaysOn(true)
             .absoluteEncoderPositionPeriodMs((int) (1000.0 / Constants.odometryFrequency))
@@ -89,6 +83,8 @@ public class ShooterConstants {
             .appliedOutputPeriodMs(20)
             .busVoltagePeriodMs(20)
             .outputCurrentPeriodMs(20);
+
+        feederControlConstants.applyTo(feederConfig);
 
         indexConfig
             .idleMode(IdleMode.kCoast)
@@ -102,12 +98,9 @@ public class ShooterConstants {
             .uvwAverageDepth(2);
         indexConfig.closedLoop
             .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-            .pid(indexConstants.kP(), 0, indexConstants.kD())
             .positionWrappingEnabled(true)
             .positionWrappingInputRange(0, 2 * Math.PI)
             .outputRange(-1,1);
-        indexConfig.closedLoop.feedForward
-            .kS(indexConstants.kS()).kV(indexConstants.kV());
         indexConfig.signals
             .absoluteEncoderPositionAlwaysOn(true)
             .absoluteEncoderPositionPeriodMs((int) (1000.0 / Constants.odometryFrequency))
@@ -117,13 +110,10 @@ public class ShooterConstants {
             .busVoltagePeriodMs(20)
             .outputCurrentPeriodMs(20);
 
+        indexControlConstants.applyTo(indexConfig);
+
         talonFlywheelConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         talonFlywheelConfigs.Audio.AllowMusicDurDisable = true;
-        var slot0 = talonFlywheelConfigs.Slot0;
-        slot0.kP = flywheelConstants.kP();
-        slot0.kD = flywheelConstants.kD();
-        slot0.kS = flywheelConstants.kS();
-        slot0.kV = flywheelConstants.kV();
         talonFlywheelConfigs.CurrentLimits.StatorCurrentLimit = 100;
         talonFlywheelConfigs.CurrentLimits.StatorCurrentLimitEnable = true;
         talonFlywheelConfigs.CurrentLimits.SupplyCurrentLimit = 60;

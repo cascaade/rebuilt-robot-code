@@ -14,9 +14,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
 
 public class ShooterSubsystem extends SubsystemBase {
     private final ShooterIO shooterIOL;
@@ -83,11 +81,11 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public Command runStopShooter() {
         return run(() -> {
-            shooterIOL.stop();
-            shooterIOM.stop();
-            shooterIOR.stop();
-            feederIO.stop();
-            indexIO.stop();
+            shooterIOL.setOpenLoop(Volts.zero());
+            shooterIOM.setOpenLoop(Volts.zero());
+            shooterIOR.setOpenLoop(Volts.zero());
+            feederIO.setOpenLoop(Volts.zero());
+            indexIO.setOpenLoop(Volts.zero());
         });
     }
 
@@ -119,8 +117,8 @@ public class ShooterSubsystem extends SubsystemBase {
             // shooterIOL.setVelocityClosedLoop(200);
             // shooterIOM.setVelocityClosedLoop(200);
             // shooterIOR.setVelocityClosedLoop(200);
-            feederIO.stop();
-            indexIO.stop();
+            feederIO.setOpenLoop(Volts.zero());
+            indexIO.setOpenLoop(Volts.zero());
         });
     }
 
@@ -253,9 +251,9 @@ public class ShooterSubsystem extends SubsystemBase {
                 shootWithDistance(hubDistance);
             }
         } else {
-            shooterIOL.stop();
-            shooterIOM.stop();
-            shooterIOR.stop();
+            shooterIOL.setOpenLoop(Volts.zero());
+            shooterIOM.setOpenLoop(Volts.zero());
+            shooterIOR.setOpenLoop(Volts.zero());
         }
         if (runIndexFlag) {
             double voltageMult = 1
@@ -273,11 +271,11 @@ public class ShooterSubsystem extends SubsystemBase {
         Logger.recordOutput("Shooter/IndexRunning", runIndexFlag);
         Logger.recordOutput("Shooter/ShooterDistanceAdjust", shooterDistanceAdjust);
 
-        shooterIOL.periodic();
-        shooterIOM.periodic();
-        shooterIOR.periodic();
-        feederIO.periodic();
-        indexIO.periodic();
+        shooterIOL.syncControlConstants();
+        shooterIOM.syncControlConstants();
+        shooterIOR.syncControlConstants();
+        feederIO.syncControlConstants();
+        indexIO.syncControlConstants();
 
         shooterIOL.updateInputs(shooterInputs[0]);
         shooterIOM.updateInputs(shooterInputs[1]);

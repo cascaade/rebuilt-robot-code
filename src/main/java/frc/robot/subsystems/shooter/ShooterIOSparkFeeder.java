@@ -10,12 +10,11 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.util.LoggedTunableControlConstants;
 import org.littletonrobotics.junction.Logger;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.shooter.ShooterConstants.feederConfig;
+import static frc.robot.subsystems.shooter.ShooterConstants.feederControlConstants;
 
 public class ShooterIOSparkFeeder implements ShooterIO {
 
@@ -23,8 +22,6 @@ public class ShooterIOSparkFeeder implements ShooterIO {
     public final RelativeEncoder feederEncoder;
     public final SparkClosedLoopController feederController;
     public final SparkMaxConfig motorConfig;
-
-    public final LoggedTunableControlConstants controlConstants = ShooterConstants.feederConstants;
 
     public ShooterIOSparkFeeder(int CANID) {
         feederMotor = new SparkMax(CANID, MotorType.kBrushless);
@@ -36,18 +33,12 @@ public class ShooterIOSparkFeeder implements ShooterIO {
         motorConfig = ShooterConstants.feederConfig;
         feederMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        controlConstants.addCallback(() -> {
-            motorConfig.closedLoop
-                .p(controlConstants.kP())
-                .d(controlConstants.kD());
-            motorConfig.closedLoop.feedForward
-                .kV(controlConstants.kV())
-                .kS(controlConstants.kS());
+        syncControlConstants();
+    }
 
-            feederMotor.configure(motorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-
-            System.out.println("Control Constants Updated!");
-        });
+    @Override
+    public void syncControlConstants() {
+        feederControlConstants.applyIfChanged(feederConfig, feederMotor);
     }
 
     @Override 
@@ -64,11 +55,6 @@ public class ShooterIOSparkFeeder implements ShooterIO {
     @Override 
     public void setOpenLoop(Voltage voltage) {
         feederMotor.setVoltage(voltage);
-    }
-
-    @Override 
-    public void stop(){
-        feederMotor.stopMotor();
     }
     
     public void updateInputs(ShooterIOInputs inputs){

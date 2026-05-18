@@ -1,17 +1,17 @@
 package frc.robot.subsystems.shooter;
 
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.util.LoggedTunableControlConstants;
 import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.subsystems.shooter.ShooterConstants.flywheelControlConstants;
+import static frc.robot.subsystems.shooter.ShooterConstants.talonFlywheelConfigs;
 
 public class ShooterIOTalonFlywheel implements ShooterIO {
     public final TalonFX motor;
@@ -19,8 +19,6 @@ public class ShooterIOTalonFlywheel implements ShooterIO {
 
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0.0);
     private final SlewRateLimiter rateLimiter = new SlewRateLimiter(100);
-
-    public final LoggedTunableControlConstants controlConstants = ShooterConstants.flywheelConstants;
 
     public final AngularVelocity shooterEpsilon = RadiansPerSecond.of(2);
     public final MutAngularVelocity setpoint = RadiansPerSecond.mutable(0);
@@ -30,19 +28,12 @@ public class ShooterIOTalonFlywheel implements ShooterIO {
         motor = new TalonFX(CANID);
         this.CANID = CANID;
 
-        motor.getConfigurator().apply(ShooterConstants.talonFlywheelConfigs);
+        syncControlConstants();
+    }
 
-        controlConstants.addCallback(() -> {
-            Slot0Configs slot0 = new Slot0Configs();
-            slot0.kP = controlConstants.kP();
-            slot0.kD = controlConstants.kD();
-            slot0.kS = controlConstants.kS();
-            slot0.kV = controlConstants.kV();
-
-            motor.getConfigurator().apply(slot0);
-
-            System.out.println("Control Constants Updated!" + " " + CANID);
-        });
+    @Override
+    public void syncControlConstants() {
+        flywheelControlConstants.applyIfChanged(talonFlywheelConfigs, motor);
     }
 
     // @Override
@@ -64,12 +55,6 @@ public class ShooterIOTalonFlywheel implements ShooterIO {
     public void setOpenLoop(Voltage voltage) {
         rateLimiter.calculate(currentVelocity.in(RadiansPerSecond));
         motor.setVoltage(voltage.in(Volts));
-    }
-
-    @Override 
-    public void stop(){
-        rateLimiter.calculate(currentVelocity.in(RadiansPerSecond)); // stop rate limiter from jumping around due to gaps in the data it receives
-        motor.setVoltage(0);
     }
 
     public void updateInputs(ShooterIOInputs inputs){

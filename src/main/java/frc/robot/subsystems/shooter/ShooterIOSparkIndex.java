@@ -1,30 +1,23 @@
 package frc.robot.subsystems.shooter;
 
-import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.util.LoggedTunableControlConstants;
 import org.littletonrobotics.junction.Logger;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.shooter.ShooterConstants.indexConfig;
+import static frc.robot.subsystems.shooter.ShooterConstants.indexControlConstants;
 
 public class ShooterIOSparkIndex implements ShooterIO {
 
     public final SparkMax indexMotor;
     public final RelativeEncoder indexEncoder;
     public final SparkClosedLoopController indexController;
-    public final SparkMaxConfig motorConfig;
-
-    public final LoggedTunableControlConstants controlConstants = ShooterConstants.indexConstants;
 
     public ShooterIOSparkIndex(int CANID) {
         indexMotor = new SparkMax(CANID, MotorType.kBrushless);
@@ -33,24 +26,15 @@ public class ShooterIOSparkIndex implements ShooterIO {
         indexController = indexMotor.getClosedLoopController();
         indexEncoder = indexMotor.getEncoder();
 
-        motorConfig = ShooterConstants.indexConfig;
-        indexMotor.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
-        controlConstants.addCallback(() -> {
-            motorConfig.closedLoop
-                .p(controlConstants.kP())
-                .d(controlConstants.kD());
-            motorConfig.closedLoop.feedForward
-                .kV(controlConstants.kV())
-                .kS(controlConstants.kS());
-
-            indexMotor.configure(motorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-
-            System.out.println("Control Constants Updated!");
-        });
+        syncControlConstants();
     }
 
-    @Override 
+    @Override
+    public void syncControlConstants() {
+        indexControlConstants.applyIfChanged(indexConfig, indexMotor);
+    }
+
+    @Override
     public void setVelocityClosedLoop(AngularVelocity velocity) {
         Logger.recordOutput("Shooter/Index/Setpoint", velocity);
 
@@ -66,11 +50,7 @@ public class ShooterIOSparkIndex implements ShooterIO {
         indexMotor.setVoltage(voltage);
     }
 
-    @Override 
-    public void stop(){
-        indexMotor.stopMotor();
-    }
-    
+    @Override
     public void updateInputs(ShooterIOInputs inputs){
         inputs.velocity.mut_replace(indexEncoder.getVelocity(), RadiansPerSecond);
 

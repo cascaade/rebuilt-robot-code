@@ -14,23 +14,6 @@ import org.littletonrobotics.junction.AutoLog;
 import static edu.wpi.first.units.Units.*;
 
 public interface SDSModuleIO {
-    /** Updates loggable inputs. */
-    public default void updateInputs(SDSModuleIOInputs inputs) {}
-
-    public default void syncControlConstants() {}
-
-    /** Set drive velocity setpoint */
-    public default void setDriveVelocity(AngularVelocity velocity) {}
-
-    /** Set turn position setpoint */
-    public default void setTurnPosition(Rotation2d position) {}
-
-    /** Run turn motor at specified open loop value. */
-    public default void setTurnOpenLoop(Voltage output) {}
-
-    /** Run drive motor at specified open loop value. */
-    public default void setDriveOpenLoop(Voltage output) {}
-
     @AutoLog
     class SDSModuleIOInputs {
         public boolean driveConnected = false;
@@ -49,4 +32,21 @@ public interface SDSModuleIO {
         public MutVoltage driveAppliedVolts = Volts.mutable(0);
         public MutCurrent driveCurrentAmps = Amps.mutable(0);
     }
+
+    /** Updates loggable inputs. */
+    public default void updateInputs(SDSModuleIOInputs inputs) {}
+
+    public default void syncControlConstants() {}
+
+    /** Set drive velocity setpoint */
+    public default void setDriveVelocity(AngularVelocity velocity) {}
+
+    /** Set turn position setpoint */
+    public default void setTurnPosition(Rotation2d position) {}
+
+    /** Run turn motor at specified open loop value. */
+    public default void setTurnOpenLoop(Voltage output) {}
+
+    /** Run drive motor at specified open loop value. */
+    public default void setDriveOpenLoop(Voltage output) {}
 }
