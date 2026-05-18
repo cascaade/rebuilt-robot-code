@@ -23,12 +23,9 @@ import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.swerve.SwerveConstants.driveConfig;
+import static frc.robot.subsystems.swerve.SwerveConstants.driveControlConstants;
 
 public class SDSModuleIOSpark implements SDSModuleIO {
     private final Rotation2d zeroRotation;
@@ -62,9 +59,6 @@ public class SDSModuleIOSpark implements SDSModuleIO {
         turnMotor = new SparkMax(SwerveConstants.turnCANIDs[index], MotorType.kBrushless);
         driveMotor = new SparkMax(SwerveConstants.driveCANIDs[index], MotorType.kBrushless);
 
-        SwerveConstants.turnCompanion.setMotor(turnMotor);
-        SwerveConstants.driveCompanion.setMotor(driveMotor);
-
         turnMotor.setCANTimeout(0);
         driveMotor.setCANTimeout(0);
 
@@ -85,6 +79,13 @@ public class SDSModuleIOSpark implements SDSModuleIO {
 
         driveConnected = driveMotor.getFirmwareVersion() != 0;
         turnConnected = turnMotor.getFirmwareVersion() != 0;
+
+        syncControlConstants();
+    }
+
+    @Override
+    public void syncControlConstants() {
+        driveControlConstants.applyIfChanged(driveConfig, turnMotor);
     }
 
     @Override
@@ -129,7 +130,7 @@ public class SDSModuleIOSpark implements SDSModuleIO {
 
         if (Math.abs(velocityRadPerSec) < 0.01) velocityRadPerSec = 0;
         double setpointRadPerSec = rateLimiter.calculate(velocityRadPerSec);
-        double ffVolts = SwerveConstants.driveKs * Math.signum(velocityRadPerSec) + SwerveConstants.driveKv * velocityRadPerSec;
+        double ffVolts = driveControlConstants.getS() * Math.signum(velocityRadPerSec) + driveControlConstants.getV() * velocityRadPerSec;
         driveController.setSetpoint(
             setpointRadPerSec,
             ControlType.kVelocity,

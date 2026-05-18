@@ -11,16 +11,13 @@ import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import org.littletonrobotics.junction.AutoLog;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
 
 public interface SDSModuleIO {
     /** Updates loggable inputs. */
     public default void updateInputs(SDSModuleIOInputs inputs) {}
+
+    public default void syncControlConstants() {}
 
     /** Set drive velocity setpoint */
     public default void setDriveVelocity(AngularVelocity velocity) {}

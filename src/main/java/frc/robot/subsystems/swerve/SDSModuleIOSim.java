@@ -9,12 +9,9 @@ import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.swerve.SwerveConstants.driveControlConstants;
+import static frc.robot.subsystems.swerve.SwerveConstants.turnControlConstants;
 
 // sim based on the advantagekit 2026 swerve example
 public class SDSModuleIOSim implements SDSModuleIO {
@@ -28,14 +25,14 @@ public class SDSModuleIOSim implements SDSModuleIO {
     private boolean turnClosedLoop = false;
 
     private PIDController driveController = new PIDController(
-        SwerveConstants.driveSimP,
-        SwerveConstants.driveSimI,
-        SwerveConstants.driveSimD
+        driveControlConstants.getSimP(),
+        driveControlConstants.getSimI(),
+        driveControlConstants.getSimD()
     );
     private PIDController turnController = new PIDController(
-        SwerveConstants.turnSimP,
-        SwerveConstants.turnSimI,
-        SwerveConstants.turnSimD
+        turnControlConstants.getSimP(),
+        turnControlConstants.getSimI(),
+        turnControlConstants.getSimD()
     );
 
     // to be updated by sim

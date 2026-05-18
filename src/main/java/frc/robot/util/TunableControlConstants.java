@@ -31,8 +31,18 @@ public class TunableControlConstants {
     private final LoggedTunableNumber kA;
     private final LoggedTunableNumber kG;
 
+    private final LoggedTunableNumber simKP;
+    private final LoggedTunableNumber simKI;
+    private final LoggedTunableNumber simKD;
+    private final LoggedTunableNumber simKS;
+    private final LoggedTunableNumber simKV;
+    private final LoggedTunableNumber simKA;
+    private final LoggedTunableNumber simKG;
+
     @Getter
     private FeedforwardType feedforwardType = FeedforwardType.NONE;
+    @Getter
+    private FeedforwardType simFeedforwardType = FeedforwardType.NONE;
     private final int changeId = hashCode();
 
     /**
@@ -46,6 +56,14 @@ public class TunableControlConstants {
         kV = new LoggedTunableNumber(NetworkTablesPathUtil.join(prefix, "kV"));
         kA = new LoggedTunableNumber(NetworkTablesPathUtil.join(prefix, "kA"));
         kG = new LoggedTunableNumber(NetworkTablesPathUtil.join(prefix, "kG"));
+
+        simKP = new LoggedTunableNumber(NetworkTablesPathUtil.join(prefix, "Sim", "kP"));
+        simKI = new LoggedTunableNumber(NetworkTablesPathUtil.join(prefix, "Sim", "kI"));
+        simKD = new LoggedTunableNumber(NetworkTablesPathUtil.join(prefix, "Sim", "kD"));
+        simKS = new LoggedTunableNumber(NetworkTablesPathUtil.join(prefix, "Sim", "kS"));
+        simKV = new LoggedTunableNumber(NetworkTablesPathUtil.join(prefix, "Sim", "kV"));
+        simKA = new LoggedTunableNumber(NetworkTablesPathUtil.join(prefix, "Sim", "kA"));
+        simKG = new LoggedTunableNumber(NetworkTablesPathUtil.join(prefix, "Sim", "kG"));
     }
 
     public TunableControlConstants(String prefix, double p, double i, double d, double ff) {
@@ -58,9 +76,17 @@ public class TunableControlConstants {
         return this;
     }
 
+    public TunableControlConstants withP(double defaultValue, boolean simOnly) {
+        return simOnly ? withSimP(defaultValue) : withP(defaultValue);
+    }
+
     public TunableControlConstants withI(double defaultValue) {
         kI.initDefault(defaultValue);
         return this;
+    }
+
+    public TunableControlConstants withI(double defaultValue, boolean simOnly) {
+        return simOnly ? withSimI(defaultValue) : withI(defaultValue);
     }
 
     public TunableControlConstants withD(double defaultValue) {
@@ -68,9 +94,17 @@ public class TunableControlConstants {
         return this;
     }
 
+    public TunableControlConstants withD(double defaultValue, boolean simOnly) {
+        return simOnly ? withSimD(defaultValue) : withD(defaultValue);
+    }
+
     public TunableControlConstants withS(double defaultValue) {
         kS.initDefault(defaultValue);
         return this;
+    }
+
+    public TunableControlConstants withS(double defaultValue, boolean simOnly) {
+        return simOnly ? withSimS(defaultValue) : withS(defaultValue);
     }
 
     public TunableControlConstants withV(double defaultValue) {
@@ -78,13 +112,60 @@ public class TunableControlConstants {
         return this;
     }
 
+    public TunableControlConstants withV(double defaultValue, boolean simOnly) {
+        return simOnly ? withSimV(defaultValue) : withV(defaultValue);
+    }
+
     public TunableControlConstants withA(double defaultValue) {
         kA.initDefault(defaultValue);
         return this;
     }
 
+    public TunableControlConstants withA(double defaultValue, boolean simOnly) {
+        return simOnly ? withSimA(defaultValue) : withA(defaultValue);
+    }
+
     public TunableControlConstants withG(double defaultValue) {
         kG.initDefault(defaultValue);
+        return this;
+    }
+
+    public TunableControlConstants withG(double defaultValue, boolean simOnly) {
+        return simOnly ? withSimG(defaultValue) : withG(defaultValue);
+    }
+
+    public TunableControlConstants withSimP(double defaultValue) {
+        initSimDefault(simKP, defaultValue);
+        return this;
+    }
+
+    public TunableControlConstants withSimI(double defaultValue) {
+        initSimDefault(simKI, defaultValue);
+        return this;
+    }
+
+    public TunableControlConstants withSimD(double defaultValue) {
+        initSimDefault(simKD, defaultValue);
+        return this;
+    }
+
+    public TunableControlConstants withSimS(double defaultValue) {
+        initSimDefault(simKS, defaultValue);
+        return this;
+    }
+
+    public TunableControlConstants withSimV(double defaultValue) {
+        initSimDefault(simKV, defaultValue);
+        return this;
+    }
+
+    public TunableControlConstants withSimA(double defaultValue) {
+        initSimDefault(simKA, defaultValue);
+        return this;
+    }
+
+    public TunableControlConstants withSimG(double defaultValue) {
+        initSimDefault(simKG, defaultValue);
         return this;
     }
 
@@ -103,6 +184,21 @@ public class TunableControlConstants {
         return withS(kS).withG(kG).withV(kV).withA(kA);
     }
 
+    public TunableControlConstants withSimSimpleFeedforward(double kS, double kV, double kA) {
+        simFeedforwardType = FeedforwardType.SIMPLE;
+        return withSimS(kS).withSimV(kV).withSimA(kA);
+    }
+
+    public TunableControlConstants withSimElevatorFeedforward(double kS, double kG, double kV, double kA) {
+        simFeedforwardType = FeedforwardType.ELEVATOR;
+        return withSimS(kS).withSimG(kG).withSimV(kV).withSimA(kA);
+    }
+
+    public TunableControlConstants withSimArmFeedforward(double kS, double kG, double kV, double kA) {
+        simFeedforwardType = FeedforwardType.ARM;
+        return withSimS(kS).withSimG(kG).withSimV(kV).withSimA(kA);
+    }
+
     /** Checks if values were updated on the dashboard. */
     public boolean hasChanged() {
         return Constants.tuningMode
@@ -113,6 +209,37 @@ public class TunableControlConstants {
                 | kV.hasChanged(changeId)
                 | kA.hasChanged(changeId)
                 | kG.hasChanged(changeId));
+    }
+
+    /** Checks if simulation-only values were updated on the dashboard. */
+    public boolean hasSimChanged() {
+        return Constants.currentMode == Constants.RobotMode.SIM
+            && Constants.tuningMode
+            && (simKP.hasChanged(changeId)
+                | simKI.hasChanged(changeId)
+                | simKD.hasChanged(changeId)
+                | simKS.hasChanged(changeId)
+                | simKV.hasChanged(changeId)
+                | simKA.hasChanged(changeId)
+                | simKG.hasChanged(changeId));
+    }
+
+    public boolean ifSimChanged(Runnable action) {
+        if (!hasSimChanged()) {
+            return false;
+        }
+
+        action.run();
+        return true;
+    }
+
+    public boolean ifSimChanged(Consumer<TunableControlConstants> action) {
+        if (!hasSimChanged()) {
+            return false;
+        }
+
+        action.accept(this);
+        return true;
     }
 
     public TalonFXConfiguration applyTo(TalonFXConfiguration config) {
@@ -159,23 +286,17 @@ public class TunableControlConstants {
     }
 
     public boolean applyIfChanged(TalonFXConfiguration config, Consumer<TalonFXConfiguration> applyConfig) {
-        if (!applyIfChanged(config)) {
+        if (!hasChanged()) {
             return false;
         }
 
+        applyTo(config);
         applyConfig.accept(config);
         return true;
     }
 
     public boolean applyIfChanged(TalonFXConfiguration config, TalonFX motor) {
-        if (!applyIfChanged(config)) {
-            return false;
-        }
-
-        applyIfChanged(config,
-            c -> motor.getConfigurator().apply(c)
-        );
-        return true;
+        return applyIfChanged(config, c -> motor.getConfigurator().apply(c));
     }
 
     public boolean applyIfChanged(SparkMaxConfig config) {
@@ -188,23 +309,18 @@ public class TunableControlConstants {
     }
 
     public boolean applyIfChanged(SparkMaxConfig config, Consumer<SparkMaxConfig> applyConfig) {
-        if (!applyIfChanged(config)) {
+        if (!hasChanged()) {
             return false;
         }
 
+        applyTo(config);
         applyConfig.accept(config);
         return true;
     }
 
     public boolean applyIfChanged(SparkMaxConfig config, SparkMax motor) {
-        if (!applyIfChanged(config)) {
-            return false;
-        }
-
-        applyIfChanged(config,
-            c -> motor.configure(c, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)
-        );
-        return true;
+        return applyIfChanged(config,
+            c -> motor.configure(c, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
     }
 
     public SimpleMotorFeedforward getSimpleFeedforward() {
@@ -217,6 +333,18 @@ public class TunableControlConstants {
 
     public ArmFeedforward getArmFeedforward() {
         return new ArmFeedforward(getS(), getG(), getV(), getA());
+    }
+
+    public SimpleMotorFeedforward getSimSimpleFeedforward() {
+        return new SimpleMotorFeedforward(getSimS(), getSimV(), getSimA());
+    }
+
+    public ElevatorFeedforward getSimElevatorFeedforward() {
+        return new ElevatorFeedforward(getSimS(), getSimG(), getSimV(), getSimA());
+    }
+
+    public ArmFeedforward getSimArmFeedforward() {
+        return new ArmFeedforward(getSimS(), getSimG(), getSimV(), getSimA());
     }
 
     public double getP() {
@@ -245,5 +373,39 @@ public class TunableControlConstants {
 
     public double getG() {
         return kG.get();
+    }
+
+    public double getSimP() {
+        return simKP.get();
+    }
+
+    public double getSimI() {
+        return simKI.get();
+    }
+
+    public double getSimD() {
+        return simKD.get();
+    }
+
+    public double getSimS() {
+        return simKS.get();
+    }
+
+    public double getSimV() {
+        return simKV.get();
+    }
+
+    public double getSimA() {
+        return simKA.get();
+    }
+
+    public double getSimG() {
+        return simKG.get();
+    }
+
+    private void initSimDefault(LoggedTunableNumber number, double defaultValue) {
+        if (Constants.currentMode == Constants.RobotMode.SIM) {
+            number.initDefault(defaultValue);
+        }
     }
 }
