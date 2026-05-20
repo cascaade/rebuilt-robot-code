@@ -32,9 +32,9 @@ public class ClimbConstants {
     public static final Voltage CLIMBER_HOMING_VOLTAGE = Volts.of(1);
     public static final double CLIMBER_HOME_RESET_POSITION = 0;
 
-    public static final double CLIMBER_SETPOINT_TOLERANCE = 0;
-    public static final double CLIMBER_STOWED_SETPOINT = 0;
-    public static final double CLIMBER_READY_SETPOINT = 0;
+    public static final Angle CLIMBER_SETPOINT_TOLERANCE = Radians.of(0);
+    public static final Angle CLIMBER_STOWED_SETPOINT = Radians.of(0);
+    public static final Angle CLIMBER_READY_SETPOINT = Radians.of(0);
 
     public static final int CLIMBER_CAN_ID = 32;
 

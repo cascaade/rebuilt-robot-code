@@ -8,7 +8,7 @@ import com.revrobotics.spark.SparkMax;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Voltage;
 
-import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.climb.ClimbConstants.CLIMBER_CONFIG;
 import static frc.robot.subsystems.climb.ClimbConstants.CLIMBER_CONTROL_CONSTANTS;
 
@@ -30,11 +30,11 @@ public class ClimbIOSpark implements ClimbIO {
 
     @Override
     public void updateInputs(ClimbIOInputs inputs) {
-        inputs.positionRadians = climbEncoder.getPosition();
-        inputs.velocityRotPerSec = climbEncoder.getVelocity();
+        inputs.position.mut_replace(climbEncoder.getPosition(), Radians);
+        inputs.velocity.mut_replace(climbEncoder.getVelocity(), RadiansPerSecond);
 
-        inputs.appliedVolts = climbMotor.getBusVoltage() * climbMotor.getAppliedOutput();
-        inputs.currentAmps = climbMotor.getOutputCurrent();
+        inputs.appliedVolts.mut_replace(climbMotor.getBusVoltage() * climbMotor.getAppliedOutput(), Volts);
+        inputs.currentAmps.mut_replace(climbMotor.getOutputCurrent(), Amps);
     }
 
     @Override

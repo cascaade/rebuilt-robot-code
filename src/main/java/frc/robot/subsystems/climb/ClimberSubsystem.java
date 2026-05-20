@@ -1,6 +1,8 @@
 package frc.robot.subsystems.climb;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -11,8 +13,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import java.util.function.BooleanSupplier;
 
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
 public class ClimberSubsystem extends SubsystemBase {
@@ -45,7 +46,7 @@ public class ClimberSubsystem extends SubsystemBase {
     private double climberHomeTimestamp = Double.NaN;
     private boolean isClimberHomed = false;
 
-    private double setpointPosition = 0;
+    private MutAngle setpointPosition = Radians.mutable(0);
 
     public final ClimbIO climbIO;
     public final ClimbIOInputsAutoLogged climbIOInputs = new ClimbIOInputsAutoLogged();
@@ -105,7 +106,7 @@ public class ClimberSubsystem extends SubsystemBase {
                 }
 
                 if (DriverStation.isEnabled()) {
-                    if (Math.abs(climbIOInputs.velocityRotPerSec) <= CLIMBER_ZERO_VELOCITY_THRESHOLD) {
+                    if (climbIOInputs.velocity.isNear(RadiansPerSecond.of(0), CLIMBER_ZERO_VELOCITY_THRESHOLD)) {
                         if (Double.isNaN(climberHomeTimestamp)) {
                             climberHomeTimestamp = Timer.getFPGATimestamp();
                             return SystemState.HOMING;
@@ -129,7 +130,7 @@ public class ClimberSubsystem extends SubsystemBase {
                     return SystemState.STOWED;
                 }
 
-                setpointPosition = CLIMBER_STOWED_SETPOINT;
+                setpointPosition.mut_replace(CLIMBER_STOWED_SETPOINT);
                 setWantedState(WantedState.MOVE_TO_POSITION);
             }
             case MOVE_TO_POSITION -> {
@@ -140,7 +141,7 @@ public class ClimberSubsystem extends SubsystemBase {
                     return SystemState.WINCH_READY;
                 }
 
-                setpointPosition = CLIMBER_READY_SETPOINT;
+                setpointPosition.mut_replace(CLIMBER_READY_SETPOINT);
                 setWantedState(WantedState.MOVE_TO_POSITION);
 
                 /* todo: to complete this i need to sort out:
@@ -174,7 +175,7 @@ public class ClimberSubsystem extends SubsystemBase {
         switch (systemState) {
             case HOMING -> climbIO.setOpenLoop(CLIMBER_HOMING_VOLTAGE);
             case MOVING_TO_POSITION -> {
-                climbIO.setClosedLoop(Radians.of(setpointPosition));
+                climbIO.setClosedLoop(setpointPosition);
             }
         }
     }
@@ -194,10 +195,9 @@ public class ClimberSubsystem extends SubsystemBase {
 
     }
 
-    private boolean isAtPosition(double position) {
-        return MathUtil.isNear(
-            position,
-            climbIOInputs.positionRadians,
+    private boolean isAtPosition(Angle position) {
+        return position.isNear(
+            climbIOInputs.position,
             CLIMBER_SETPOINT_TOLERANCE
         );
     }
