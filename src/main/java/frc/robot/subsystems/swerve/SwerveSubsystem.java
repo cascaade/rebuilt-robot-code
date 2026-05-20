@@ -26,6 +26,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.util.SwerveMathUtil;
+import frc.robot.util.SwerveMathUtil.TranslationOutput;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -46,7 +48,7 @@ public class SwerveSubsystem extends SubsystemBase {
     private final SwerveDriveKinematics kinematics;
     private final SwerveDrivePoseEstimator poseEstimator;
 
-    private boolean toCrossbuck;
+    private boolean toCross;
     private final MutTime lastMove;
 
     private final AtomicBoolean aimHubFlag;
@@ -69,7 +71,7 @@ public class SwerveSubsystem extends SubsystemBase {
         this.gyroIO = gyroIO;
         this.gyroIOInputs = new GyroIOInputsAutoLogged();
 
-        toCrossbuck = true;
+        toCross = true;
 
         modules = new SDSSwerveModule[] {
             new SDSSwerveModule("Module 0", flModuleIO),
@@ -103,39 +105,13 @@ public class SwerveSubsystem extends SubsystemBase {
         SmartDashboard.putData("Odometry/Field", field);
     }
 
-    private double adjustAxisInput(
-        double controllerInput,
-        double deadband,
-        double minThreshold,
-        double steepness
-    ) {
-        // see https://www.desmos.com/calculator/wj59z401tq
-        
-        return
-            Math.abs(controllerInput) > deadband ?
-                MathUtil.clamp(
-                    Math.signum(controllerInput) * (
-                        (1 - minThreshold) *
-                        Math.pow(
-                            (Math.abs(controllerInput) - deadband) / (1 - deadband),
-                            steepness
-                        ) +
-                        minThreshold
-                    ),
-                    -1,
-                    1
-                )
-            : 0;
-    }
-
     /**
      * Run swerve drive using joystick inputs
-     * 
      * @param xInput controller x-axis supplier
      * @param yInput controller y-axis supplier
      * @param omegaInput controller turning supplier
      * @param speedFactorInput analog speed erosion supplier
-     * @return
+     * @return Teleop drive Command
      */
     public Command runDriveInputs(
         DoubleSupplier xInput,
@@ -144,40 +120,25 @@ public class SwerveSubsystem extends SubsystemBase {
         DoubleSupplier speedFactorInput
     ) {
         return run(() -> {
-            double xInputValue = xInput.getAsDouble();
-            double yInputValue = yInput.getAsDouble();
-            double omegaInputValue = omegaInput.getAsDouble();
+            double rawX = xInput.getAsDouble();
+            double rawY = yInput.getAsDouble();
+            double rawOmega = omegaInput.getAsDouble();
+            double rawSpeedFactor = speedFactorInput.getAsDouble();
 
-            // see https://docs.wpilib.org/en/stable/docs/software/basic-programming/joystick.html#joystick-class
-            yInputValue *= -1; // y-axis is inverted on joystick
-            omegaInputValue *= -1; // rotation is reversed
+            double speedFactor = SwerveMathUtil.calculateSpeedFactor(rawSpeedFactor, SwerveConstants.kSlowedMult);
+            TranslationOutput translation = SwerveMathUtil.processTranslationInputs(rawX, rawY, speedFactor);
+            double processedOmega = SwerveMathUtil.processRotationInput(rawOmega, speedFactor);
 
-            double speedFactor = 1 - (1 - SwerveConstants.kSlowedMult) * speedFactorInput.getAsDouble();
-
-            // apply joysticks to NWU
-            double vx = yInputValue;
-            double vy = -xInputValue;
-            double omega = omegaInputValue;
-
-            double mag = Math.hypot(vx, vy);
-            double dir = Math.atan2(vy, vx);
-
-            double deadband = 0.2; // minimum axis input before robot input
-            double minThreshold = 0.03; // minimum robot input to overcome resistance
-            double steepness = 1.8; // more precision on lower values
-            
-            mag = adjustAxisInput(mag, deadband, minThreshold, steepness);
-            mag *= speedFactor;
-            omega = adjustAxisInput(omega, deadband, minThreshold, steepness + 1);
-            omega *= speedFactor;
-
+            // 3. Construct ChassisSpeeds
             OrientedChassisSpeeds chassisSpeeds = new OrientedChassisSpeeds(
-                SwerveConstants.kMagVelLimit.times(mag * Math.cos(dir)),
-                SwerveConstants.kMagVelLimit.times(mag * Math.sin(dir)),
-                SwerveConstants.kRotVelLimit.times(omega),
-                false, true
+                SwerveConstants.kMagVelLimit.times(translation.x()),
+                SwerveConstants.kMagVelLimit.times(translation.y()),
+                SwerveConstants.kRotVelLimit.times(processedOmega),
+                false,
+                true
             );
 
+            // 4. Mutate state / output to hardware
             adjustSpeedsForPresetRotation(chassisSpeeds);
             submitChassisSpeeds(chassisSpeeds);
         }).withName("Teleop Drive default");
@@ -206,6 +167,7 @@ public class SwerveSubsystem extends SubsystemBase {
     private void submitChassisSpeeds(
         OrientedChassisSpeeds chassisSpeeds
     ) {
+        // Update lastMove
         if (
             chassisSpeeds.vxMetersPerSecond != 0 ||
             chassisSpeeds.vyMetersPerSecond != 0 ||
@@ -214,13 +176,15 @@ public class SwerveSubsystem extends SubsystemBase {
             lastMove.mut_replace(Timer.getFPGATimestamp(), Seconds);
         }
 
+        // Set modules to cross if the time since last move exceeds threshold
         if (
-            (toCrossbuck && Seconds.of(Timer.getFPGATimestamp()).minus(lastMove).gt(SwerveConstants.crossbuckDelay))
+            (toCross && Seconds.of(Timer.getFPGATimestamp()).minus(lastMove).gt(SwerveConstants.crossDelay))
         ) {
-            setModulesToCrossbuckPosition(true);
+            setModulesToCrossPosition(true);
             return;
         }
 
+        // Adjust speeds to be robot centric if they aren't already
         ChassisSpeeds adjustedSpeeds = chassisSpeeds;
 
         if (chassisSpeeds.fieldCentric) {
@@ -230,6 +194,7 @@ public class SwerveSubsystem extends SubsystemBase {
             );
         }
 
+        // Account for the skew discrete periods make on the smooth arc
         adjustedSpeeds = ChassisSpeeds.discretize(adjustedSpeeds, LoggedRobot.defaultPeriodSecs);
 
         SwerveModuleState[] moduleSetpoints = kinematics.toSwerveModuleStates(adjustedSpeeds);
@@ -247,7 +212,7 @@ public class SwerveSubsystem extends SubsystemBase {
         }
     }
 
-    private void setModulesToCrossbuckPosition(boolean optimize) {
+    private void setModulesToCrossPosition(boolean optimize) {
         setRawModuleSetpoints(new SwerveModuleState[] {
             new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
             new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
@@ -345,7 +310,7 @@ public class SwerveSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         Logger.recordOutput("Swerve/AimHubFlag", aimHubFlag.get());
-        Logger.recordOutput("Swerve/CrossbuckEnabled", toCrossbuck);
+        Logger.recordOutput("Swerve/CrossEnabled", toCross);
 
         // updated all hardware inputs
         gyroIO.updateInputs(gyroIOInputs);

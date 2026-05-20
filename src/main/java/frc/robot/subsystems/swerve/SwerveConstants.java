@@ -30,7 +30,7 @@ public class SwerveConstants {
     public static final LinearVelocity kMagVelLimit = MetersPerSecond.of(4.5);
     public static final AngularVelocity kRotVelLimit = RotationsPerSecond.of(2);
 
-    public static final Time crossbuckDelay = Seconds.of(.3);
+    public static final Time crossDelay = Seconds.of(.3);
 
     public static final Distance kSwerveWheelRadius = Inches.of(2);
 
