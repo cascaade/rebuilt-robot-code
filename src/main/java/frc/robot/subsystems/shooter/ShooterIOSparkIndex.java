@@ -35,7 +35,7 @@ public class ShooterIOSparkIndex implements ShooterIO {
     }
 
     @Override
-    public void setVelocityClosedLoop(AngularVelocity velocity) {
+    public void setClosedLoop(AngularVelocity velocity) {
         Logger.recordOutput("Shooter/Index/Setpoint", velocity);
 
         // feedforward should already be accounted for

@@ -42,7 +42,7 @@ public class ShooterIOTalonFlywheel implements ShooterIO {
     // }
 
     @Override
-    public void setVelocityClosedLoop(AngularVelocity velocity) {
+    public void setClosedLoop(AngularVelocity velocity) {
         setpoint.mut_replace(rateLimiter.calculate(velocity.in(RadiansPerSecond)), RadiansPerSecond);
         Logger.recordOutput("Shooter/Flywheel/" + CANID + "/Setpoint", setpoint);
 

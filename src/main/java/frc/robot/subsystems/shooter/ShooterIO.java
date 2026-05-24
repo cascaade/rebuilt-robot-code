@@ -27,7 +27,7 @@ public interface ShooterIO {
 
     // public default void addToOrchestra(Orchestra orchestra, int track) {}
 
-    public default void setVelocityClosedLoop(AngularVelocity velocity) {}
+    public default void setClosedLoop(AngularVelocity velocity) {}
 
     //Set the shooter motor voltage input
     public default void setOpenLoop(Voltage voltage) {}
