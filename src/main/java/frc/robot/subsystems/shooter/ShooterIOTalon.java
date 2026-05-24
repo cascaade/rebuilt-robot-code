@@ -13,7 +13,7 @@ import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.shooter.ShooterConstants.flywheelControlConstants;
 import static frc.robot.subsystems.shooter.ShooterConstants.talonFlywheelConfigs;
 
-public class ShooterIOTalonFlywheel implements ShooterIO {
+public class ShooterIOTalon implements ShooterIO {
     public final TalonFX motor;
     public final int CANID;
 
@@ -24,7 +24,7 @@ public class ShooterIOTalonFlywheel implements ShooterIO {
     public final MutAngularVelocity setpoint = RadiansPerSecond.mutable(0);
     public final MutAngularVelocity currentVelocity = RadiansPerSecond.mutable(0);
 
-    public ShooterIOTalonFlywheel(int CANID) {
+    public ShooterIOTalon(int CANID) {
         motor = new TalonFX(CANID);
         this.CANID = CANID;
 

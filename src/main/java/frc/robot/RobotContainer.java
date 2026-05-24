@@ -20,9 +20,7 @@ import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.shooter.ShooterConstants;
 import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSparkFeeder;
-import frc.robot.subsystems.shooter.ShooterIOSparkIndex;
-import frc.robot.subsystems.shooter.ShooterIOTalonFlywheel;
+import frc.robot.subsystems.shooter.ShooterIOTalon;
 import frc.robot.subsystems.swerve.GyroIO;
 import frc.robot.subsystems.swerve.GyroIOPigeon;
 import frc.robot.subsystems.swerve.SDSModuleIO;
@@ -70,11 +68,11 @@ public class RobotContainer {
                     new VisionIOPhoton(VisionConstants.camConfigs[3])
                 );
                 shooterSubsystem = new ShooterSubsystem(
-                    new ShooterIOTalonFlywheel(ShooterConstants.shooterLMotorCANID),
-                    new ShooterIOTalonFlywheel(ShooterConstants.shooterMMotorCANID),
-                    new ShooterIOTalonFlywheel(ShooterConstants.shooterRMotorCANID),
-                    new ShooterIOSparkFeeder(ShooterConstants.feederMotorCANID),
-                    new ShooterIOSparkIndex(ShooterConstants.indexMotorCANID),
+                    new ShooterIOTalon(ShooterConstants.shooterLMotorCANID),
+                    new ShooterIOTalon(ShooterConstants.shooterMMotorCANID),
+                    new ShooterIOTalon(ShooterConstants.shooterRMotorCANID),
+                    new ShooterIOTalon(ShooterConstants.feederMotorCANID),
+                    new ShooterIOTalon(ShooterConstants.indexMotorCANID),
                     swerveSubsystem::getPose
                 );
                 intakeSubsystem = new IntakeSubsystem(

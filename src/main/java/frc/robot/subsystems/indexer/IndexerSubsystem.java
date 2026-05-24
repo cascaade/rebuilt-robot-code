@@ -4,20 +4,22 @@ import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.subsystems.indexer.IndexerConstants.INDEXER_INTAKE_SPEED;
-import static frc.robot.subsystems.indexer.IndexerConstants.INDEXER_OUTTAKE_SPEED;
+import static frc.robot.subsystems.indexer.IndexerConstants.ConveyorConstants.CONVEYOR_FEED_SPEED;
+import static frc.robot.subsystems.indexer.IndexerConstants.ConveyorConstants.CONVEYOR_REVERSE_SPEED;
+import static frc.robot.subsystems.indexer.IndexerConstants.KickerConstants.KICKER_FEED_SPEED;
+import static frc.robot.subsystems.indexer.IndexerConstants.KickerConstants.KICKER_REVERSE_SPEED;
 
 public class IndexerSubsystem {
     public enum WantedState {
         IDLE,
-        INDEX,
-        INDEX_REVERSE
+        FEED,
+        REVERSE
     }
 
     private enum SystemState {
         IDLING,
-        INDEXING,
-        INDEXING_REVERSE
+        FEEDING,
+        REVERSING
         // todo: add jam detection
     }
 
@@ -26,20 +28,23 @@ public class IndexerSubsystem {
     private WantedState previousWantedState = WantedState.IDLE;
     private SystemState systemState = SystemState.IDLING;
 
-    private final IndexerIO indexerIO;
-    private final IndexerIOInputsAutoLogged indexerIOInputs = new IndexerIOInputsAutoLogged();
+    private final ConveyorIO conveyorIO;
+    private final KickerIO kickerIO;
+    private final ConveyorIOInputsAutoLogged conveyorIOInputs = new ConveyorIOInputsAutoLogged();
+    private final KickerIOInputsAutoLogged kickerIOInputs = new KickerIOInputsAutoLogged();
 
-    public IndexerSubsystem(IndexerIO indexerIO) {
-        this.indexerIO = indexerIO;
+    public IndexerSubsystem(ConveyorIO conveyorIO, KickerIO kickerIO) {
+        this.conveyorIO = conveyorIO;
+        this.kickerIO = kickerIO;
     }
 
     private SystemState handleStateTransitions() {
         switch (wantedState) {
-            case INDEX -> {
-                return SystemState.INDEXING;
+            case FEED -> {
+                return SystemState.FEEDING;
             }
-            case INDEX_REVERSE -> {
-                return SystemState.INDEXING_REVERSE;
+            case REVERSE -> {
+                return SystemState.REVERSING;
             }
             default -> {
                 return SystemState.IDLING;
@@ -49,14 +54,20 @@ public class IndexerSubsystem {
 
     private void applyStates() {
         switch (systemState) {
-            case INDEXING ->
-                indexerIO.setClosedLoop(INDEXER_INTAKE_SPEED);
+            case FEEDING -> {
+                conveyorIO.setClosedLoop(CONVEYOR_FEED_SPEED);
+                kickerIO.setClosedLoop(KICKER_FEED_SPEED);
+            }
 
-            case INDEXING_REVERSE ->
-                indexerIO.setClosedLoop(INDEXER_OUTTAKE_SPEED);
+            case REVERSING -> {
+                conveyorIO.setClosedLoop(CONVEYOR_REVERSE_SPEED);
+                kickerIO.setClosedLoop(KICKER_REVERSE_SPEED);
+            }
 
-            default ->
-                indexerIO.setOpenLoop(Volts.of(0));
+            default -> {
+                conveyorIO.setOpenLoop(Volts.of(0));
+                kickerIO.setOpenLoop(Volts.of(0));
+            }
         }
     }
 
@@ -65,8 +76,11 @@ public class IndexerSubsystem {
         applyStates();
         this.previousWantedState = wantedState;
 
-        indexerIO.updateInputs(indexerIOInputs);
-        Logger.processInputs("Indexer", indexerIOInputs);
-        indexerIO.syncControlConstants();
+        conveyorIO.updateInputs(conveyorIOInputs);
+        kickerIO.updateInputs(kickerIOInputs);
+        Logger.processInputs("Indexer/Conveyor", conveyorIOInputs);
+        Logger.processInputs("Indexer/Kicker", kickerIOInputs);
+        conveyorIO.syncControlConstants();
+        kickerIO.syncControlConstants();
     }
 }

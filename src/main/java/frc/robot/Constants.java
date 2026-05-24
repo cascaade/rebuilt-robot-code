@@ -4,9 +4,12 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
+
+import static edu.wpi.first.units.Units.Volts;
 
 public class Constants {
     public static enum RobotMode {
@@ -25,6 +28,8 @@ public class Constants {
 
     public static final RobotMode simMode = RobotMode.SIM;
 	public static final RobotMode currentMode = RobotBase.isReal() ? RobotMode.REAL : simMode;
+
+    public static final Voltage NOMINAL_VOLTAGE = Volts.of(11);
 
     public static boolean isRed() {
         return DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == Alliance.Red;

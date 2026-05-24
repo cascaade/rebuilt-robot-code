@@ -34,12 +34,16 @@ public class ShooterFSM {
 
     private final Supplier<Pose2d> robotPoseSupplier;
 
-    private final ShooterIO shooterIO;
-    private final ShooterIOInputsAutoLogged shooterIOInputs = new ShooterIOInputsAutoLogged();
+    private final ShooterIO[] shooterIOs;
+    private final ShooterIOInputsAutoLogged[] shooterIOInputs;
 
-    public ShooterFSM(ShooterIO shooterIO, Supplier<Pose2d> robotPoseSupplier) {
-        this.shooterIO = shooterIO;
+    public ShooterFSM(ShooterIO shooterIOa, ShooterIO shooterIOb, ShooterIO shooterIOc, Supplier<Pose2d> robotPoseSupplier) {
+        this.shooterIOs = new ShooterIO[] { shooterIOa, shooterIOb, shooterIOc };
         this.robotPoseSupplier = robotPoseSupplier;
+
+        this.shooterIOInputs = new ShooterIOInputsAutoLogged[3];
+        for (int i = 0; i < shooterIOInputs.length; i++)
+            shooterIOInputs[i] = new ShooterIOInputsAutoLogged();
     }
 
     private SystemState handleStateTransitions() {
@@ -65,14 +69,20 @@ public class ShooterFSM {
                 Distance hubDistance = Meters.of(robotPose.getTranslation().getDistance(hubPose.getTranslation()));
 
                 AngularVelocity shooterRunSpeed = ShooterLUT.getFlywheelSpeedAtDistance(hubDistance);
-                shooterIO.setClosedLoop(shooterRunSpeed);
+
+                for (ShooterIO shooterIO : shooterIOs)
+                    shooterIO.setClosedLoop(shooterRunSpeed);
             }
 
-            case PASSING ->
-                shooterIO.setClosedLoop(shooterMaxSpeed);
+            case PASSING -> {
+                for (ShooterIO shooterIO : shooterIOs)
+                    shooterIO.setClosedLoop(shooterMaxSpeed);
+            }
 
-            default ->
-                shooterIO.setOpenLoop(Volts.of(0));
+            default -> {
+                for (ShooterIO shooterIO : shooterIOs)
+                    shooterIO.setOpenLoop(Volts.of(0));
+            }
         }
     }
 
@@ -81,8 +91,10 @@ public class ShooterFSM {
         applyStates();
         this.previousWantedState = wantedState;
 
-        shooterIO.updateInputs(shooterIOInputs);
-        Logger.processInputs("Shooter", shooterIOInputs);
-        shooterIO.syncControlConstants();
+        for (int i = 0; i < shooterIOInputs.length; i++) {
+            shooterIOs[i].updateInputs(shooterIOInputs[i]);
+            Logger.processInputs("Shooter/Flywheel" + i, shooterIOInputs[i]);
+            shooterIOs[i].syncControlConstants();
+        }
     }
 }
