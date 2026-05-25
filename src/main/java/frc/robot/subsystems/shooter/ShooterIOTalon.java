@@ -10,8 +10,8 @@ import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.subsystems.shooter.ShooterConstants.flywheelControlConstants;
-import static frc.robot.subsystems.shooter.ShooterConstants.talonFlywheelConfigs;
+import static frc.robot.subsystems.shooter.ShooterConstants.FLYWHEEL_CONTROL_CONSTANTS;
+import static frc.robot.subsystems.shooter.ShooterConstants.FLYWHEEL_SPARK_CONFIG;
 
 public class ShooterIOTalon implements ShooterIO {
     public final TalonFX motor;
@@ -33,7 +33,7 @@ public class ShooterIOTalon implements ShooterIO {
 
     @Override
     public void syncControlConstants() {
-        flywheelControlConstants.applyIfChanged(talonFlywheelConfigs, motor);
+        FLYWHEEL_CONTROL_CONSTANTS.applyIfChanged(FLYWHEEL_SPARK_CONFIG, motor);
     }
 
     // @Override
@@ -61,7 +61,7 @@ public class ShooterIOTalon implements ShooterIO {
         currentVelocity.mut_replace(motor.getVelocity().getValue());
         inputs.velocity.mut_replace(currentVelocity);
 
-        Logger.recordOutput("Shooter/Flywheel/" + CANID + "/AtSetpoint", currentVelocity.minus(setpoint).lt(shooterEpsilon));
+        Logger.recordOutput("Shooter/Flywheel/" + CANID + "/AtSetpoint", currentVelocity.isNear(setpoint, shooterEpsilon));
 
         inputs.appliedVolts.mut_replace(motor.getMotorVoltage().getValue());
         inputs.supplyCurrentAmps.mut_replace(motor.getSupplyCurrent().getValue());
