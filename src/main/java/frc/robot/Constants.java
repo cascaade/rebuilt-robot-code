@@ -100,6 +100,14 @@ public class Constants {
                 new Transform2d(x, y, Rotation2d.kZero)
             );
         }
+
+        public static Pose2d getPassLeft() {
+            return new Pose2d();
+        }
+
+        public static Pose2d getPassRight() {
+            return new Pose2d();
+        }
     }
 
     public static class OperatorConstants {

@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.RobotState;
 import frc.robot.util.ShooterLUT;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
@@ -63,20 +64,17 @@ public class ShooterFSM {
     private void applyStates() {
         switch (systemState) {
             case RESPONDING -> {
-                Pose2d robotPose = robotPoseSupplier.get();
-                Pose2d hubPose = FieldConstants.getHubCenter();
-
-                Distance hubDistance = Meters.of(robotPose.getTranslation().getDistance(hubPose.getTranslation()));
-
-                AngularVelocity shooterRunSpeed = ShooterLUT.getFlywheelSpeedAtDistance(hubDistance);
+                AngularVelocity shooterRunSpeed = ShooterLUT.getFlywheelSpeedAtDistance(RobotState.getInstance().getFieldHubDistance());
 
                 for (ShooterIO shooterIO : shooterIOs)
                     shooterIO.setClosedLoop(shooterRunSpeed);
             }
 
             case PASSING -> {
+                AngularVelocity shooterRunSpeed = ShooterLUT.getFlywheelSpeedAtDistance(RobotState.getInstance().getClosestFieldPassDistance());
+
                 for (ShooterIO shooterIO : shooterIOs)
-                    shooterIO.setClosedLoop(shooterMaxSpeed);
+                    shooterIO.setClosedLoop(shooterRunSpeed);
             }
 
             default -> {

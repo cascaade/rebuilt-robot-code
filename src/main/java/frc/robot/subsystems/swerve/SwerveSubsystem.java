@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.RobotState;
 import frc.robot.util.SwerveMathUtil;
 import frc.robot.util.SwerveMathUtil.TranslationOutput;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -353,6 +354,8 @@ public class SwerveSubsystem extends SubsystemBase {
         if (DriverStation.isDisabled()) {
             aimHubFlag.set(false);
         }
+
+        RobotState.getInstance().addPoseObservation(poseEstimator.getEstimatedPosition());
 
         Logger.recordOutput("Swerve/Drive_Command", this.getCurrentCommand() == null ? "null" : this.getCurrentCommand().getName());
     }
