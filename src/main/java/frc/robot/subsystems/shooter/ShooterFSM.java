@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotState;
 import frc.robot.util.ShooterLUT;
@@ -15,7 +16,7 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.shooter.ShooterConstants.shooterMaxSpeed;
 
-public class ShooterFSM {
+public class ShooterFSM extends SubsystemBase {
     public enum WantedState {
         IDLE,
         RESPONSIVE,

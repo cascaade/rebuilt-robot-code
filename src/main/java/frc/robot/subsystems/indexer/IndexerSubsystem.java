@@ -1,5 +1,6 @@
 package frc.robot.subsystems.indexer;
 
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
@@ -9,7 +10,7 @@ import static frc.robot.subsystems.indexer.IndexerConstants.ConveyorConstants.CO
 import static frc.robot.subsystems.indexer.IndexerConstants.KickerConstants.KICKER_FEED_SPEED;
 import static frc.robot.subsystems.indexer.IndexerConstants.KickerConstants.KICKER_REVERSE_SPEED;
 
-public class IndexerSubsystem {
+public class IndexerSubsystem extends SubsystemBase {
     public enum WantedState {
         IDLE,
         FEED,
