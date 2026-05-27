@@ -1,5 +1,6 @@
 package frc.robot.subsystems.swerve;
 
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -88,6 +89,8 @@ public class SwerveFSM extends SubsystemBase {
 
     private final SDSSwerveModule[] modules;
     private SwerveModulePosition[] modulePositions;
+
+    private SwerveSample requestedSwerveSample;
 
     public SwerveFSM (
         CommandXboxController controller, GyroIO gyroIO,
@@ -190,7 +193,22 @@ public class SwerveFSM extends SubsystemBase {
                 submitChassisSpeeds(chassisSpeeds);
             }
             case TRAJECTORY -> {
+                Pose2d currentPose = getPose();
 
+                OrientedChassisSpeeds speeds = new OrientedChassisSpeeds(
+                    requestedSwerveSample.vx + trajVXController.calculate(currentPose.getX(), requestedSwerveSample.x),
+                    requestedSwerveSample.vy + trajVYController.calculate(currentPose.getY(), requestedSwerveSample.y),
+                    requestedSwerveSample.omega + trajHeadingController.calculate(
+                        currentPose.getRotation().getRadians(),
+                        requestedSwerveSample.heading
+                    ),
+                    true, true
+                );
+
+                Logger.recordOutput("Swerve/ChassisSpeeds/Auto", speeds);
+
+                adjustSpeedsForPresetRotation(speeds);
+                submitChassisSpeeds(speeds);
             }
             default -> {
 
@@ -346,5 +364,10 @@ public class SwerveFSM extends SubsystemBase {
                 });
         }
         return Commands.none();
+    }
+
+    public void requestFollowTrajectory(SwerveSample sample) {
+        setWantedState(WantedState.TRAJECTORY);
+        requestedSwerveSample = sample;
     }
 }
