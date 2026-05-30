@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotState;
@@ -24,6 +25,7 @@ public class Superstructure extends SubsystemBase {
 
     public enum CurrentSuperState {
         DEFAULT,
+        DISABLED,
         AUTO,
         TELEOP,
         INTAKE_TELEOP,
@@ -57,6 +59,10 @@ public class Superstructure extends SubsystemBase {
     }
 
     private CurrentSuperState handleStateTransitions() {
+        if (DriverStation.isDisabled() || !DriverStation.isJoystickConnected(0) || !DriverStation.isJoystickConnected(1)) {
+            return CurrentSuperState.DISABLED;
+        }
+
         switch (wantedSuperState) {
             case DEFAULT -> {
                 if (DriverStation.isAutonomousEnabled()) {
@@ -88,7 +94,11 @@ public class Superstructure extends SubsystemBase {
                 return CurrentSuperState.AIMING_TELEOP;
             }
             case SHOOT_TELEOP -> {
-                return CurrentSuperState.SHOOTING_TELEOP;
+                if (ShooterFSM.isAtSpeed() && SwerveFSM.isAligned()) {
+                    return CurrentSuperState.SHOOTING_TELEOP;
+                } else {
+                    return CurrentSuperState.AIMING_TELEOP;
+                }
             }
             case PROTECTED_TELEOP -> {
                 return CurrentSuperState.PROTECTED_TELEOP;
@@ -103,6 +113,19 @@ public class Superstructure extends SubsystemBase {
 
         ShooterFSM.WantedState shooterState = usePassPointInsteadOfHub ? ShooterFSM.WantedState.PASS : ShooterFSM.WantedState.RESPONSIVE;
         LEDSubsystem.WantedState ledState = LEDSubsystem.WantedState.DISPLAY_OFF;
+
+        if (Timer.getFPGATimestamp() < 10) {
+            ledState = LEDSubsystem.WantedState.BOOT;
+        } else if (DriverStation.isDSAttached()) {
+            if (DriverStation.isAutonomous())
+                ledState = LEDSubsystem.WantedState.AUTONOMOUS;
+            else if (DriverStation.isEnabled())
+                ledState = LEDSubsystem.WantedState.ENABLED;
+            else
+                ledState = LEDSubsystem.WantedState.DISABLED;
+        } else {
+            ledState = LEDSubsystem.WantedState.DISCONNECTED;
+        }
 
         switch (currentSuperState) {
             case DEFAULT -> {
@@ -141,6 +164,14 @@ public class Superstructure extends SubsystemBase {
                 swerveSubsystem.setWantedState(SwerveFSM.WantedState.CROSS);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
+            }
+            case DISABLED -> {
+                swerveSubsystem.setWantedState(SwerveFSM.WantedState.STOP);
+                intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
+                indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
+                shooterSubsystem.setWantedState(ShooterFSM.WantedState.IDLE);
+                ledSubsystem.setWantedState(LEDSubsystem.WantedState.DISABLED);
+                return;
             }
         }
 

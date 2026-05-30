@@ -111,20 +111,6 @@ public class LEDSubsystem extends SubsystemBase {
         applyStates();
         this.previousWantedState = wantedState;
 
-        // sample use cases
-        if (Timer.getFPGATimestamp() < 10) {
-            setWantedState(WantedState.BOOT);
-        } else if (DriverStation.isDSAttached()) {
-            if (DriverStation.isAutonomous())
-                setWantedState(WantedState.AUTONOMOUS);
-            else if (DriverStation.isEnabled())
-                setWantedState(WantedState.ENABLED);
-            else
-                setWantedState(WantedState.DISABLED);
-        } else {
-            setWantedState(WantedState.DISCONNECTED);
-        }
-
         // needed for sim only
         controllerIO.update();
     }
