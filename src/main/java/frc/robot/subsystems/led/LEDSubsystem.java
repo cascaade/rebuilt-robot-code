@@ -9,7 +9,7 @@ import static frc.robot.subsystems.led.LEDAnimation.LEDAnimationType.*;
 import static frc.robot.subsystems.led.LEDConstants.*;
 
 public class LEDSubsystem extends SubsystemBase {
-    private enum WantedState {
+    public enum WantedState {
         DISPLAY_OFF,
         DISABLED,
         DISCONNECTED,

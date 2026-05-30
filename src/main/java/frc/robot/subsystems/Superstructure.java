@@ -1,42 +1,116 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.intake.IntakeFSM;
+import frc.robot.subsystems.led.LEDSubsystem;
+import frc.robot.subsystems.shooter.ShooterFSM;
+import frc.robot.subsystems.swerve.SwerveFSM;
 import lombok.Setter;
 
 public class Superstructure extends SubsystemBase {
     public enum WantedSuperState {
         DEFAULT,
-        HOME
+        AUTO,
+        TELEOP,
+        INTAKE_TELEOP,
+        AIM_TELEOP,
+        SHOOT_TELEOP,
+        PROTECTED_TELEOP
     }
 
     public enum CurrentSuperState {
-        HOMING
+        DEFAULT,
+        AUTO,
+        TELEOP,
+        INTAKE_TELEOP,
+        AIMING_TELEOP,
+        SHOOTING_TELEOP,
+        PROTECTED_TELEOP
     }
 
     @Setter
-    private WantedSuperState wantedSuperState = WantedSuperState.HOME;
-    private CurrentSuperState currentSuperState = CurrentSuperState.HOMING;
+    private WantedSuperState wantedSuperState = WantedSuperState.DEFAULT;
+    private CurrentSuperState currentSuperState = CurrentSuperState.DEFAULT;
 
-    public Superstructure() {
+    private final SwerveFSM swerveSubsystem;
+    private final IntakeFSM intakeSubsystem;
+    private final IndexerSubsystem indexerSubsystem;
+    private final ShooterFSM shooterSubsystem;
+    private final LEDSubsystem ledSubsystem;
 
+    public Superstructure(
+        SwerveFSM swerveSubsystem,
+        IntakeFSM intakeSubsystem,
+        IndexerSubsystem indexerSubsystem,
+        ShooterFSM shooterSubsystem,
+        LEDSubsystem ledSubsystem
+    ) {
+        this.swerveSubsystem = swerveSubsystem;
+        this.intakeSubsystem = intakeSubsystem;
+        this.indexerSubsystem = indexerSubsystem;
+        this.shooterSubsystem = shooterSubsystem;
+        this.ledSubsystem = ledSubsystem;
     }
 
     private CurrentSuperState handleStateTransitions() {
         switch (wantedSuperState) {
-            default -> {
-                return CurrentSuperState.HOMING;
+            case DEFAULT -> {
+                if (DriverStation.isAutonomousEnabled()) {
+                    return CurrentSuperState.AUTO;
+                } else if (DriverStation.isTeleopEnabled()) {
+                    return CurrentSuperState.TELEOP;
+                } else {
+                    return CurrentSuperState.DEFAULT;
+                }
+            }
+            case AUTO -> {
+                if (!DriverStation.isAutonomousEnabled()) {
+                    return CurrentSuperState.DEFAULT;
+                }
+
+                return CurrentSuperState.AUTO;
+            }
+            case TELEOP -> {
+                if (!DriverStation.isTeleopEnabled()) {
+                    return CurrentSuperState.DEFAULT;
+                }
+
+                return CurrentSuperState.TELEOP;
+            }
+            case INTAKE_TELEOP -> {
+                return CurrentSuperState.INTAKE_TELEOP;
+            }
+            case AIM_TELEOP -> {
+                return CurrentSuperState.AIMING_TELEOP;
+            }
+            case SHOOT_TELEOP -> {
+                return CurrentSuperState.SHOOTING_TELEOP;
+            }
+            case PROTECTED_TELEOP -> {
+                return CurrentSuperState.PROTECTED_TELEOP;
             }
         }
+
+        return CurrentSuperState.DEFAULT;
     }
 
     private void applyStates() {
         switch (currentSuperState) {
-
+            case TELEOP -> {
+                swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
+                intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
+                indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
+                shooterSubsystem.setWantedState(ShooterFSM.WantedState.IDLE);
+                ledSubsystem.setWantedState(LEDSubsystem.WantedState.ENABLED);
+            }
         }
     }
 
     @Override
     public void periodic() {
-        super.periodic();
+        this.currentSuperState = handleStateTransitions();
+        applyStates();
     }
 }

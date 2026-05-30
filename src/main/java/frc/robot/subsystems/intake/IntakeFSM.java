@@ -14,7 +14,7 @@ import static frc.robot.subsystems.intake.IntakeConstants.WristConstants.WRIST_P
 import static frc.robot.subsystems.intake.IntakeConstants.WristConstants.WRIST_PULSE_STOW_DURATION;
 
 public class IntakeFSM extends SubsystemBase {
-    private enum WantedState {
+    public enum WantedState {
         IDLE,
         HOME,
         INTAKE,
