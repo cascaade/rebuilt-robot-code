@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.FieldConstants;
+import frc.robot.RobotState;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeFSM;
 import frc.robot.subsystems.led.LEDSubsystem;
@@ -97,15 +99,53 @@ public class Superstructure extends SubsystemBase {
     }
 
     private void applyStates() {
+        boolean usePassPointInsteadOfHub = RobotState.getInstance().getRobotFieldPose().getMeasureX().gt(FieldConstants.getHubCenter().getMeasureX());
+
+        ShooterFSM.WantedState shooterState = usePassPointInsteadOfHub ? ShooterFSM.WantedState.PASS : ShooterFSM.WantedState.RESPONSIVE;
+        LEDSubsystem.WantedState ledState = LEDSubsystem.WantedState.DISPLAY_OFF;
+
         switch (currentSuperState) {
+            case DEFAULT -> {
+                swerveSubsystem.setWantedState(SwerveFSM.WantedState.STOP);
+                intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
+                indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
+            }
+            case AUTO -> {
+                shooterState = ShooterFSM.WantedState.RESPONSIVE;
+                ledState = LEDSubsystem.WantedState.AUTONOMOUS;
+
+                // implementing auto later
+            }
             case TELEOP -> {
                 swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
-                shooterSubsystem.setWantedState(ShooterFSM.WantedState.IDLE);
-                ledSubsystem.setWantedState(LEDSubsystem.WantedState.ENABLED);
+            }
+            case INTAKE_TELEOP -> {
+                swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
+                intakeSubsystem.setWantedState(IntakeFSM.WantedState.INTAKE);
+                indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.REVERSE);
+            }
+            case AIMING_TELEOP -> {
+                swerveSubsystem.setWantedState(usePassPointInsteadOfHub ? SwerveFSM.WantedState.AIM_PASS : SwerveFSM.WantedState.AIM_HUB);
+                intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
+                indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
+            }
+            case SHOOTING_TELEOP -> {
+                swerveSubsystem.setWantedState(SwerveFSM.WantedState.CROSS);
+                intakeSubsystem.setWantedState(IntakeFSM.WantedState.PULSE);
+                indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.FEED);
+                ledState = LEDSubsystem.WantedState.BOOT;
+            }
+            case PROTECTED_TELEOP -> {
+                swerveSubsystem.setWantedState(SwerveFSM.WantedState.CROSS);
+                intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
+                indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
             }
         }
+
+        shooterSubsystem.setWantedState(shooterState);
+        ledSubsystem.setWantedState(ledState);
     }
 
     @Override
