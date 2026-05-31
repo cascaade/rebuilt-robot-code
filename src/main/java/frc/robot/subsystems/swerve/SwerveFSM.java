@@ -120,7 +120,7 @@ public class SwerveFSM extends SubsystemBase {
         );
 
         rawGyroRotation = new Rotation2d();
-        modulePositions = Arrays.stream(modules).map(module -> module.getPosition()).toArray(SwerveModulePosition[]::new);
+        modulePositions = Arrays.stream(modules).map(SDSSwerveModule::getPosition).toArray(SwerveModulePosition[]::new);
 
         poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, modulePositions, Constants.getInitialPose());
 
