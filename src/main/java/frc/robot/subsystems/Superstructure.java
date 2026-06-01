@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotState;
@@ -18,7 +19,6 @@ public class Superstructure extends SubsystemBase {
         AUTO,
         TELEOP,
         INTAKE_TELEOP,
-        AIM_TELEOP,
         SHOOT_TELEOP,
         PROTECTED_TELEOP
     }
@@ -90,9 +90,6 @@ public class Superstructure extends SubsystemBase {
             case INTAKE_TELEOP -> {
                 return CurrentSuperState.INTAKE_TELEOP;
             }
-            case AIM_TELEOP -> {
-                return CurrentSuperState.AIMING_TELEOP;
-            }
             case SHOOT_TELEOP -> {
                 if (shooterSubsystem.isAtSpeed() && swerveSubsystem.isAligned()) {
                     return CurrentSuperState.SHOOTING_TELEOP;
@@ -109,9 +106,9 @@ public class Superstructure extends SubsystemBase {
     }
 
     private void applyStates() {
-        boolean usePassPointInsteadOfHub = RobotState.getInstance().getRobotFieldPose().getMeasureX().gt(FieldConstants.getHubCenter().getMeasureX());
+        boolean inNeutralZone = RobotState.getInstance().getRobotFieldPose().getMeasureX().gt(FieldConstants.getHubCenter().getMeasureX());
 
-        ShooterFSM.WantedState shooterState = usePassPointInsteadOfHub ? ShooterFSM.WantedState.PASS : ShooterFSM.WantedState.RESPONSIVE;
+        ShooterFSM.WantedState shooterState = inNeutralZone ? ShooterFSM.WantedState.PASS : ShooterFSM.WantedState.RESPONSIVE;
         LEDSubsystem.WantedState ledState = LEDSubsystem.WantedState.DISPLAY_OFF;
 
         if (Timer.getFPGATimestamp() < 10) {
@@ -150,7 +147,7 @@ public class Superstructure extends SubsystemBase {
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.REVERSE);
             }
             case AIMING_TELEOP -> {
-                swerveSubsystem.setWantedState(usePassPointInsteadOfHub ? SwerveFSM.WantedState.AIM_PASS : SwerveFSM.WantedState.AIM_HUB);
+                swerveSubsystem.setWantedState(inNeutralZone ? SwerveFSM.WantedState.AIM_PASS : SwerveFSM.WantedState.AIM_HUB);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
             }
@@ -183,5 +180,19 @@ public class Superstructure extends SubsystemBase {
     public void periodic() {
         this.currentSuperState = handleStateTransitions();
         applyStates();
+    }
+
+    public Command intakeCommand() {
+        return this.startEnd(
+            () -> setWantedSuperState(WantedSuperState.INTAKE_TELEOP),
+            () -> setWantedSuperState(WantedSuperState.TELEOP)
+        ).withName("SuperstructureIntake");
+    }
+
+    public Command shootCommand() {
+        return this.startEnd(
+                () -> setWantedSuperState(WantedSuperState.SHOOT_TELEOP),
+                () -> setWantedSuperState(WantedSuperState.TELEOP)
+        ).withName("SuperstructureShoot");
     }
 }
