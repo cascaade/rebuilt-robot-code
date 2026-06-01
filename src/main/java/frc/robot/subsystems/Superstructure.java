@@ -94,7 +94,7 @@ public class Superstructure extends SubsystemBase {
                 return CurrentSuperState.AIMING_TELEOP;
             }
             case SHOOT_TELEOP -> {
-                if (ShooterFSM.isAtSpeed() && SwerveFSM.isAligned()) {
+                if (shooterSubsystem.isAtSpeed() && swerveSubsystem.isAligned()) {
                     return CurrentSuperState.SHOOTING_TELEOP;
                 } else {
                     return CurrentSuperState.AIMING_TELEOP;

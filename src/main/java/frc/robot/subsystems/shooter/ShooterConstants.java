@@ -23,6 +23,8 @@ public class ShooterConstants {
     public static final AngularVelocity feederRunSpeed = RadiansPerSecond.of(5000);
     public static final AngularVelocity indexRunSpeed = RadiansPerSecond.of(7250);
 
+    public static final AngularVelocity SHOOTER_SPEED_TOLERANCE = RadiansPerSecond.of(5);
+
     public static final int FLYWHEEL_STATOR_CURRENT_LIMIT = 60;
     public static final int FLYWHEEL_SUPPLY_CURRENT_LIMIT = 40;
 

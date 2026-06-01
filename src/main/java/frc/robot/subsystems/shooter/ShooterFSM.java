@@ -3,17 +3,19 @@ package frc.robot.subsystems.shooter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotState;
+import frc.robot.subsystems.shooter.ShooterIO.ShooterIOInputs;
 import frc.robot.util.ShooterLUT;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.shooter.ShooterConstants.SHOOTER_SPEED_TOLERANCE;
 import static frc.robot.subsystems.shooter.ShooterConstants.shooterMaxSpeed;
 
 public class ShooterFSM extends SubsystemBase {
@@ -35,6 +37,7 @@ public class ShooterFSM extends SubsystemBase {
     private SystemState systemState = SystemState.IDLING;
 
     private final Supplier<Pose2d> robotPoseSupplier;
+    private final MutAngularVelocity targetVelocity = RadiansPerSecond.mutable(0);
 
     private final ShooterIO[] shooterIOs;
     private final ShooterIOInputsAutoLogged[] shooterIOInputs;
@@ -65,20 +68,22 @@ public class ShooterFSM extends SubsystemBase {
     private void applyStates() {
         switch (systemState) {
             case RESPONDING -> {
-                AngularVelocity shooterRunSpeed = ShooterLUT.getFlywheelSpeedAtDistance(RobotState.getInstance().getFieldHubDistance());
+                targetVelocity.mut_replace(ShooterLUT.getFlywheelSpeedAtDistance(RobotState.getInstance().getFieldHubDistance()));
 
                 for (ShooterIO shooterIO : shooterIOs)
-                    shooterIO.setClosedLoop(shooterRunSpeed);
+                    shooterIO.setClosedLoop(targetVelocity);
             }
 
             case PASSING -> {
-                AngularVelocity shooterRunSpeed = ShooterLUT.getFlywheelSpeedAtDistance(RobotState.getInstance().getClosestFieldPassDistance());
+                targetVelocity.mut_replace(ShooterLUT.getFlywheelSpeedAtDistance(RobotState.getInstance().getClosestFieldPassDistance()));
 
                 for (ShooterIO shooterIO : shooterIOs)
-                    shooterIO.setClosedLoop(shooterRunSpeed);
+                    shooterIO.setClosedLoop(targetVelocity);
             }
 
             default -> {
+                targetVelocity.mut_replace(Double.NaN, RadiansPerSecond);
+
                 for (ShooterIO shooterIO : shooterIOs)
                     shooterIO.setOpenLoop(Volts.of(0));
             }
@@ -95,5 +100,17 @@ public class ShooterFSM extends SubsystemBase {
             Logger.processInputs("Shooter/Flywheel" + i, shooterIOInputs[i]);
             shooterIOs[i].syncControlConstants();
         }
+    }
+
+    public boolean isAtSpeed() {
+        boolean atSpeed = true;
+
+        if (Double.isNaN(targetVelocity.in(RadiansPerSecond)))
+            return false;
+
+        for (ShooterIOInputs inputs : shooterIOInputs)
+            atSpeed = atSpeed && inputs.velocity.isNear(targetVelocity, SHOOTER_SPEED_TOLERANCE);
+
+        return atSpeed;
     }
 }

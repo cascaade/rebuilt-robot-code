@@ -5,11 +5,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
 import frc.robot.util.TunableControlConstants;
 
@@ -20,6 +16,8 @@ public class SwerveConstants {
     public static final int[] driveCANIDs = { 5, 6, 7, 8 };
     public static final int[] canCoderCANIDs = { 9, 10, 11, 12 };
     public static final int pigeonCANID = 13;
+
+    public static final Angle BODY_ROTATION_ALIGN_TOLERANCE = Degrees.of(5);
 
     public static final Distance kWheelDistanceX = Inches.of(25 - 5.25); // forward/back
     public static final Distance kWheelDistanceY = Inches.of(29 - 5.25); // left/right

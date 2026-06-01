@@ -40,6 +40,7 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.shooter.ShooterConstants.shooterMaxSpeed;
+import static frc.robot.subsystems.swerve.SwerveConstants.BODY_ROTATION_ALIGN_TOLERANCE;
 
 public class SwerveFSM extends SubsystemBase {
     public enum WantedState {
@@ -86,6 +87,7 @@ public class SwerveFSM extends SubsystemBase {
 
     private final GyroIO gyroIO;
     private final GyroIOInputsAutoLogged gyroIOInputs;
+    private Rotation2d targetRotation;
 
     private final SDSSwerveModule[] modules;
     private SwerveModulePosition[] modulePositions;
@@ -271,6 +273,10 @@ public class SwerveFSM extends SubsystemBase {
         Logger.recordOutput("Swerve/Drive_Command", this.getCurrentCommand() == null ? "null" : this.getCurrentCommand().getName());
     }
 
+    public boolean isAligned() {
+        return rawGyroRotation.getMeasure().isNear(targetRotation.getMeasure(), BODY_ROTATION_ALIGN_TOLERANCE);
+    }
+
     @AutoLogOutput(key = "Odometry/Pose")
     public Pose2d getPose() {
         return poseEstimator.getEstimatedPosition();
@@ -288,11 +294,15 @@ public class SwerveFSM extends SubsystemBase {
         Logger.recordOutput("Field/HubPose", hubPose);
         Logger.recordOutput("Swerve/AutoAlignUpdate", Timer.getFPGATimestamp());
 
+        targetRotation = rawGyroRotation;
+
         if (aimHubFlag.get()) {
             speeds.omegaRadiansPerSecond = trajHeadingController.calculate(
                 robotPose.getRotation().getRadians(),
                 targetHeading.getRadians()
             );
+
+            targetRotation = targetHeading;
         }
     }
 
