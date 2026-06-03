@@ -51,7 +51,7 @@ public class SwerveConstants {
     // turn config
     public static final SparkMaxConfig turnConfig = new SparkMaxConfig();
     public static final TunableControlConstants turnControlConstants =
-        new TunableControlConstants("Swerve/Drive")
+        new TunableControlConstants("Swerve/Turn")
             .withP(0.6)
             .withSimP(8);
 

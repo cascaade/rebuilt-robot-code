@@ -88,7 +88,7 @@ public class SwerveFSM extends SubsystemBase {
 
     private final GyroIO gyroIO;
     private final GyroIOInputsAutoLogged gyroIOInputs;
-    private Rotation2d targetRotation;
+    private Rotation2d targetRotation = new Rotation2d();
 
     private final SDSSwerveModule[] modules;
     private SwerveModulePosition[] modulePositions;
