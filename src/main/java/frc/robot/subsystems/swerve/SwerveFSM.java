@@ -33,9 +33,7 @@ import frc.robot.util.ShooterLUT;
 import frc.robot.util.SwerveMathUtil;
 import frc.robot.util.SwerveMathUtil.TranslationOutput;
 import lombok.Setter;
-import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.LoggedRobot;
-import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.*;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -98,7 +96,8 @@ public class SwerveFSM extends SubsystemBase {
     private SwerveSample requestedSwerveSample;
 
     public SwerveFSM (
-        CommandXboxController controller, GyroIO gyroIO,
+        CommandXboxController controller,
+        GyroIO gyroIO,
         SDSModuleIO flModuleIO,
         SDSModuleIO frModuleIO,
         SDSModuleIO blModuleIO,
@@ -170,13 +169,7 @@ public class SwerveFSM extends SubsystemBase {
             case SYS_ID -> {
 
             }
-            case AIMING_HUB -> {
-
-            }
-            case AIMING_PASS -> {
-
-            }
-            case TELEOP -> {
+            case AIMING_HUB, TELEOP, AIMING_PASS -> {
                 double rawX = controller.getLeftX();
                 double rawY = controller.getLeftY();
                 double rawOmega = controller.getRightX();
@@ -225,6 +218,9 @@ public class SwerveFSM extends SubsystemBase {
         this.systemState = handleStateTransitions();
         applyStates();
         this.previousWantedState = wantedState;
+
+        Logger.recordOutput("Swerve/WantedState", wantedState);
+        Logger.recordOutput("Swerve/SystemState", systemState);
 
         Logger.recordOutput("Swerve/AimHubFlag", aimHubFlag.get());
         Logger.recordOutput("Swerve/CrossEnabled", toCross);
@@ -276,6 +272,7 @@ public class SwerveFSM extends SubsystemBase {
         Logger.recordOutput("Swerve/Drive_Command", this.getCurrentCommand() == null ? "null" : this.getCurrentCommand().getName());
     }
 
+    @AutoLogOutput(key = "Swerve/IsAligned")
     public boolean isAligned() {
         return rawGyroRotation.getMeasure().isNear(targetRotation.getMeasure(), BODY_ROTATION_ALIGN_TOLERANCE);
     }
@@ -305,7 +302,7 @@ public class SwerveFSM extends SubsystemBase {
 
         targetRotation = rawGyroRotation;
 
-        if (aimHubFlag.get()) {
+        if (systemState == SystemState.AIMING_HUB) {
             speeds.omegaRadiansPerSecond = trajHeadingController.calculate(
                 robotPose.getRotation().getRadians(),
                 targetHeading.getRadians()
@@ -318,6 +315,7 @@ public class SwerveFSM extends SubsystemBase {
     private void submitChassisSpeeds(
         OrientedChassisSpeeds chassisSpeeds
     ) {
+
         // Update lastMove
         if (
             chassisSpeeds.vxMetersPerSecond != 0 ||
@@ -326,6 +324,10 @@ public class SwerveFSM extends SubsystemBase {
         ) {
             lastMove.mut_replace(Timer.getFPGATimestamp(), Seconds);
         }
+
+        Logger.recordOutput("Swerve/ChassisSpeeds/RawChassisSpeeds", new ChassisSpeeds(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, chassisSpeeds.omegaRadiansPerSecond));
+//        Logger.recordOutput("Swerve/ChassisSpeeds/rawVelocity", chassisSpeeds.omegaRadiansPerSecond);
+        Logger.recordOutput("Swerve/timeSinceLastMove", Seconds.of(Timer.getFPGATimestamp()).minus(lastMove));
 
         // Set modules to cross if the time since last move exceeds threshold
         if (

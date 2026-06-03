@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import lombok.Setter;
+import org.littletonrobotics.junction.Logger;
 
 import static frc.robot.subsystems.led.LEDAnimation.LEDAnimationType.*;
 import static frc.robot.subsystems.led.LEDConstants.*;
@@ -110,6 +111,9 @@ public class LEDSubsystem extends SubsystemBase {
         this.systemState = handleStateTransitions();
         applyStates();
         this.previousWantedState = wantedState;
+
+        Logger.recordOutput("LEDs/WantedState", wantedState);
+        Logger.recordOutput("LEDs/SystemState", systemState);
 
         // needed for sim only
         controllerIO.update();

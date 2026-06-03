@@ -102,6 +102,9 @@ public class Wrist {
         applyStates();
         this.previousWantedState = wantedState;
 
+        Logger.recordOutput("Intake/Wrist/WantedState", wantedState);
+        Logger.recordOutput("Intake/Wrist/SystemState", systemState);
+
         wristIO.updateInputs(wristIOInputs);
         Logger.processInputs("Intake/Wrist", wristIOInputs);
         wristIO.syncControlConstants();

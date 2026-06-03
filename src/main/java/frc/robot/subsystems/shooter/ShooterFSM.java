@@ -10,6 +10,7 @@ import frc.robot.RobotState;
 import frc.robot.subsystems.shooter.ShooterIO.ShooterIOInputs;
 import frc.robot.util.ShooterLUT;
 import lombok.Setter;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.function.Supplier;
@@ -95,6 +96,9 @@ public class ShooterFSM extends SubsystemBase {
         applyStates();
         this.previousWantedState = wantedState;
 
+        Logger.recordOutput("Shooter/WantedState", wantedState);
+        Logger.recordOutput("Shooter/SystemState", systemState);
+
         for (int i = 0; i < shooterIOInputs.length; i++) {
             shooterIOs[i].updateInputs(shooterIOInputs[i]);
             Logger.processInputs("Shooter/Flywheel" + i, shooterIOInputs[i]);
@@ -102,6 +106,7 @@ public class ShooterFSM extends SubsystemBase {
         }
     }
 
+    @AutoLogOutput(key = "Shooter/IsAtSpeed")
     public boolean isAtSpeed() {
         boolean atSpeed = true;
 

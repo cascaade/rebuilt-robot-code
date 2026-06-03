@@ -77,6 +77,9 @@ public class IndexerSubsystem extends SubsystemBase {
         applyStates();
         this.previousWantedState = wantedState;
 
+        Logger.recordOutput("Indexer/WantedState", wantedState);
+        Logger.recordOutput("Indexer/SystemState", systemState);
+
         conveyorIO.updateInputs(conveyorIOInputs);
         kickerIO.updateInputs(kickerIOInputs);
         Logger.processInputs("Indexer/Conveyor", conveyorIOInputs);

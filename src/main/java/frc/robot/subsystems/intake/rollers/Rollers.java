@@ -65,6 +65,9 @@ public class Rollers {
         applyStates();
         this.previousWantedState = wantedState;
 
+        Logger.recordOutput("Intake/Rollers/WantedState", wantedState);
+        Logger.recordOutput("Intake/Rollers/SystemState", systemState);
+
         rollersIO.updateInputs(rollersIOInputs);
         Logger.processInputs("Intake/Rollers", rollersIOInputs);
         rollersIO.syncControlConstants();

@@ -5,8 +5,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.units.measure.MutVoltage;
-import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 import static edu.wpi.first.units.Units.*;
@@ -55,6 +54,18 @@ public class SDSModuleIOSim implements SDSModuleIO {
 
     @Override
     public void updateInputs(SDSModuleIOInputs inputs) {
+        driveControlConstants.ifSimChanged(() -> driveController.setPID(
+            driveControlConstants.getSimP(),
+            driveControlConstants.getSimI(),
+            driveControlConstants.getSimD()
+        ));
+
+        turnControlConstants.ifSimChanged(() -> turnController.setPID(
+            turnControlConstants.getSimP(),
+            turnControlConstants.getSimI(),
+            turnControlConstants.getSimD()
+        ));
+
         if (driveClosedLoop) {
             driveAppliedVolts.mut_replace(driveFFVolts.in(Volts) + driveController.calculate(driveSim.getAngularVelocityRadPerSec()), Volts);
         } else {
@@ -88,6 +99,13 @@ public class SDSModuleIOSim implements SDSModuleIO {
         inputs.turnVelocity.mut_replace(turnSim.getAngularVelocity());
         inputs.turnAppliedVolts.mut_replace(turnAppliedVolts);
         inputs.turnCurrentAmps.mut_replace(Math.abs(turnSim.getCurrentDrawAmps()), Amps);
+    }
+
+    @Override
+    public void setDriveVelocity(AngularVelocity velocity) {
+        driveClosedLoop = true;
+        driveController.setSetpoint(velocity.in(RadiansPerSecond));
+        driveFFVolts.mut_replace(0, Volts);
     }
 
     @Override

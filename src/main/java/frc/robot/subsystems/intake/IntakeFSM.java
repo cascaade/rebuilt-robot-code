@@ -8,6 +8,7 @@ import frc.robot.subsystems.intake.rollers.RollersIO;
 import frc.robot.subsystems.intake.wrist.Wrist;
 import frc.robot.subsystems.intake.wrist.WristIO;
 import lombok.Setter;
+import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.units.Units.Seconds;
 import static frc.robot.subsystems.intake.IntakeConstants.WristConstants.WRIST_PULSE_DEPLOY_DURATION;
@@ -140,6 +141,9 @@ public class IntakeFSM extends SubsystemBase {
         this.systemState = handleStateTransitions();
         applyStates();
         this.previousWantedState = wantedState;
+
+        Logger.recordOutput("Intake/WantedState", wantedState);
+        Logger.recordOutput("Intake/SystemState", systemState);
 
         wrist.periodic();
         rollers.periodic();

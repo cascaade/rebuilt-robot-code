@@ -12,6 +12,7 @@ import frc.robot.subsystems.led.LEDSubsystem;
 import frc.robot.subsystems.shooter.ShooterFSM;
 import frc.robot.subsystems.swerve.SwerveFSM;
 import lombok.Setter;
+import org.littletonrobotics.junction.Logger;
 
 public class Superstructure extends SubsystemBase {
     public enum WantedSuperState {
@@ -59,7 +60,7 @@ public class Superstructure extends SubsystemBase {
     }
 
     private CurrentSuperState handleStateTransitions() {
-        if (DriverStation.isDisabled() || !DriverStation.isJoystickConnected(0) || !DriverStation.isJoystickConnected(1)) {
+        if (DriverStation.isDisabled() || !DriverStation.isJoystickConnected(0)) {
             return CurrentSuperState.DISABLED;
         }
 
@@ -180,6 +181,9 @@ public class Superstructure extends SubsystemBase {
     public void periodic() {
         this.currentSuperState = handleStateTransitions();
         applyStates();
+
+        Logger.recordOutput("Superstructure/WantedSuperState", wantedSuperState);
+        Logger.recordOutput("Superstructure/CurrentSuperState", currentSuperState);
     }
 
     public Command intakeCommand() {

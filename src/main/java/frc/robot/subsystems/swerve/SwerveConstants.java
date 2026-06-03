@@ -38,7 +38,7 @@ public class SwerveConstants {
             .withP(0.0001)
             .withS(0.01)
             .withV(0.11)
-            .withSimP(0.05)
+            .withSimP(0.5)
             .withSimV(0.0789);
 
     public static final double driveMotorReduction = 6.75; // l2 mk4i gear set
