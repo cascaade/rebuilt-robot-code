@@ -17,8 +17,8 @@ public class WristIOSpark implements WristIO {
     private final SparkClosedLoopController wristController;
     private final RelativeEncoder wristEncoder;
 
-    public WristIOSpark() {
-        wristMotor = new SparkMax(WRIST_CAN_ID, MotorType.kBrushless);
+    public WristIOSpark(int wristCanId) {
+        wristMotor = new SparkMax(wristCanId, MotorType.kBrushless);
         wristController = wristMotor.getClosedLoopController();
         wristEncoder = wristMotor.getEncoder();
 

@@ -10,7 +10,6 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 
 import static edu.wpi.first.units.Units.*;
-import static frc.robot.subsystems.indexer.IndexerConstants.*;
 import static frc.robot.subsystems.indexer.IndexerConstants.KickerConstants.*;
 
 public class KickerIOSpark implements KickerIO {
@@ -18,8 +17,8 @@ public class KickerIOSpark implements KickerIO {
     private final SparkClosedLoopController kickerController;
     private final RelativeEncoder kickerEncoder;
 
-    public KickerIOSpark() {
-        kickerMotor = new SparkMax(KICKER_CAN_ID, MotorType.kBrushless);
+    public KickerIOSpark(int indexMotorCANID) {
+        kickerMotor = new SparkMax(indexMotorCANID, MotorType.kBrushless);
         kickerController = kickerMotor.getClosedLoopController();
         kickerEncoder = kickerMotor.getEncoder();
 

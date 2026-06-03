@@ -7,58 +7,66 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.autos.AutoBrain;
-import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.indexer.*;
+import frc.robot.subsystems.intake.*;
+import frc.robot.subsystems.intake.IntakeConstants.RollerConstants;
+import frc.robot.subsystems.intake.IntakeConstants.WristConstants;
 import frc.robot.subsystems.intake.rollers.RollersIO;
 import frc.robot.subsystems.intake.rollers.RollersIOSpark;
 import frc.robot.subsystems.intake.wrist.WristIO;
 import frc.robot.subsystems.intake.wrist.WristIOSpark;
 import frc.robot.subsystems.led.LEDControllerIOSim;
 import frc.robot.subsystems.led.LEDSubsystem;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.shooter.ShooterConstants;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOTalon;
-import frc.robot.subsystems.swerve.GyroIO;
-import frc.robot.subsystems.swerve.GyroIOPigeon;
-import frc.robot.subsystems.swerve.SDSModuleIO;
-import frc.robot.subsystems.swerve.SDSModuleIOSim;
-import frc.robot.subsystems.swerve.SDSModuleIOSpark;
-import frc.robot.subsystems.swerve.SwerveSubsystem;
-import frc.robot.subsystems.vision.VisionSubsystem;
-import frc.robot.subsystems.vision.VisionConstants;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhoton;
+import frc.robot.subsystems.shooter.*;
+import frc.robot.subsystems.swerve.*;
+import frc.robot.subsystems.vision.*;
 
 public class RobotContainer {
-    private final CommandXboxController driverController;
-    private final CommandXboxController auxController;
+    private final CommandXboxController controller;
 
-    private final SwerveSubsystem swerveSubsystem;
-    private final VisionSubsystem visionSubsystem;
-    private final ShooterSubsystem shooterSubsystem;
-    private final IntakeSubsystem intakeSubsystem;
+    private final SwerveFSM swerveSubsystem;
+    private final ShooterFSM shooterSubsystem;
+    private final IndexerSubsystem indexerSubsystem;
+    private final IntakeFSM intakeSubsystem;
     private final LEDSubsystem ledSubsystem;
+    private final VisionSubsystem visionSubsystem;
 
-    private final AutoBrain autoBrain;
+//    private final AutoBrain autoBrain;
+
+    private final Superstructure superstructure;
 
     public RobotContainer() {
-
         Preferences.removeAll();
 
-        driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
-        auxController = new CommandXboxController(OperatorConstants.kAuxControllerPort);
+        controller = new CommandXboxController(OperatorConstants.OPERATOR_CONTROLLER_PORT);
 
         switch (Constants.currentMode) {
             case REAL:
-                swerveSubsystem = new SwerveSubsystem(
+                swerveSubsystem = new SwerveFSM(
+                    controller,
                     new GyroIOPigeon(),
                     new SDSModuleIOSpark(0),
                     new SDSModuleIOSpark(1),
                     new SDSModuleIOSpark(2),
                     new SDSModuleIOSpark(3)
+                );
+                shooterSubsystem = new ShooterFSM(
+                    new ShooterIOTalon(ShooterConstants.shooterLMotorCANID),
+                    new ShooterIOTalon(ShooterConstants.shooterMMotorCANID),
+                    new ShooterIOTalon(ShooterConstants.shooterRMotorCANID),
+                    swerveSubsystem::getPose
+                );
+                indexerSubsystem = new IndexerSubsystem(
+                    new ConveyorIOSpark(ShooterConstants.feederMotorCANID),
+                    new KickerIOSpark(ShooterConstants.indexMotorCANID)
+                );
+                intakeSubsystem = new IntakeFSM(
+                    new WristIOSpark(WristConstants.WRIST_CAN_ID),
+                    new RollersIOSpark(RollerConstants.ROLLERS_CAN_ID)
                 );
                 visionSubsystem = new VisionSubsystem(
                     swerveSubsystem::addVisionMeasurement,
@@ -67,21 +75,10 @@ public class RobotContainer {
                     new VisionIOPhoton(VisionConstants.camConfigs[2]),
                     new VisionIOPhoton(VisionConstants.camConfigs[3])
                 );
-                shooterSubsystem = new ShooterSubsystem(
-                    new ShooterIOTalon(ShooterConstants.shooterLMotorCANID),
-                    new ShooterIOTalon(ShooterConstants.shooterMMotorCANID),
-                    new ShooterIOTalon(ShooterConstants.shooterRMotorCANID),
-                    new ShooterIOTalon(ShooterConstants.feederMotorCANID),
-                    new ShooterIOTalon(ShooterConstants.indexMotorCANID),
-                    swerveSubsystem::getPose
-                );
-                intakeSubsystem = new IntakeSubsystem(
-                    new RollersIOSpark(),
-                    new WristIOSpark()
-                );
                 break;
             case SIM:
-                swerveSubsystem = new SwerveSubsystem(
+                swerveSubsystem = new SwerveFSM(
+                    controller,
                     new GyroIO() {},
                     new SDSModuleIOSim(),
                     new SDSModuleIOSim(),
@@ -95,22 +92,26 @@ public class RobotContainer {
                     new VisionIO() {},
                     new VisionIO() {}
                 );
-                shooterSubsystem = new ShooterSubsystem(
+                shooterSubsystem = new ShooterFSM(
                     new ShooterIO() {},
                     new ShooterIO() {},
                     new ShooterIO() {},
-                    new ShooterIO() {},
-                    new ShooterIO() {},
-                    Pose2d::new
+                    swerveSubsystem::getPose
                 );
-                intakeSubsystem = new IntakeSubsystem(
-                    new RollersIO() {},
-                    new WristIO() {}
+                indexerSubsystem = new IndexerSubsystem(
+                    new ConveyorIO() {},
+                    new KickerIO() {}
+                );
+                intakeSubsystem = new IntakeFSM(
+                    new WristIO() {},
+                    new RollersIO() {}
                 );
                 break;
             default:
-                swerveSubsystem = new SwerveSubsystem(
-                    new GyroIO() {},
+                swerveSubsystem = new SwerveFSM(
+                    controller,
+                    new GyroIO() {
+                    },
                     new SDSModuleIO() {},
                     new SDSModuleIO() {},
                     new SDSModuleIO() {},
@@ -123,17 +124,19 @@ public class RobotContainer {
                     new VisionIO() {},
                     new VisionIO() {}
                 );
-                shooterSubsystem = new ShooterSubsystem(
+                shooterSubsystem = new ShooterFSM(
                     new ShooterIO() {},
                     new ShooterIO() {},
                     new ShooterIO() {},
-                    new ShooterIO() {},
-                    new ShooterIO() {},
-                    Pose2d::new
+                    swerveSubsystem::getPose
                 );
-                intakeSubsystem = new IntakeSubsystem(
-                    new RollersIO() {},
-                    new WristIO() {}
+                indexerSubsystem = new IndexerSubsystem(
+                    new ConveyorIO() {},
+                    new KickerIO() {}
+                );
+                intakeSubsystem = new IntakeFSM(
+                    new WristIO() {},
+                    new RollersIO() {}
                 );
                 break;
         }
@@ -141,27 +144,35 @@ public class RobotContainer {
         ledSubsystem = new LEDSubsystem(
             new LEDControllerIOSim()
         );
+
+        superstructure = new Superstructure(
+            swerveSubsystem,
+            intakeSubsystem,
+            indexerSubsystem,
+            shooterSubsystem,
+            ledSubsystem
+        );
         
         configureBindings();
 
-        autoBrain = new AutoBrain(swerveSubsystem, shooterSubsystem, intakeSubsystem);
+//        autoBrain = new AutoBrain(swerveSubsystem, shooterSubsystem, intakeSubsystem);
     }
 
     private void configureBindings() {
         // swerve default joystick inputs
-        swerveSubsystem.setDefaultCommand(swerveSubsystem.runDriveInputs(
-            driverController::getLeftX,          // vx
-            driverController::getLeftY,          // vy
-            driverController::getRightX,         // omega
-            driverController::getLeftTriggerAxis // raw slow input
-        ));
+//        swerveSubsystem.setDefaultCommand(swerveSubsystem.runDriveInputs(
+//            driverController::getLeftX,          // vx
+//            driverController::getLeftY,          // vy
+//            driverController::getRightX,         // omega
+//            driverController::getLeftTriggerAxis // raw slow input
+//        ));
 
         // reset robot orientation (doesn't work with vision or FMS)
-        driverController.y().onTrue(swerveSubsystem.runZeroGyro());
+//        driverController.y().onTrue(swerveSubsystem.runZeroGyro());
 
         // hub aim on/off
-        driverController.leftBumper().onTrue(swerveSubsystem.runToggleAimHub(true));
-        driverController.leftBumper().onFalse(swerveSubsystem.runToggleAimHub(false));
+//        driverController.leftBumper().onTrue(swerveSubsystem.runToggleAimHub(true));
+//        driverController.leftBumper().onFalse(swerveSubsystem.runToggleAimHub(false));
 
         // swerve adjustments using POV
         // auxController.povUp().onTrue(swerve.runXSetTime(-0.15));
@@ -172,36 +183,39 @@ public class RobotContainer {
         // shooter flywheel on/off
 
         // index feed on/off
-        driverController.rightTrigger(.5).onTrue(shooterSubsystem.toggleRunIndex(true));
-        driverController.rightTrigger(.5).onFalse(shooterSubsystem.toggleRunIndex(false));
+//        driverController.rightTrigger(.5).onTrue(shooterSubsystem.toggleRunIndex(true));
+//        driverController.rightTrigger(.5).onFalse(shooterSubsystem.toggleRunIndex(false));
+//
+//        // agitator feed/unjam
+//        driverController.povDown().onTrue(shooterSubsystem.runToggleReverseFeeder(true));
+//        driverController.povDown().onFalse(shooterSubsystem.runToggleReverseFeeder(false));
+//
+//        // intake wrist up/down
+//        auxController.a().onTrue(intakeSubsystem.toggleWristPosFlag(true));
+//        auxController.a().onFalse(intakeSubsystem.toggleWristPosFlag(false));
+//        auxController.x().onTrue(intakeSubsystem.toggleWristNegFlag(true));
+//        auxController.x().onFalse(intakeSubsystem.toggleWristNegFlag(false));
+//
+//        // intake wrist pulses
+//        auxController.leftTrigger().onTrue(intakeSubsystem.addPulse());
+//
+//        // intake rollers suck/repel
+//        auxController.b().onTrue(intakeSubsystem.toggleRollerDirection(true));
+//        auxController.b().onFalse(intakeSubsystem.toggleRollerDirection(false));
+//
+//        // intake rollers on/off
+//        auxController.rightBumper().onTrue(intakeSubsystem.toggleRollerFlag(false));
+//        auxController.rightBumper().onFalse(intakeSubsystem.toggleRollerFlag(true));
+//
+//        // shooter toggles on/off
+//        auxController.leftBumper().onTrue(shooterSubsystem.toggleRunShooter());
+//
+//        // shooter goes to max speed
+//        auxController.y().onTrue(shooterSubsystem.switchMaxShooterFlag(true));
+//        auxController.y().onFalse(shooterSubsystem.switchMaxShooterFlag(false));
 
-        // agitator feed/unjam
-        driverController.povDown().onTrue(shooterSubsystem.runToggleReverseFeeder(true));
-        driverController.povDown().onFalse(shooterSubsystem.runToggleReverseFeeder(false));
-
-        // intake wrist up/down
-        auxController.a().onTrue(intakeSubsystem.toggleWristPosFlag(true));
-        auxController.a().onFalse(intakeSubsystem.toggleWristPosFlag(false));
-        auxController.x().onTrue(intakeSubsystem.toggleWristNegFlag(true));
-        auxController.x().onFalse(intakeSubsystem.toggleWristNegFlag(false));
-
-        // intake wrist pulses
-        auxController.leftTrigger().onTrue(intakeSubsystem.addPulse());
-
-        // intake rollers suck/repel
-        auxController.b().onTrue(intakeSubsystem.toggleRollerDirection(true));
-        auxController.b().onFalse(intakeSubsystem.toggleRollerDirection(false));
-
-        // intake rollers on/off
-        auxController.rightBumper().onTrue(intakeSubsystem.toggleRollerFlag(false));
-        auxController.rightBumper().onFalse(intakeSubsystem.toggleRollerFlag(true));
-
-        // shooter toggles on/off
-        auxController.leftBumper().onTrue(shooterSubsystem.toggleRunShooter());
-
-        // shooter goes to max speed
-        auxController.y().onTrue(shooterSubsystem.switchMaxShooterFlag(true));
-        auxController.y().onFalse(shooterSubsystem.switchMaxShooterFlag(false));
+        controller.leftTrigger().whileTrue(superstructure.intakeCommand());
+        controller.rightTrigger().whileTrue(superstructure.shootCommand());
     }
 
     public void testPeriodic() {
@@ -209,6 +223,7 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return autoBrain.fetchAuto().cmd();
+//        return autoBrain.fetchAuto().cmd();
+        return Commands.none();
     }
 }

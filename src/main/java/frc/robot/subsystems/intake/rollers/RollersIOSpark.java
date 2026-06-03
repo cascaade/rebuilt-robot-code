@@ -19,8 +19,8 @@ public class RollersIOSpark implements RollersIO {
     private final SparkClosedLoopController intakeController;
     private final RelativeEncoder intakeEncoder;
 
-    public RollersIOSpark() {
-        intakeMotor = new SparkMax(ROLLERS_CAN_ID, MotorType.kBrushless);
+    public RollersIOSpark(int rollersCanId) {
+        intakeMotor = new SparkMax(rollersCanId, MotorType.kBrushless);
         intakeController = intakeMotor.getClosedLoopController();
         intakeEncoder = intakeMotor.getEncoder();
 

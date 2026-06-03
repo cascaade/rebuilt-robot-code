@@ -17,8 +17,8 @@ public class ConveyorIOSpark implements ConveyorIO {
     private final SparkClosedLoopController conveyorController;
     private final RelativeEncoder conveyorEncoder;
 
-    public ConveyorIOSpark() {
-        conveyorMotor = new SparkMax(CONVEYOR_CAN_ID, MotorType.kBrushless);
+    public ConveyorIOSpark(int feederMotorCANID) {
+        conveyorMotor = new SparkMax(feederMotorCANID, MotorType.kBrushless);
         conveyorController = conveyorMotor.getClosedLoopController();
         conveyorEncoder = conveyorMotor.getEncoder();
 

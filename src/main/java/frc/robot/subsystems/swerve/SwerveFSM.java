@@ -1,6 +1,7 @@
 package frc.robot.subsystems.swerve;
 
 import choreo.trajectory.SwerveSample;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -11,6 +12,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.MutTime;
@@ -280,6 +283,12 @@ public class SwerveFSM extends SubsystemBase {
     @AutoLogOutput(key = "Odometry/Pose")
     public Pose2d getPose() {
         return poseEstimator.getEstimatedPosition();
+    }
+
+    public void addVisionMeasurement(Pose2d visionMeasurement, double timestamp, Matrix<N3, N1> stdDevs) {
+        // higher standard deviations means vision measurements are trusted less
+        poseEstimator.addVisionMeasurement(visionMeasurement, timestamp, stdDevs);
+        getPose();
     }
 
     private void adjustSpeedsForPresetRotation(OrientedChassisSpeeds speeds) {
