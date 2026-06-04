@@ -214,7 +214,7 @@ public class RobotContainer {
 //        auxController.y().onTrue(shooterSubsystem.switchMaxShooterFlag(true));
 //        auxController.y().onFalse(shooterSubsystem.switchMaxShooterFlag(false));
 
-        controller.leftTrigger().whileTrue(superstructure.intakeCommand());
+        controller.leftBumper().whileTrue(superstructure.intakeCommand());
         controller.rightTrigger().whileTrue(superstructure.shootCommand());
     }
 

@@ -4,6 +4,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.Constants;
+import frc.robot.Constants.RobotMode;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
 
@@ -59,6 +61,14 @@ public class Wrist {
                 }
 
                 if (!DriverStation.isDisabled()) {
+                    if (Constants.currentMode == RobotMode.SIM) {
+                        wristHomeTimestamp = Double.NaN;
+                        isWristHomed = true;
+                        tareWristPosition(WRIST_HOME_RESET_POSITION);
+                        setWantedState(WantedState.IDLE);
+                        return SystemState.IDLING;
+                    }
+
                     if (wristIOInputs.velocity.isNear(RadiansPerSecond.of(0), WRIST_ZERO_VELOCITY_THRESHOLD)) {
                         if (Double.isNaN(wristHomeTimestamp)) {
                             wristHomeTimestamp = Timer.getFPGATimestamp();

@@ -17,6 +17,7 @@ import org.littletonrobotics.junction.Logger;
 public class Superstructure extends SubsystemBase {
     public enum WantedSuperState {
         DEFAULT,
+        HOME,
         AUTO,
         TELEOP,
         INTAKE_TELEOP,
@@ -27,6 +28,7 @@ public class Superstructure extends SubsystemBase {
     public enum CurrentSuperState {
         DEFAULT,
         DISABLED,
+        HOMING,
         AUTO,
         TELEOP,
         INTAKE_TELEOP,
@@ -37,7 +39,10 @@ public class Superstructure extends SubsystemBase {
 
     @Setter
     private WantedSuperState wantedSuperState = WantedSuperState.DEFAULT;
+    private WantedSuperState previousWantedSuperState = WantedSuperState.DEFAULT;
     private CurrentSuperState currentSuperState = CurrentSuperState.DEFAULT;
+
+    private boolean homeCompleted = false;
 
     private final SwerveFSM swerveSubsystem;
     private final IntakeFSM intakeSubsystem;
@@ -62,6 +67,10 @@ public class Superstructure extends SubsystemBase {
     private CurrentSuperState handleStateTransitions() {
         if (DriverStation.isDisabled() || !DriverStation.isJoystickConnected(0)) {
             return CurrentSuperState.DISABLED;
+        }
+
+        if (!homeCompleted) {
+            this.wantedSuperState = WantedSuperState.HOME;
         }
 
         switch (wantedSuperState) {
@@ -100,6 +109,18 @@ public class Superstructure extends SubsystemBase {
             }
             case PROTECTED_TELEOP -> {
                 return CurrentSuperState.PROTECTED_TELEOP;
+            }
+            case HOME -> {
+                if (previousWantedSuperState != WantedSuperState.HOME) {
+                    homeCompleted = false;
+                }
+
+                if (!hasHomeCompleted()) {
+                    return CurrentSuperState.HOMING;
+                }
+                homeCompleted = true;
+                setWantedSuperState(WantedSuperState.DEFAULT);
+                return CurrentSuperState.DEFAULT;
             }
         }
 
@@ -163,6 +184,13 @@ public class Superstructure extends SubsystemBase {
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
             }
+            case HOMING -> {
+                swerveSubsystem.setWantedState(SwerveFSM.WantedState.STOP);
+                intakeSubsystem.setWantedState(IntakeFSM.WantedState.HOME);
+                indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
+                shooterSubsystem.setWantedState(ShooterFSM.WantedState.IDLE);
+                ledSubsystem.setWantedState(LEDSubsystem.WantedState.DISPLAY_OFF);
+            }
             case DISABLED -> {
                 swerveSubsystem.setWantedState(SwerveFSM.WantedState.STOP);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
@@ -181,9 +209,14 @@ public class Superstructure extends SubsystemBase {
     public void periodic() {
         this.currentSuperState = handleStateTransitions();
         applyStates();
+        this.previousWantedSuperState = wantedSuperState;
 
         Logger.recordOutput("Superstructure/WantedSuperState", wantedSuperState);
         Logger.recordOutput("Superstructure/CurrentSuperState", currentSuperState);
+    }
+
+    public boolean hasHomeCompleted() {
+        return intakeSubsystem.hasHomeCompleted();
     }
 
     public Command intakeCommand() {
