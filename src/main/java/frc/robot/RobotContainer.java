@@ -93,9 +93,9 @@ public class RobotContainer {
                     new VisionIO() {}
                 );
                 shooterSubsystem = new ShooterFSM(
-                    new ShooterIO() {},
-                    new ShooterIO() {},
-                    new ShooterIO() {},
+                    new ShooterIOSim(),
+                    new ShooterIOSim(),
+                    new ShooterIOSim(),
                     swerveSubsystem::getPose
                 );
                 indexerSubsystem = new IndexerSubsystem(

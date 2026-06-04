@@ -7,10 +7,10 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.controller.ArmFeedforward;
-import edu.wpi.first.math.controller.ElevatorFeedforward;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.controller.*;
+import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
+import frc.robot.Constants.RobotMode;
 import lombok.Getter;
 
 import java.util.function.Consumer;
@@ -224,6 +224,10 @@ public class TunableControlConstants {
                 | simKG.hasChanged(changeId));
     }
 
+    public boolean haveAnyChanged() {
+        return hasChanged() || hasSimChanged();
+    }
+
     public boolean ifSimChanged(Runnable action) {
         if (!hasSimChanged()) {
             return false;
@@ -276,6 +280,21 @@ public class TunableControlConstants {
         return config;
     }
 
+    public void applyTo(PIDController controller) {
+        controller.setPID(getP(), getI(), getD());
+    }
+
+    public void applySimTo(PIDController controller) {
+        controller.setPID(getSimP(), getSimI(), getSimD());
+    }
+
+    public void applySimTo(PIDController controller, SimpleMotorFeedforward ff) {
+        controller.setPID(getSimP(), getSimI(), getSimD());
+        ff.setKa(getSimA());
+        ff.setKs(getSimS());
+        ff.setKv(getSimV());
+    }
+
     public boolean applyIfChanged(TalonFXConfiguration config) {
         if (!hasChanged()) {
             return false;
@@ -321,6 +340,62 @@ public class TunableControlConstants {
     public boolean applyIfChanged(SparkMaxConfig config, SparkMax motor) {
         return applyIfChanged(config,
             c -> motor.configure(c, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+    }
+
+    /*
+    override comments for PIDController applyIfChanged:
+        "changed" can mean one of three things: any value has changed, only primary values have changed (used for
+        physical motors), or the simulation values have changed. PIDController can represent any of these scenarios,
+        unlike designated physical PID controller constant classes like SparkMaxConfig or TalonFXConfiguration. to
+        account for this, I have created three overrides, one for each of the meanings of "changed".
+        the wording of the last one (applySimIfChanged) is different from the second simply because I realized it was
+        setting the primary values when the sim was changed, so to clarify i changed it. feel free to change it later
+     */
+
+    /**
+     * Apply constants to a PID controller if any primary value or any simulation value has changed
+     * Applies the constants that correspond to the current robotMode
+     * @param config the controller to apply constants to
+     * @return if any value has changed and the constants have been applied
+     */
+    public boolean applyIfChanged(PIDController config) {
+        if (!haveAnyChanged()) {
+            return false;
+        }
+
+        if (Constants.currentMode == RobotMode.SIM)
+            applySimTo(config);
+        else
+            applyTo(config);
+        return true;
+    }
+
+    /**
+     * Apply constants to a PID controller if any primary value has changed
+     * @param config the controller to apply constants to
+     * @return if any value has changed and the constants have been applied
+     */
+    public boolean applyIfPrimaryChanged(PIDController config) {
+        if (!haveAnyChanged()) {
+            return false;
+        }
+
+        applyTo(config);
+        return true;
+    }
+
+    /**
+     * Apply constants to a PID controller if any simulation value has changed
+     * @param config the controller to apply constants to
+     * @return if any value has changed and the constants have been applied
+     */
+    public boolean applySimIfChanged(PIDController config) {
+        if (!hasSimChanged()) {
+            return false;
+        }
+
+        applySimTo(config);
+        return true;
     }
 
     public SimpleMotorFeedforward getSimpleFeedforward() {

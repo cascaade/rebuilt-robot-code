@@ -23,16 +23,8 @@ public class SDSModuleIOSim implements SDSModuleIO {
     private boolean driveClosedLoop = false;
     private boolean turnClosedLoop = false;
 
-    private PIDController driveController = new PIDController(
-        driveControlConstants.getSimP(),
-        driveControlConstants.getSimI(),
-        driveControlConstants.getSimD()
-    );
-    private PIDController turnController = new PIDController(
-        turnControlConstants.getSimP(),
-        turnControlConstants.getSimI(),
-        turnControlConstants.getSimD()
-    );
+    private PIDController driveController;
+    private PIDController turnController;
 
     // to be updated by sim
     private final MutVoltage driveFFVolts = Volts.mutable(0);
@@ -49,23 +41,15 @@ public class SDSModuleIOSim implements SDSModuleIO {
             turnGearbox
         );
 
+        driveController = new PIDController(0, 0, 0);
+        turnController = new PIDController(0, 0, 0);
         turnController.enableContinuousInput(-Math.PI, Math.PI);
+
+        syncControlConstants();
     }
 
     @Override
     public void updateInputs(SDSModuleIOInputs inputs) {
-        driveControlConstants.ifSimChanged(() -> driveController.setPID(
-            driveControlConstants.getSimP(),
-            driveControlConstants.getSimI(),
-            driveControlConstants.getSimD()
-        ));
-
-        turnControlConstants.ifSimChanged(() -> turnController.setPID(
-            turnControlConstants.getSimP(),
-            turnControlConstants.getSimI(),
-            turnControlConstants.getSimD()
-        ));
-
         if (driveClosedLoop) {
             driveAppliedVolts.mut_replace(driveFFVolts.in(Volts) + driveController.calculate(driveSim.getAngularVelocityRadPerSec()), Volts);
         } else {
@@ -99,6 +83,13 @@ public class SDSModuleIOSim implements SDSModuleIO {
         inputs.turnVelocity.mut_replace(turnSim.getAngularVelocity());
         inputs.turnAppliedVolts.mut_replace(turnAppliedVolts);
         inputs.turnCurrentAmps.mut_replace(Math.abs(turnSim.getCurrentDrawAmps()), Amps);
+    }
+
+    @Override
+    public void syncControlConstants() {
+        // todo: fix issue with applySimIfChanged bc it only applies to one module, and by then it is not considered changing.
+        driveControlConstants.applySimTo(driveController);
+        turnControlConstants.applySimTo(turnController);
     }
 
     @Override

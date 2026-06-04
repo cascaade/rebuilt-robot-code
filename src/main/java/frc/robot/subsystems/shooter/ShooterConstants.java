@@ -19,6 +19,8 @@ public class ShooterConstants {
     public static final double idleMult = 0.8;
     public static final double feederMotorMult = 1;
 
+    public static final double flywheelMOI = 0.0019;
+
     public static final AngularVelocity shooterRunSpeed = RadiansPerSecond.of(340);
     public static final AngularVelocity feederRunSpeed = RadiansPerSecond.of(5000);
     public static final AngularVelocity indexRunSpeed = RadiansPerSecond.of(7250);
@@ -32,7 +34,10 @@ public class ShooterConstants {
         new TunableControlConstants("Shooter/Flywheel")
             .withP(0.34)
             .withS(0.18)
-            .withV(0.111);
+            .withV(0.111)
+            .withSimP(0.15)
+            .withSimS(0.18)
+            .withSimV(0.0184);
 
     public static final TalonFXConfiguration FLYWHEEL_SPARK_CONFIG = new TalonFXConfiguration();
 

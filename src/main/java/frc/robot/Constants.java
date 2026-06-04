@@ -23,7 +23,7 @@ public class Constants {
 		REPLAY,
 	}
 
-    public static final boolean tuningMode = true; // // If false, ignores dashboard changes to save CPU/Network bandwidth.
+    public static final boolean tuningMode = true; // If false, ignores dashboard changes to save CPU/Network bandwidth.
     public static final boolean disableHAL = false;
 
     public static final RobotMode simMode = RobotMode.SIM;

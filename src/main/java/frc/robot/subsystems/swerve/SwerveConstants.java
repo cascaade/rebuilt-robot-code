@@ -17,7 +17,30 @@ public class SwerveConstants {
     public static final int[] canCoderCANIDs = { 9, 10, 11, 12 };
     public static final int pigeonCANID = 13;
 
-    public static final Angle BODY_ROTATION_ALIGN_TOLERANCE = Degrees.of(5);
+    public static final Angle BODY_ROTATION_ALIGN_TOLERANCE = Degrees.of(2);
+
+    public static final TunableControlConstants trajVXControllerControlConstants =
+        new TunableControlConstants("Swerve/TrajectoryX")
+            .withP(8)
+            .withI(0)
+            .withD(0)
+            .withSimP(8);
+
+    public static final TunableControlConstants trajVYControllerControlConstants =
+        new TunableControlConstants("Swerve/TrajectoryY")
+            .withP(8)
+            .withI(0)
+            .withD(0)
+            .withSimP(8);
+
+    public static final TunableControlConstants trajHeadingControllerControlConstants =
+        new TunableControlConstants("Swerve/TrajectoryHeading")
+            .withP(8)
+            .withI(0)
+            .withD(0)
+            .withSimP(8)
+            .withSimI(0)
+            .withSimD(0);
 
     public static final Distance kWheelDistanceX = Inches.of(25 - 5.25); // forward/back
     public static final Distance kWheelDistanceY = Inches.of(29 - 5.25); // left/right
@@ -34,7 +57,7 @@ public class SwerveConstants {
 
     public static final SparkMaxConfig driveConfig = new SparkMaxConfig();
     public static final TunableControlConstants driveControlConstants =
-        new TunableControlConstants("Swerve/Drive")
+        new TunableControlConstants("Swerve/Modules/Drive")
             .withP(0.0001)
             .withS(0.01)
             .withV(0.11)
@@ -51,7 +74,7 @@ public class SwerveConstants {
     // turn config
     public static final SparkMaxConfig turnConfig = new SparkMaxConfig();
     public static final TunableControlConstants turnControlConstants =
-        new TunableControlConstants("Swerve/Turn")
+        new TunableControlConstants("Swerve/Modules/Turn")
             .withP(0.6)
             .withSimP(8);
 

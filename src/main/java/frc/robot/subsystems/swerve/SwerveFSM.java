@@ -41,7 +41,7 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.shooter.ShooterConstants.shooterMaxSpeed;
-import static frc.robot.subsystems.swerve.SwerveConstants.BODY_ROTATION_ALIGN_TOLERANCE;
+import static frc.robot.subsystems.swerve.SwerveConstants.*;
 
 public class SwerveFSM extends SubsystemBase {
     public enum WantedState {
@@ -130,10 +130,14 @@ public class SwerveFSM extends SubsystemBase {
 
         aimHubFlag = new AtomicBoolean(false);
 
-        trajVXController = new PIDController(8, 0, 0);
-        trajVYController = new PIDController(8, 0, 0);
-        trajHeadingController = new PIDController(3, 0, 0);
+        trajVXController = new PIDController(0, 0, 0);
+        trajVYController = new PIDController(0, 0, 0);
+        trajHeadingController = new PIDController(0, 0, 0);
         trajHeadingController.enableContinuousInput(0, 2 * Math.PI);
+
+        trajVXControllerControlConstants.applyTo(trajVXController);
+        trajVYControllerControlConstants.applyTo(trajVYController);
+        trajHeadingControllerControlConstants.applyTo(trajHeadingController);
 
         lastMove = Seconds.mutable(Timer.getFPGATimestamp());
 
@@ -157,6 +161,9 @@ public class SwerveFSM extends SubsystemBase {
             }
             case TRAJECTORY -> {
                 return SystemState.TRAJECTORY;
+            }
+            case CROSS -> {
+                return SystemState.CROSSED;
             }
             default -> {
                 return SystemState.STOPPED;
@@ -208,6 +215,14 @@ public class SwerveFSM extends SubsystemBase {
                 adjustSpeedsForPresetRotation(speeds);
                 submitChassisSpeeds(speeds);
             }
+            case STOPPED -> {
+                for (int i = 0; i < 4; i++) {
+                    modules[i].stopDrive();
+                }
+            }
+            case CROSSED -> {
+                setModulesToCrossPosition(false);
+            }
             default -> {
 
             }
@@ -221,6 +236,10 @@ public class SwerveFSM extends SubsystemBase {
 
         Logger.recordOutput("Swerve/WantedState", wantedState);
         Logger.recordOutput("Swerve/SystemState", systemState);
+
+        trajVXControllerControlConstants.applyIfChanged(trajVXController);
+        trajVYControllerControlConstants.applyIfChanged(trajVYController);
+        trajHeadingControllerControlConstants.applyIfChanged(trajHeadingController);
 
         Logger.recordOutput("Swerve/AimHubFlag", aimHubFlag.get());
         Logger.recordOutput("Swerve/CrossEnabled", toCross);
@@ -307,9 +326,9 @@ public class SwerveFSM extends SubsystemBase {
                 robotPose.getRotation().getRadians(),
                 targetHeading.getRadians()
             );
-
-            targetRotation = targetHeading;
         }
+
+        targetRotation = targetHeading;
     }
 
     private void submitChassisSpeeds(
