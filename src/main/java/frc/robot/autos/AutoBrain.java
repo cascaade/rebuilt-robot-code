@@ -10,8 +10,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.Superstructure.WantedSuperState;
 import frc.robot.subsystems.swerve.SwerveFSM;
 
 public class AutoBrain {
@@ -59,7 +61,7 @@ public class AutoBrain {
         autoFactory = new AutoFactory(
             swerveSubsystem::getPose,
             swerveSubsystem::resetOdometry,
-            swerveSubsystem::requestFollowTrajectory,
+            superstructure::requestFollowTrajectory,
             true,
             swerveSubsystem
         );
@@ -85,8 +87,7 @@ public class AutoBrain {
             auto.active().onTrue(Commands.sequence(
                 path.resetOdometry(),
                 path.cmd().withName("preloadPathSequence"),
-                superstructure.shootCommand(),
-                new WaitCommand(8)
+                superstructure.shootCommand().withTimeout(3)
             ));
             cachedAuto = auto;
             autoThatIsCached = "";
@@ -114,31 +115,40 @@ public class AutoBrain {
             String EP = points[i + 1];
             String pathN = pathNames[i];
 
-            System.out.println("running for path " + pathN);
-
             if (shouldShootAfter(EP)) {
                 paths[i].done().onTrue(Commands.sequence(
-                    superstructure.shootCommand(),
-                    new WaitCommand(8),
+                    superstructure.shootCommand().withTimeout(6),
                     paths[i + 1].cmd()
                 ));
             } 
             else if (shouldIntakeDuring(pathN)) {
                 paths[i].active().onTrue(
-                    superstructure.intakeCommand()
+                    Commands.runOnce(
+                        () -> superstructure.setWantedSuperState(
+                            WantedSuperState.INTAKE
+                        )
+                    )
                 );
+
+                paths[i].done().onTrue(
+                    Commands.runOnce(
+                        () -> superstructure.setWantedSuperState(
+                            WantedSuperState.DRIVE
+                        )
+                    )
+                );
+
                 paths[i].done().onTrue(paths[i + 1].cmd());
             }
             else if (shouldWaitfor5After(EP)) {
                 paths[i].done().onTrue(
-                    Commands.sequence(
-                        new WaitCommand(5),
-                        paths[i+ 1].cmd()
-                    )
+                    paths[i+ 1].cmd()
                 );
             } 
             else {
-                paths[i].done().onTrue(paths[i + 1].cmd());
+                paths[i].done().onTrue(
+                    paths[i + 1].cmd()
+                );
             }
         }
 
@@ -150,13 +160,6 @@ public class AutoBrain {
             paths[paths.length - 1].done().onTrue(Commands.sequence(
                 superstructure.shootCommand()
             ));
-        }
-        else {
-            lastPath.done().onTrue(
-                Commands.runOnce(() ->
-                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.STOP)
-                )
-            );
         }
 
         cachedAuto = auto;

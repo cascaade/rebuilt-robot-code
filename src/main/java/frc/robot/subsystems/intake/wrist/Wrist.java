@@ -62,11 +62,14 @@ public class Wrist {
 
                 if (!DriverStation.isDisabled()) {
                     if (Constants.currentMode == RobotMode.SIM) {
-                        wristHomeTimestamp = Double.NaN;
-                        isWristHomed = true;
-                        tareWristPosition(WRIST_HOME_RESET_POSITION);
-                        setWantedState(WantedState.IDLE);
-                        return SystemState.IDLING;
+                        if (Double.isNaN(wristHomeTimestamp)) wristHomeTimestamp = Timer.getFPGATimestamp();
+                        else if (Seconds.of(Timer.getFPGATimestamp() - wristHomeTimestamp).gte(Seconds.of(5))) {
+                            wristHomeTimestamp = Double.NaN;
+                            isWristHomed = true;
+                            tareWristPosition(WRIST_HOME_RESET_POSITION);
+                            setWantedState(WantedState.IDLE);
+                        }
+                        return SystemState.HOMING;
                     }
 
                     if (wristIOInputs.velocity.isNear(RadiansPerSecond.of(0), WRIST_ZERO_VELOCITY_THRESHOLD)) {

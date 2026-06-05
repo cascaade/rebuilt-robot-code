@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,21 +17,18 @@ import org.littletonrobotics.junction.Logger;
 
 public class Superstructure extends SubsystemBase {
     public enum WantedSuperState {
-        DEFAULT,
+        DISABLED,
         HOME,
-        AUTO,
-        TELEOP,
+        DRIVE,
         INTAKE,
         SHOOT,
         PROTECTED
     }
 
     public enum CurrentSuperState {
-        DEFAULT,
         DISABLED,
         HOMING,
-        AUTO,
-        TELEOP,
+        DRIVE,
         INTAKE,
         AIMING,
         SHOOTING,
@@ -38,11 +36,12 @@ public class Superstructure extends SubsystemBase {
     }
 
     @Setter
-    private WantedSuperState wantedSuperState = WantedSuperState.DEFAULT;
-    private WantedSuperState previousWantedSuperState = WantedSuperState.DEFAULT;
-    private CurrentSuperState currentSuperState = CurrentSuperState.DEFAULT;
+    private WantedSuperState wantedSuperState = WantedSuperState.DISABLED;
+    private WantedSuperState previousWantedSuperState = WantedSuperState.DISABLED;
+    private CurrentSuperState currentSuperState = CurrentSuperState.DISABLED;
 
     private boolean homeCompleted = false;
+    private SwerveSample requestedSwerveSample = null;
 
     private final SwerveFSM swerveSubsystem;
     private final IntakeFSM intakeSubsystem;
@@ -65,6 +64,8 @@ public class Superstructure extends SubsystemBase {
     }
 
     private CurrentSuperState handleStateTransitions() {
+        Logger.recordOutput("Superstructure/Booleans/IsDisabled", DriverStation.isDisabled());
+        Logger.recordOutput("Superstructure/Booleans/NoJoystick", !DriverStation.isJoystickConnected(0));
         if (DriverStation.isDisabled() || !DriverStation.isJoystickConnected(0)) {
             return CurrentSuperState.DISABLED;
         }
@@ -74,28 +75,8 @@ public class Superstructure extends SubsystemBase {
         }
 
         switch (wantedSuperState) {
-            case DEFAULT -> {
-                if (DriverStation.isAutonomousEnabled()) {
-                    return CurrentSuperState.AUTO;
-                } else if (DriverStation.isTeleopEnabled()) {
-                    return CurrentSuperState.TELEOP;
-                } else {
-                    return CurrentSuperState.DEFAULT;
-                }
-            }
-            case AUTO -> {
-                if (!DriverStation.isAutonomousEnabled()) {
-                    return CurrentSuperState.DEFAULT;
-                }
-
-                return CurrentSuperState.AUTO;
-            }
-            case TELEOP -> {
-                if (!DriverStation.isTeleopEnabled()) {
-                    return CurrentSuperState.DEFAULT;
-                }
-
-                return CurrentSuperState.TELEOP;
+            case DRIVE -> {
+                return CurrentSuperState.DRIVE;
             }
             case INTAKE -> {
                 return CurrentSuperState.INTAKE;
@@ -119,19 +100,19 @@ public class Superstructure extends SubsystemBase {
                     return CurrentSuperState.HOMING;
                 }
                 homeCompleted = true;
-                setWantedSuperState(WantedSuperState.DEFAULT);
-                return CurrentSuperState.DEFAULT;
+                setWantedSuperState(WantedSuperState.DRIVE);
+                return CurrentSuperState.DRIVE;
             }
         }
 
-        return CurrentSuperState.DEFAULT;
+        return CurrentSuperState.DRIVE;
     }
 
     private void applyStates() {
         boolean inNeutralZone = RobotState.getInstance().getRobotFieldPose().getMeasureX().gt(FieldConstants.getHubCenter().getMeasureX());
 
         ShooterFSM.WantedState shooterState = inNeutralZone ? ShooterFSM.WantedState.PASS : ShooterFSM.WantedState.RESPONSIVE;
-        LEDSubsystem.WantedState ledState = LEDSubsystem.WantedState.DISPLAY_OFF;
+        LEDSubsystem.WantedState ledState = LEDSubsystem.WantedState.DISCONNECTED;
 
         if (Timer.getFPGATimestamp() < 10) {
             ledState = LEDSubsystem.WantedState.BOOT;
@@ -142,29 +123,30 @@ public class Superstructure extends SubsystemBase {
                 ledState = LEDSubsystem.WantedState.ENABLED;
             else
                 ledState = LEDSubsystem.WantedState.DISABLED;
-        } else {
-            ledState = LEDSubsystem.WantedState.DISCONNECTED;
         }
 
-        switch (currentSuperState) {
-            case DEFAULT -> {
-                swerveSubsystem.setWantedState(SwerveFSM.WantedState.STOP);
-                intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
-                indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
-            }
-            case AUTO -> {
-                shooterState = ShooterFSM.WantedState.RESPONSIVE;
-                ledState = LEDSubsystem.WantedState.AUTONOMOUS;
+        swerveSubsystem.requestFollowTrajectory(requestedSwerveSample);
 
-                // implementing auto later
-            }
-            case TELEOP -> {
-                swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
+        switch (currentSuperState) {
+            case DRIVE -> {
+                if (!DriverStation.isAutonomousEnabled()) {
+                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
+                } else {
+                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.TRAJECTORY);
+                    shooterState = ShooterFSM.WantedState.RESPONSIVE;
+                    ledState = LEDSubsystem.WantedState.AUTONOMOUS;
+                }
+
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
             }
             case INTAKE -> {
-                swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
+                if (!DriverStation.isAutonomousEnabled()) {
+                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
+                } else {
+                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.TRAJECTORY);
+                }
+
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.INTAKE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.REVERSE);
             }
@@ -188,10 +170,12 @@ public class Superstructure extends SubsystemBase {
                 swerveSubsystem.setWantedState(SwerveFSM.WantedState.STOP);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.HOME);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
-                shooterSubsystem.setWantedState(ShooterFSM.WantedState.IDLE);
-                ledSubsystem.setWantedState(LEDSubsystem.WantedState.DISPLAY_OFF);
+                shooterState = ShooterFSM.WantedState.IDLE;
+                ledState = LEDSubsystem.WantedState.DISPLAY_OFF;
             }
             case DISABLED -> {
+                requestedSwerveSample = null;
+
                 swerveSubsystem.setWantedState(SwerveFSM.WantedState.STOP);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
@@ -222,14 +206,24 @@ public class Superstructure extends SubsystemBase {
     public Command intakeCommand() {
         return this.startEnd(
             () -> setWantedSuperState(WantedSuperState.INTAKE),
-            () -> setWantedSuperState(WantedSuperState.TELEOP)
+            () -> setWantedSuperState(WantedSuperState.DRIVE)
         ).withName("SuperstructureIntake");
     }
 
     public Command shootCommand() {
         return this.startEnd(
                 () -> setWantedSuperState(WantedSuperState.SHOOT),
-                () -> setWantedSuperState(WantedSuperState.TELEOP)
+                () -> setWantedSuperState(WantedSuperState.DRIVE)
         ).withName("SuperstructureShoot");
+    }
+
+    public Command disableCommand() {
+        return runOnce(
+            () -> setWantedSuperState(WantedSuperState.DISABLED)
+        );
+    }
+
+    public void requestFollowTrajectory(SwerveSample sample) {
+        requestedSwerveSample = sample;
     }
 }

@@ -198,6 +198,13 @@ public class SwerveFSM extends SubsystemBase {
                 submitChassisSpeeds(chassisSpeeds);
             }
             case TRAJECTORY -> {
+                if (requestedSwerveSample == null) {
+                    for (int i = 0; i < 4; i++) {
+                        modules[i].stopDrive();
+                    }
+                    return;
+                }
+
                 Pose2d currentPose = getPose();
 
                 OrientedChassisSpeeds speeds = new OrientedChassisSpeeds(
@@ -214,6 +221,9 @@ public class SwerveFSM extends SubsystemBase {
 
                 adjustSpeedsForPresetRotation(speeds);
                 submitChassisSpeeds(speeds);
+
+                // dispose of swerve sample to prevent repetition
+                requestedSwerveSample = null;
             }
             case STOPPED -> {
                 for (int i = 0; i < 4; i++) {
@@ -411,7 +421,6 @@ public class SwerveFSM extends SubsystemBase {
     }
 
     public void requestFollowTrajectory(SwerveSample sample) {
-        setWantedState(WantedState.TRAJECTORY);
         requestedSwerveSample = sample;
     }
 }

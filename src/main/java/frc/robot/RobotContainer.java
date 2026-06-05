@@ -8,10 +8,13 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.autos.AutoBrain;
 import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.Superstructure.WantedSuperState;
 import frc.robot.subsystems.indexer.*;
 import frc.robot.subsystems.intake.*;
 import frc.robot.subsystems.intake.IntakeConstants.RollerConstants;
@@ -224,6 +227,9 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return autoBrain.fetchAuto().cmd();
+        return Commands.runOnce(() -> superstructure.setWantedSuperState(WantedSuperState.DRIVE))
+            .andThen(new WaitUntilCommand(superstructure::hasHomeCompleted))
+            .andThen(autoBrain.fetchAuto().cmd())
+            .andThen(superstructure.disableCommand());
     }
 }
