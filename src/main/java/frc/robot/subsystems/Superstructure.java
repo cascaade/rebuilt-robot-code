@@ -20,9 +20,9 @@ public class Superstructure extends SubsystemBase {
         HOME,
         AUTO,
         TELEOP,
-        INTAKE_TELEOP,
-        SHOOT_TELEOP,
-        PROTECTED_TELEOP
+        INTAKE,
+        SHOOT,
+        PROTECTED
     }
 
     public enum CurrentSuperState {
@@ -31,10 +31,10 @@ public class Superstructure extends SubsystemBase {
         HOMING,
         AUTO,
         TELEOP,
-        INTAKE_TELEOP,
-        AIMING_TELEOP,
-        SHOOTING_TELEOP,
-        PROTECTED_TELEOP
+        INTAKE,
+        AIMING,
+        SHOOTING,
+        PROTECTED
     }
 
     @Setter
@@ -97,18 +97,18 @@ public class Superstructure extends SubsystemBase {
 
                 return CurrentSuperState.TELEOP;
             }
-            case INTAKE_TELEOP -> {
-                return CurrentSuperState.INTAKE_TELEOP;
+            case INTAKE -> {
+                return CurrentSuperState.INTAKE;
             }
-            case SHOOT_TELEOP -> {
+            case SHOOT -> {
                 if (shooterSubsystem.isAtSpeed() && swerveSubsystem.isAligned()) {
-                    return CurrentSuperState.SHOOTING_TELEOP;
+                    return CurrentSuperState.SHOOTING;
                 } else {
-                    return CurrentSuperState.AIMING_TELEOP;
+                    return CurrentSuperState.AIMING;
                 }
             }
-            case PROTECTED_TELEOP -> {
-                return CurrentSuperState.PROTECTED_TELEOP;
+            case PROTECTED -> {
+                return CurrentSuperState.PROTECTED;
             }
             case HOME -> {
                 if (previousWantedSuperState != WantedSuperState.HOME) {
@@ -163,23 +163,23 @@ public class Superstructure extends SubsystemBase {
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
             }
-            case INTAKE_TELEOP -> {
+            case INTAKE -> {
                 swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.INTAKE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.REVERSE);
             }
-            case AIMING_TELEOP -> {
+            case AIMING -> {
                 swerveSubsystem.setWantedState(inNeutralZone ? SwerveFSM.WantedState.AIM_PASS : SwerveFSM.WantedState.AIM_HUB);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
             }
-            case SHOOTING_TELEOP -> {
+            case SHOOTING -> {
                 swerveSubsystem.setWantedState(SwerveFSM.WantedState.CROSS);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.PULSE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.FEED);
                 ledState = LEDSubsystem.WantedState.BOOT;
             }
-            case PROTECTED_TELEOP -> {
+            case PROTECTED -> {
                 swerveSubsystem.setWantedState(SwerveFSM.WantedState.CROSS);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
@@ -221,14 +221,14 @@ public class Superstructure extends SubsystemBase {
 
     public Command intakeCommand() {
         return this.startEnd(
-            () -> setWantedSuperState(WantedSuperState.INTAKE_TELEOP),
+            () -> setWantedSuperState(WantedSuperState.INTAKE),
             () -> setWantedSuperState(WantedSuperState.TELEOP)
         ).withName("SuperstructureIntake");
     }
 
     public Command shootCommand() {
         return this.startEnd(
-                () -> setWantedSuperState(WantedSuperState.SHOOT_TELEOP),
+                () -> setWantedSuperState(WantedSuperState.SHOOT),
                 () -> setWantedSuperState(WantedSuperState.TELEOP)
         ).withName("SuperstructureShoot");
     }

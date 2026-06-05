@@ -11,9 +11,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.subsystems.intake.IntakeSubsystem;
-import frc.robot.subsystems.shooter.ShooterSubsystem;
-import frc.robot.subsystems.swerve.SwerveSubsystem;
+import frc.robot.subsystems.Superstructure;
+import frc.robot.subsystems.swerve.SwerveFSM;
 
 public class AutoBrain {
     private final AutoFactory autoFactory;
@@ -21,17 +20,15 @@ public class AutoBrain {
     private final StringSubscriber autoPathSubscriber;
     private final SendableChooser<String> autoMode = new SendableChooser<>();
 
-    private final SwerveSubsystem swerveSubsystem;
-    private final ShooterSubsystem shooterSubsystem;
-    private final IntakeSubsystem intakeSubsystem;
+    private final Superstructure superstructure;
+    private final SwerveFSM swerveSubsystem;
 
     private AutoRoutine cachedAuto;
     private String autoThatIsCached;
 
-    public AutoBrain(SwerveSubsystem swerveSubsystem, ShooterSubsystem shooterSubsystem, IntakeSubsystem intakeSubsystem) {
+    public AutoBrain(Superstructure superstructure, SwerveFSM swerveSubsystem) {
+        this.superstructure = superstructure;
         this.swerveSubsystem = swerveSubsystem;
-        this.shooterSubsystem = shooterSubsystem;
-        this.intakeSubsystem = intakeSubsystem;
 
         autoMode.setDefaultOption("Auto 1", "Auto1");
         autoMode.addOption("Auto 2", "Auto2");
@@ -62,7 +59,7 @@ public class AutoBrain {
         autoFactory = new AutoFactory(
             swerveSubsystem::getPose,
             swerveSubsystem::resetOdometry,
-            swerveSubsystem::followTrajectory,
+            swerveSubsystem::requestFollowTrajectory,
             true,
             swerveSubsystem
         );
@@ -88,10 +85,8 @@ public class AutoBrain {
             auto.active().onTrue(Commands.sequence(
                 path.resetOdometry(),
                 path.cmd().withName("preloadPathSequence"),
-                swerveSubsystem.runStopDrive(),
-                swerveSubsystem.runToggleAimHub(true),
-                new WaitCommand(0.5),                        // aim settling time
-                shooterSubsystem.toggleRunIndex(true)
+                superstructure.shootCommand(),
+                new WaitCommand(8)
             ));
             cachedAuto = auto;
             autoThatIsCached = "";
@@ -112,49 +107,25 @@ public class AutoBrain {
 
         auto.active().onTrue(Commands.sequence(
             paths[0].resetOdometry(),
-            Commands.parallel(
-                shooterSubsystem.runShooterOn(),
-                Commands.sequence(
-                    intakeSubsystem.toggleWristPosFlag(true),
-                    intakeSubsystem.toggleRollerFlag(true),
-                    new WaitCommand(0.5),
-                    intakeSubsystem.toggleWristPosFlag(false)
-                ),
-                paths[0].cmd()
-            )
+            paths[0].cmd()
         ));
 
         for (int i = 0; i < paths.length - 1; i++) {
             String EP = points[i + 1];
             String pathN = pathNames[i];
 
+            System.out.println("running for path " + pathN);
+
             if (shouldShootAfter(EP)) {
                 paths[i].done().onTrue(Commands.sequence(
-                    Commands.sequence(
-                        new WaitCommand(1),
-                        shooterSubsystem.toggleRunIndex(true),
-                        new WaitCommand(1),
-                        intakeSubsystem.toggleWristNegFlag(true),
-                        new WaitCommand(0.4),
-                        intakeSubsystem.toggleWristNegFlag(false),
-                        intakeSubsystem.toggleWristPosFlag(true),
-                        new WaitCommand(0.6),
-                        intakeSubsystem.toggleWristPosFlag(false),
-                        new WaitCommand(1),
-                        shooterSubsystem.toggleRunIndex(false)
-                    ).deadlineFor(Commands.sequence(
-                        swerveSubsystem.runToggleAimHub(true),
-                        swerveSubsystem.runSpeedAdjustOnly()
-                    )),
-
-                    swerveSubsystem.runToggleAimHub(false),
-                
+                    superstructure.shootCommand(),
+                    new WaitCommand(8),
                     paths[i + 1].cmd()
                 ));
             } 
             else if (shouldIntakeDuring(pathN)) {
                 paths[i].active().onTrue(
-                    intakeSubsystem.isRollingFlag == true ? Commands.none() : intakeSubsystem.toggleRollerFlag(true)
+                    superstructure.intakeCommand()
                 );
                 paths[i].done().onTrue(paths[i + 1].cmd());
             }
@@ -177,25 +148,15 @@ public class AutoBrain {
 
         if (shouldShootAfter(lastEP)) {
             paths[paths.length - 1].done().onTrue(Commands.sequence(
-                Commands.sequence(
-                    new WaitCommand(1),
-                    shooterSubsystem.toggleRunIndex(true),
-                    new WaitCommand(3),
-                    intakeSubsystem.toggleWristNegFlag(true),
-                    new WaitCommand(0.4),
-                    intakeSubsystem.toggleWristNegFlag(false),
-                    intakeSubsystem.toggleWristPosFlag(true),
-                    new WaitCommand(0.6)
-                ).deadlineFor(Commands.sequence(
-                    swerveSubsystem.runToggleAimHub(true),
-                    swerveSubsystem.runSpeedAdjustOnly()
-                )),
-
-                swerveSubsystem.runToggleAimHub(false)
+                superstructure.shootCommand()
             ));
         }
         else {
-            lastPath.done().onTrue(swerveSubsystem.runStopDrive());
+            lastPath.done().onTrue(
+                Commands.runOnce(() ->
+                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.STOP)
+                )
+            );
         }
 
         cachedAuto = auto;

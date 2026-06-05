@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.autos.AutoBrain;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.indexer.*;
 import frc.robot.subsystems.intake.*;
@@ -35,7 +36,7 @@ public class RobotContainer {
     private final LEDSubsystem ledSubsystem;
     private final VisionSubsystem visionSubsystem;
 
-//    private final AutoBrain autoBrain;
+    private final AutoBrain autoBrain;
 
     private final Superstructure superstructure;
 
@@ -155,7 +156,7 @@ public class RobotContainer {
         
         configureBindings();
 
-//        autoBrain = new AutoBrain(swerveSubsystem, shooterSubsystem, intakeSubsystem);
+        autoBrain = new AutoBrain(superstructure, swerveSubsystem);
     }
 
     private void configureBindings() {
@@ -223,7 +224,6 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-//        return autoBrain.fetchAuto().cmd();
-        return Commands.none();
+        return autoBrain.fetchAuto().cmd();
     }
 }

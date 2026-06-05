@@ -406,6 +406,10 @@ public class SwerveFSM extends SubsystemBase {
         return Commands.none();
     }
 
+    public void resetOdometry(Pose2d pose) {
+        poseEstimator.resetPose(pose);
+    }
+
     public void requestFollowTrajectory(SwerveSample sample) {
         setWantedState(WantedState.TRAJECTORY);
         requestedSwerveSample = sample;
