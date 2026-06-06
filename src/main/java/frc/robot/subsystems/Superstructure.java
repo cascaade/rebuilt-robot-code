@@ -82,7 +82,7 @@ public class Superstructure extends SubsystemBase {
                 return CurrentSuperState.INTAKE;
             }
             case SHOOT -> {
-                if (shooterSubsystem.isAtSpeed() && swerveSubsystem.isAligned()) {
+                if (shooterSubsystem.isAtSpeed() && swerveSubsystem.isAligned() || RobotState.getInstance().isOutsideAllianceZone()) {
                     return CurrentSuperState.SHOOTING;
                 } else {
                     return CurrentSuperState.AIMING;
@@ -109,9 +109,7 @@ public class Superstructure extends SubsystemBase {
     }
 
     private void applyStates() {
-        boolean inNeutralZone = RobotState.getInstance().getRobotFieldPose().getMeasureX().gt(FieldConstants.getHubCenter().getMeasureX());
-
-        ShooterFSM.WantedState shooterState = inNeutralZone ? ShooterFSM.WantedState.PASS : ShooterFSM.WantedState.RESPONSIVE;
+        ShooterFSM.WantedState shooterState = RobotState.getInstance().isOutsideAllianceZone() ? ShooterFSM.WantedState.PASS : ShooterFSM.WantedState.RESPONSIVE;
         LEDSubsystem.WantedState ledState = LEDSubsystem.WantedState.DISCONNECTED;
 
         if (Timer.getFPGATimestamp() < 10) {
@@ -151,13 +149,19 @@ public class Superstructure extends SubsystemBase {
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.REVERSE);
             }
             case AIMING -> {
-                swerveSubsystem.setWantedState(inNeutralZone ? SwerveFSM.WantedState.AIM_PASS : SwerveFSM.WantedState.AIM_HUB);
+                swerveSubsystem.setWantedState(RobotState.getInstance().isOutsideAllianceZone() ? SwerveFSM.WantedState.AIM_PASS : SwerveFSM.WantedState.AIM_HUB);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
             }
             case SHOOTING -> {
-                swerveSubsystem.setWantedState(SwerveFSM.WantedState.CROSS);
-                intakeSubsystem.setWantedState(IntakeFSM.WantedState.PULSE);
+                if (RobotState.getInstance().isOutsideAllianceZone()) {
+                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.AIM_PASS);
+                    intakeSubsystem.setWantedState(IntakeFSM.WantedState.INTAKE);
+                } else {
+                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.CROSS);
+                    intakeSubsystem.setWantedState(IntakeFSM.WantedState.PULSE);
+                }
+
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.FEED);
                 ledState = LEDSubsystem.WantedState.BOOT;
             }

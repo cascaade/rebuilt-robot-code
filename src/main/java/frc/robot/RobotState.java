@@ -39,17 +39,23 @@ public class RobotState {
     }
 
     public Distance getClosestFieldPassDistance() {
-        boolean shouldPassLeft = false;
-        Pose2d passPose = shouldPassLeft ? FieldConstants.getPassLeft() : FieldConstants.getPassRight();
+        boolean shouldPassLow = getRobotFieldPose().getMeasureY().gt(FieldConstants.getHubCenter().getMeasureY());
+        Pose2d passPose = shouldPassLow ? FieldConstants.getPassLow() : FieldConstants.getPassHigh();
 
         return Meters.of(robotFieldPose.getTranslation().getDistance(passPose.getTranslation()));
     }
 
     public Rotation2d getClosestFieldPassTargetHeading() {
-        boolean shouldPassLeft = false;
-        Pose2d passPose = shouldPassLeft ? FieldConstants.getPassLeft() : FieldConstants.getPassRight();
+        boolean shouldPassLow = getRobotFieldPose().getMeasureY().gt(FieldConstants.getHubCenter().getMeasureY());
+        Pose2d passPose = shouldPassLow ? FieldConstants.getPassLow() : FieldConstants.getPassHigh();
 
         Translation2d robotToPass = passPose.getTranslation().minus(robotFieldPose.getTranslation());
-        return robotToPass.getAngle().minus(Rotation2d.k180deg);
+        return robotToPass.getAngle();
+    }
+
+    public boolean isOutsideAllianceZone() {
+        return Constants.isRed() ?
+            getRobotFieldPose().getMeasureX().lt(FieldConstants.getHubCenter().getMeasureX())
+            : getRobotFieldPose().getMeasureX().gt(FieldConstants.getHubCenter().getMeasureX());
     }
 }

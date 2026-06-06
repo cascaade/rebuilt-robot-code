@@ -3,6 +3,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -101,12 +102,36 @@ public class Constants {
             );
         }
 
-        public static Pose2d getPassLeft() {
-            return new Pose2d();
+        public static Pose2d getPassLow() {
+            double x, y;
+
+            if (kFieldType.equals(FieldType.WELDED)) {
+                x = Units.inchesToMeters(182.11 / 2.0);
+                y = Units.inchesToMeters(158.84 / 2.0);
+            } else {
+                x = Units.inchesToMeters(181.56 / 2.0);
+                y = Units.inchesToMeters(158.32 / 2.0);
+            }
+
+            return getInitialPose().transformBy(
+                new Transform2d(x, y, Rotation2d.kZero)
+            );
         }
 
-        public static Pose2d getPassRight() {
-            return new Pose2d();
+        public static Pose2d getPassHigh() {
+            double x, y;
+
+            if (kFieldType.equals(FieldType.WELDED)) {
+                x = Units.inchesToMeters(182.11 / 2.0);
+                y = Units.inchesToMeters(158.84 * 1.5);
+            } else {
+                x = Units.inchesToMeters(181.56 / 2.0);
+                y = Units.inchesToMeters(158.32 * 1.5);
+            }
+
+            return getInitialPose().transformBy(
+                new Transform2d(x, y, Rotation2d.kZero)
+            );
         }
     }
 

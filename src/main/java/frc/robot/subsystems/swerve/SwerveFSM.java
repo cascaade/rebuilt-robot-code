@@ -176,13 +176,46 @@ public class SwerveFSM extends SubsystemBase {
             case SYS_ID -> {
 
             }
-            case AIMING_HUB, TELEOP, AIMING_PASS -> {
+            case AIMING_HUB -> {
+                OrientedChassisSpeeds chassisSpeeds = new OrientedChassisSpeeds(
+                    0,
+                    0,
+                    0,
+                    false,
+                    true
+                );
+
+                adjustSpeedsForPresetRotation(chassisSpeeds);
+                submitChassisSpeeds(chassisSpeeds);
+            }
+            case TELEOP -> {
                 double rawX = controller.getLeftX();
                 double rawY = controller.getLeftY();
                 double rawOmega = controller.getRightX();
                 double rawSpeedFactor = controller.getLeftTriggerAxis();
 
                 double speedFactor = SwerveMathUtil.calculateSpeedFactor(rawSpeedFactor, SwerveConstants.kSlowedMult);
+                TranslationOutput translation = SwerveMathUtil.processTranslationInputs(rawX, rawY, speedFactor);
+                double processedOmega = SwerveMathUtil.processRotationInput(rawOmega, speedFactor);
+
+                OrientedChassisSpeeds chassisSpeeds = new OrientedChassisSpeeds(
+                    SwerveConstants.kMagVelLimit.times(translation.x()),
+                    SwerveConstants.kMagVelLimit.times(translation.y()),
+                    SwerveConstants.kRotVelLimit.times(processedOmega),
+                    false,
+                    true
+                );
+
+                adjustSpeedsForPresetRotation(chassisSpeeds);
+                submitChassisSpeeds(chassisSpeeds);
+            }
+            case AIMING_PASS -> {
+                double rawX = controller.getLeftX();
+                double rawY = controller.getLeftY();
+                double rawOmega = controller.getRightX();
+                double rawSpeedFactor = controller.getLeftTriggerAxis();
+
+                double speedFactor = SwerveMathUtil.calculateSpeedFactor(rawSpeedFactor, SwerveConstants.kSlowedMult) * 0.8;
                 TranslationOutput translation = SwerveMathUtil.processTranslationInputs(rawX, rawY, speedFactor);
                 double processedOmega = SwerveMathUtil.processRotationInput(rawOmega, speedFactor);
 
@@ -303,6 +336,7 @@ public class SwerveFSM extends SubsystemBase {
 
     @AutoLogOutput(key = "Swerve/IsAligned")
     public boolean isAligned() {
+        Logger.recordOutput("Swerve/AlignmentError", rawGyroRotation.getMeasure().minus(targetRotation.getMeasure()).abs(Degrees));
         return rawGyroRotation.getMeasure().isNear(targetRotation.getMeasure(), BODY_ROTATION_ALIGN_TOLERANCE);
     }
 
@@ -322,23 +356,32 @@ public class SwerveFSM extends SubsystemBase {
         Pose2d hubPose = FieldConstants.getHubCenter();
 
         Translation2d robotToHub = hubPose.getTranslation().minus(robotPose.getTranslation());
-        Rotation2d targetHeading = robotToHub.getAngle().minus(Rotation2d.k180deg);
+        Rotation2d targetHeading = robotToHub.getAngle(); // why did the thing flip omg
 
         Logger.recordOutput("Swerve/AutoAlignTargetPose", new Pose2d(robotPose.getTranslation(), targetHeading));
         Logger.recordOutput("Swerve/DistanceToHub", robotToHub.getNorm());
         Logger.recordOutput("Field/HubPose", hubPose);
         Logger.recordOutput("Swerve/AutoAlignUpdate", Timer.getFPGATimestamp());
 
-        targetRotation = rawGyroRotation;
-
-        if (systemState == SystemState.AIMING_HUB) {
-            speeds.omegaRadiansPerSecond = trajHeadingController.calculate(
-                robotPose.getRotation().getRadians(),
-                targetHeading.getRadians()
-            );
+        switch (systemState) {
+            case AIMING_HUB -> {
+                speeds.omegaRadiansPerSecond = trajHeadingController.calculate(
+                    robotPose.getRotation().getRadians(),
+                    targetHeading.getRadians()
+                );
+                targetRotation = targetHeading;
+            }
+            case AIMING_PASS -> {
+                speeds.omegaRadiansPerSecond = trajHeadingController.calculate(
+                    robotPose.getRotation().getRadians(),
+                    RobotState.getInstance().getClosestFieldPassTargetHeading().getRadians()
+                );
+                targetRotation = RobotState.getInstance().getClosestFieldPassTargetHeading();
+            }
+            default -> targetRotation = rawGyroRotation.rotateBy(Rotation2d.k180deg);
         }
 
-        targetRotation = targetHeading;
+        Logger.recordOutput("Swerve/targetRotation", new Pose2d(robotPose.getTranslation(), targetRotation));
     }
 
     private void submitChassisSpeeds(
