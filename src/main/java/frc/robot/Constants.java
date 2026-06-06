@@ -107,10 +107,10 @@ public class Constants {
 
             if (kFieldType.equals(FieldType.WELDED)) {
                 x = Units.inchesToMeters(182.11 / 2.0);
-                y = Units.inchesToMeters(158.84 / 2.0);
+                y = Units.inchesToMeters(158.84 / 4.0);
             } else {
                 x = Units.inchesToMeters(181.56 / 2.0);
-                y = Units.inchesToMeters(158.32 / 2.0);
+                y = Units.inchesToMeters(158.32 / 4.0);
             }
 
             return getInitialPose().transformBy(
@@ -123,10 +123,10 @@ public class Constants {
 
             if (kFieldType.equals(FieldType.WELDED)) {
                 x = Units.inchesToMeters(182.11 / 2.0);
-                y = Units.inchesToMeters(158.84 * 1.5);
+                y = Units.inchesToMeters(158.84 * 1.75);
             } else {
                 x = Units.inchesToMeters(181.56 / 2.0);
-                y = Units.inchesToMeters(158.32 * 1.5);
+                y = Units.inchesToMeters(158.32 * 1.75);
             }
 
             return getInitialPose().transformBy(
