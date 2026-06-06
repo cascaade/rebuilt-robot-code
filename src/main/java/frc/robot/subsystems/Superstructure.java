@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotState;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
 import frc.robot.subsystems.intake.IntakeFSM;
@@ -30,7 +29,7 @@ public class Superstructure extends SubsystemBase {
         HOMING,
         DRIVE,
         INTAKE,
-        AIMING,
+        AIMING_HUB,
         SHOOTING,
         PROTECTED
     }
@@ -64,8 +63,6 @@ public class Superstructure extends SubsystemBase {
     }
 
     private CurrentSuperState handleStateTransitions() {
-        Logger.recordOutput("Superstructure/Booleans/IsDisabled", DriverStation.isDisabled());
-        Logger.recordOutput("Superstructure/Booleans/NoJoystick", !DriverStation.isJoystickConnected(0));
         if (DriverStation.isDisabled() || !DriverStation.isJoystickConnected(0)) {
             return CurrentSuperState.DISABLED;
         }
@@ -85,7 +82,7 @@ public class Superstructure extends SubsystemBase {
                 if (shooterSubsystem.isAtSpeed() && swerveSubsystem.isAligned() || RobotState.getInstance().isOutsideAllianceZone()) {
                     return CurrentSuperState.SHOOTING;
                 } else {
-                    return CurrentSuperState.AIMING;
+                    return CurrentSuperState.AIMING_HUB;
                 }
             }
             case PROTECTED -> {
@@ -110,60 +107,53 @@ public class Superstructure extends SubsystemBase {
 
     private void applyStates() {
         ShooterFSM.WantedState shooterState = RobotState.getInstance().isOutsideAllianceZone() ? ShooterFSM.WantedState.PASS : ShooterFSM.WantedState.RESPONSIVE;
-        LEDSubsystem.WantedState ledState = LEDSubsystem.WantedState.DISCONNECTED;
-
-        if (Timer.getFPGATimestamp() < 10) {
-            ledState = LEDSubsystem.WantedState.BOOT;
-        } else if (DriverStation.isDSAttached()) {
-            if (DriverStation.isAutonomous())
-                ledState = LEDSubsystem.WantedState.AUTONOMOUS;
-            else if (DriverStation.isEnabled())
-                ledState = LEDSubsystem.WantedState.ENABLED;
-            else
-                ledState = LEDSubsystem.WantedState.DISABLED;
-        }
+        LEDSubsystem.WantedState ledState = LEDSubsystem.WantedState.DISPLAY_OFF;
 
         swerveSubsystem.requestFollowTrajectory(requestedSwerveSample);
 
         switch (currentSuperState) {
             case DRIVE -> {
-                if (!DriverStation.isAutonomousEnabled()) {
-                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
-                } else {
+                if (DriverStation.isAutonomousEnabled()) {
                     swerveSubsystem.setWantedState(SwerveFSM.WantedState.TRAJECTORY);
                     shooterState = ShooterFSM.WantedState.RESPONSIVE;
                     ledState = LEDSubsystem.WantedState.AUTONOMOUS;
+                } else {
+                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
+                    ledState = LEDSubsystem.WantedState.TELEOP;
                 }
 
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
             }
             case INTAKE -> {
-                if (!DriverStation.isAutonomousEnabled()) {
-                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
-                } else {
+                if (DriverStation.isAutonomousEnabled()) {
                     swerveSubsystem.setWantedState(SwerveFSM.WantedState.TRAJECTORY);
+                } else {
+                    swerveSubsystem.setWantedState(SwerveFSM.WantedState.TELEOP);
                 }
 
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.INTAKE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.REVERSE);
+                ledState = LEDSubsystem.WantedState.INTAKING;
             }
-            case AIMING -> {
-                swerveSubsystem.setWantedState(RobotState.getInstance().isOutsideAllianceZone() ? SwerveFSM.WantedState.AIM_PASS : SwerveFSM.WantedState.AIM_HUB);
+            case AIMING_HUB -> {
+                swerveSubsystem.setWantedState(SwerveFSM.WantedState.AIM_HUB);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
+                ledState = LEDSubsystem.WantedState.AIMING_HUB;
             }
             case SHOOTING -> {
                 if (RobotState.getInstance().isOutsideAllianceZone()) {
                     swerveSubsystem.setWantedState(SwerveFSM.WantedState.AIM_PASS);
                     intakeSubsystem.setWantedState(IntakeFSM.WantedState.INTAKE);
+                    ledState = LEDSubsystem.WantedState.PASSING;
                 } else {
                     swerveSubsystem.setWantedState(SwerveFSM.WantedState.CROSS);
                     intakeSubsystem.setWantedState(IntakeFSM.WantedState.PULSE);
+                    ledState = LEDSubsystem.WantedState.SHOOT;
                 }
 
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.FEED);
-                ledState = LEDSubsystem.WantedState.BOOT;
             }
             case PROTECTED -> {
                 swerveSubsystem.setWantedState(SwerveFSM.WantedState.CROSS);
@@ -175,16 +165,24 @@ public class Superstructure extends SubsystemBase {
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.HOME);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
                 shooterState = ShooterFSM.WantedState.IDLE;
-                ledState = LEDSubsystem.WantedState.DISPLAY_OFF;
+                ledState = LEDSubsystem.WantedState.HOMING;
             }
             case DISABLED -> {
                 requestedSwerveSample = null;
+
+                if (Timer.getFPGATimestamp() < 15) {
+                    ledState = LEDSubsystem.WantedState.BOOT;
+                } else if (DriverStation.isDSAttached()) {
+                    ledState = LEDSubsystem.WantedState.DISABLED;
+                } else {
+                    ledState = LEDSubsystem.WantedState.DISCONNECTED;
+                }
 
                 swerveSubsystem.setWantedState(SwerveFSM.WantedState.STOP);
                 intakeSubsystem.setWantedState(IntakeFSM.WantedState.IDLE);
                 indexerSubsystem.setWantedState(IndexerSubsystem.WantedState.IDLE);
                 shooterSubsystem.setWantedState(ShooterFSM.WantedState.IDLE);
-                ledSubsystem.setWantedState(LEDSubsystem.WantedState.DISABLED);
+                ledSubsystem.setWantedState(ledState);
                 return;
             }
         }

@@ -50,7 +50,7 @@ public class RobotState {
         Pose2d passPose = shouldPassLow ? FieldConstants.getPassLow() : FieldConstants.getPassHigh();
 
         Translation2d robotToPass = passPose.getTranslation().minus(robotFieldPose.getTranslation());
-        return robotToPass.getAngle();
+        return robotToPass.getAngle().minus(Rotation2d.k180deg);
     }
 
     public boolean isOutsideAllianceZone() {

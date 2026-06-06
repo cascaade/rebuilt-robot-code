@@ -54,7 +54,7 @@ public class LEDControllerIOSim implements LEDControllerIO {
         if (animation == null) return;
 
         switch (animation.animationType()) {
-            case BLINK:
+            case BLINK -> {
                 if ((int) (Timer.getFPGATimestamp() * animation.frameRate()) % 2 == 0) {
                     for (int i = 0; i < buffer.length; i++)
                         buffer[i] = String.format(
@@ -67,8 +67,107 @@ public class LEDControllerIOSim implements LEDControllerIO {
                     for (int i = 0; i < buffer.length; i++)
                         buffer[i] = "#000000";
                 }
-                break;
-            case ROTATION:
+            }
+            case FLOW -> {
+                int[][] colors = animation.colors();
+
+                int[] baseColor;
+                int[] fillColor;
+
+                if (colors.length >= 2) {
+                    baseColor = colors[0];
+                    fillColor = colors[1];
+                } else {
+                    baseColor = new int[] {0, 0, 0};
+                    fillColor = colors[0];
+                }
+
+                int animationBufferLength = animation.endIndex() - animation.startIndex();
+                int cycleLength = animationBufferLength * 2;
+
+                int frame = Math.floorMod(
+                    (int) Math.floor(Timer.getFPGATimestamp() * animation.frameRate()),
+                    cycleLength
+                );
+
+                int filled;
+                boolean rev;
+
+                if (frame < animationBufferLength) {
+                    filled = frame + 1;
+                    rev = false;
+                } else {
+                    filled = cycleLength - frame - 1;
+                    rev = true;
+                }
+
+                String baseHex = String.format(
+                    "#%02X%02X%02X",
+                    baseColor[0],
+                    baseColor[1],
+                    baseColor[2]
+                );
+
+                String fillHex = String.format(
+                    "#%02X%02X%02X",
+                    fillColor[0],
+                    fillColor[1],
+                    fillColor[2]
+                );
+
+                for (int i = 0; i < animationBufferLength; i++) {
+                    int j = rev ? animationBufferLength - i - 1 : i;
+                    buffer[animation.startIndex() + j] = i < filled ? fillHex : baseHex;
+                }
+            }
+            case LARSON -> { // todo i dont like how frame-y these animations are, they should be smoothed
+                int animationBufferLength = animation.endIndex() - animation.startIndex();
+                int cycleLength = Math.max(1, animationBufferLength * 2 - 2);
+
+                int frame = Math.floorMod(
+                    (int) Math.floor(Timer.getFPGATimestamp() * animation.frameRate() * 2),
+                    cycleLength
+                );
+
+                int position;
+                if (frame < animationBufferLength) {
+                    position = frame;
+                } else {
+                    position = cycleLength - frame;
+                }
+
+                int trailLength = 4;
+
+                int r = animation.colors()[0][0];
+                int g = animation.colors()[0][1];
+                int b = animation.colors()[0][2];
+
+                for (int i = 0; i < animationBufferLength; i++) {
+                    int distance = Math.abs(i - position);
+
+                    if (distance > trailLength) {
+                        buffer[animation.startIndex() + i] = "#000000";
+                        continue;
+                    }
+
+                    double brightness = Math.pow(
+                        Math.max(0.0, 1.0 - distance / (double)(trailLength + 1)),
+                        1.8
+                    );
+
+                    int scaledR = (int) Math.round(r * brightness);
+                    int scaledG = (int) Math.round(g * brightness);
+                    int scaledB = (int) Math.round(b * brightness);
+
+                    buffer[animation.startIndex() + i] = String.format(
+                        "#%02X%02X%02X",
+                        scaledR,
+                        scaledG,
+                        scaledB
+                    );
+                }
+            }
+            case ROTATION -> {
                 int len = animation.colors().length;
                 int offset = (int) MathUtil.inputModulus(Timer.getFPGATimestamp() * animation.frameRate(), 0, len);
 
@@ -79,10 +178,11 @@ public class LEDControllerIOSim implements LEDControllerIO {
                         animation.colors()[(i + offset) % len][2]
                     );
 
-                break;
-            default:
+            }
+            default -> {
                 for (int i = 0; i < buffer.length; i++)
                     buffer[i] = "#000000";
+            }
         }
 
         updateNTBuffer();

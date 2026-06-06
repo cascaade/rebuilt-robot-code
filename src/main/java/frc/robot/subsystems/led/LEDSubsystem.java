@@ -1,10 +1,10 @@
 package frc.robot.subsystems.led;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import lombok.Setter;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.EnumMap;
 
 import static frc.robot.subsystems.led.LEDAnimation.LEDAnimationType.*;
 import static frc.robot.subsystems.led.LEDConstants.*;
@@ -15,7 +15,12 @@ public class LEDSubsystem extends SubsystemBase {
         DISABLED,
         DISCONNECTED,
         AUTONOMOUS,
-        ENABLED,
+        TELEOP,
+        AIMING_HUB,
+        PASSING,
+        INTAKING,
+        HOMING,
+        SHOOT,
         BOOT
     }
 
@@ -24,7 +29,12 @@ public class LEDSubsystem extends SubsystemBase {
         DISABLED,
         DISCONNECTED,
         AUTONOMOUS,
-        ENABLED,
+        TELEOP,
+        AIMING_HUB,
+        PASSING,
+        INTAKING,
+        HOMING,
+        SHOOT,
         BOOT
     }
 
@@ -42,14 +52,8 @@ public class LEDSubsystem extends SubsystemBase {
     }
 
     public SystemState handleStateTransitions() {
-        return switch (wantedState) {
-            case DISPLAY_OFF -> SystemState.DISPLAYING_OFF;
-            case DISABLED -> SystemState.DISABLED;
-            case DISCONNECTED -> SystemState.DISCONNECTED;
-            case AUTONOMOUS -> SystemState.AUTONOMOUS;
-            case ENABLED -> SystemState.ENABLED;
-            case BOOT -> SystemState.BOOT;
-        };
+        if (wantedState == WantedState.DISPLAY_OFF) return SystemState.DISPLAYING_OFF;
+        return SystemState.valueOf(wantedState.name());
     }
 
     public void applyStates() {
@@ -80,7 +84,7 @@ public class LEDSubsystem extends SubsystemBase {
                     new int[] { 255, 160, 0 }
                 ));
                 break;
-            case ENABLED:
+            case TELEOP:
                 controllerIO.setAnimation(new LEDAnimation(
                     BLINK,
                     0,
@@ -89,7 +93,42 @@ public class LEDSubsystem extends SubsystemBase {
                     new int[] { 0, 255, 0 }
                 ));
                 break;
-            case BOOT:
+            case AIMING_HUB:
+                controllerIO.setAnimation(new LEDAnimation(
+                    LARSON,
+                    0,
+                    BUFFER_LENGTH,
+                    3,
+                    new int[] { 0, 255, 0 }
+                ));
+                break;
+            case INTAKING:
+                controllerIO.setAnimation(new LEDAnimation(
+                    LARSON,
+                    0,
+                    20,
+                    12,
+                    new int[] { 0, 0, 255 }
+                ));
+                break;
+            case PASSING:
+                controllerIO.setAnimation(new LEDAnimation(
+                    FLOW,
+                    0,
+                    BUFFER_LENGTH,
+                    4,
+                    new int[] { 0, 0, 255 }
+                ));
+            case HOMING:
+                controllerIO.setAnimation(new LEDAnimation(
+                    FLOW,
+                    0,
+                    10,
+                    10,
+                    new int[] { 255, 255, 255 }
+                ));
+                break;
+            case BOOT, SHOOT:
                 controllerIO.setAnimation(new LEDAnimation(
                     ROTATION,
                     0,
