@@ -3,6 +3,9 @@ package frc.robot.autos;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import choreo.trajectory.SwerveSample;
+import choreo.trajectory.TrajectorySample;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StringSubscriber;
@@ -15,6 +18,10 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.WantedSuperState;
 import frc.robot.subsystems.swerve.SwerveFSM;
+import frc.robot.util.OperatorDashboard;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AutoBrain {
     private final AutoFactory autoFactory;
@@ -164,6 +171,20 @@ public class AutoBrain {
 
         cachedAuto = auto;
         autoThatIsCached = pathName;
+
+        List<Pose2d> allPoses = new ArrayList<>();
+
+        for (AutoTrajectory traj : paths) {
+            allPoses.addAll(
+                traj.getRawTrajectory()
+                    .samples()
+                    .stream()
+                    .map(TrajectorySample::getPose)
+                    .toList()
+            );
+        }
+
+        OperatorDashboard.getField().getObject("traj").setPoses(allPoses);
     }
 
     public AutoRoutine fetchAuto() {
