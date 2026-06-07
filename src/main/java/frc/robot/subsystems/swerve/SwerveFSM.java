@@ -29,8 +29,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotState;
-import frc.robot.util.ShooterLUT;
-import frc.robot.util.SwerveMathUtil;
+import frc.robot.util.*;
 import frc.robot.util.SwerveMathUtil.TranslationOutput;
 import lombok.Setter;
 import org.littletonrobotics.junction.*;
@@ -70,7 +69,6 @@ public class SwerveFSM extends SubsystemBase {
     private SystemState systemState = SystemState.STOPPED;
 
     private Rotation2d rawGyroRotation;
-    private final Field2d field;
 
     private boolean toCross;
     private final MutTime lastMove;
@@ -140,9 +138,6 @@ public class SwerveFSM extends SubsystemBase {
         trajHeadingControllerControlConstants.applyTo(trajHeadingController);
 
         lastMove = Seconds.mutable(Timer.getFPGATimestamp());
-
-        field = new Field2d();
-        SmartDashboard.putData("Odometry/Field", field);
     }
 
     private SystemState handleStateTransitions() {
@@ -323,7 +318,7 @@ public class SwerveFSM extends SubsystemBase {
         Logger.recordOutput("Swerve/States/Actual", moduleStates);
         poseEstimator.update(rawGyroRotation, updatedModulePositions);
 
-        field.setRobotPose(getPose());
+        OperatorDashboard.getField().setRobotPose(getPose());
 
         if (DriverStation.isDisabled()) {
             aimHubFlag.set(false);

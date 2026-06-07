@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.RobotState;
+import frc.robot.util.OperatorDashboard;
 import frc.robot.util.SwerveMathUtil;
 import frc.robot.util.SwerveMathUtil.TranslationOutput;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -59,8 +60,6 @@ public class SwerveSubsystem extends SubsystemBase {
     private PIDController trajHeadingController;
 
     private Rotation2d rawGyroRotation;
-
-    private final Field2d field;
 
     public SwerveSubsystem(
         GyroIO gyroIO,
@@ -101,9 +100,6 @@ public class SwerveSubsystem extends SubsystemBase {
         trajHeadingController.enableContinuousInput(0, 2 * Math.PI);
 
         lastMove = Seconds.mutable(Timer.getFPGATimestamp());
-
-        field = new Field2d();
-        SmartDashboard.putData("Odometry/Field", field);
     }
 
     /**
@@ -349,7 +345,7 @@ public class SwerveSubsystem extends SubsystemBase {
         Logger.recordOutput("Swerve/States/Actual", moduleStates);
         poseEstimator.update(rawGyroRotation, updatedModulePositions);
 
-        field.setRobotPose(getPose());
+        OperatorDashboard.getField().setRobotPose(getPose());
 
         if (DriverStation.isDisabled()) {
             aimHubFlag.set(false);
