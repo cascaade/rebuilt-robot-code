@@ -70,7 +70,6 @@ public class SwerveFSM extends SubsystemBase {
 
     private Rotation2d rawGyroRotation;
 
-    private boolean toCross;
     private final MutTime lastMove;
 
     private final AtomicBoolean aimHubFlag;
@@ -104,8 +103,6 @@ public class SwerveFSM extends SubsystemBase {
         this.controller = controller;
         this.gyroIO = gyroIO;
         this.gyroIOInputs = new GyroIOInputsAutoLogged();
-
-        toCross = true;
 
         modules = new SDSSwerveModule[] {
             new SDSSwerveModule("Module 0", flModuleIO),
@@ -280,7 +277,6 @@ public class SwerveFSM extends SubsystemBase {
         trajHeadingControllerControlConstants.applyIfChanged(trajHeadingController);
 
         Logger.recordOutput("Swerve/AimHubFlag", aimHubFlag.get());
-        Logger.recordOutput("Swerve/CrossEnabled", toCross);
 
         // updated all hardware inputs
         gyroIO.updateInputs(gyroIOInputs);
@@ -398,7 +394,7 @@ public class SwerveFSM extends SubsystemBase {
 
         // Set modules to cross if the time since last move exceeds threshold
         if (
-            (toCross && Seconds.of(Timer.getFPGATimestamp()).minus(lastMove).gt(SwerveConstants.crossDelay))
+            (Seconds.of(Timer.getFPGATimestamp()).minus(lastMove).gt(SwerveConstants.crossDelay))
         ) {
             setModulesToCrossPosition(true);
             return;
