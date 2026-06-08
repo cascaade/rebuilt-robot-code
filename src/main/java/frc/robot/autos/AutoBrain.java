@@ -3,31 +3,20 @@ package frc.robot.autos;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
-import choreo.trajectory.SwerveSample;
 import choreo.trajectory.TrajectorySample;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringPublisher;
-import edu.wpi.first.networktables.StringSubscriber;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.WantedSuperState;
 import frc.robot.subsystems.swerve.SwerveFSM;
 import frc.robot.util.OperatorDashboard;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class AutoBrain {
     private final AutoFactory autoFactory;
-    private final StringPublisher autoPathPublisher;
-    private final StringSubscriber autoPathSubscriber;
-    private final SendableChooser<String> autoMode = new SendableChooser<>();
 
     private final Superstructure superstructure;
     private final SwerveFSM swerveSubsystem;
@@ -38,17 +27,6 @@ public class AutoBrain {
     public AutoBrain(Superstructure superstructure, SwerveFSM swerveSubsystem) {
         this.superstructure = superstructure;
         this.swerveSubsystem = swerveSubsystem;
-
-        autoMode.setDefaultOption("Auto 1", "Auto1");
-        autoMode.addOption("Auto 2", "Auto2");
-        autoMode.addOption("Auto 3", "Auto3");
-        SmartDashboard.putData("Auto", autoMode);
-
-        var topic = NetworkTableInstance.getDefault()
-            .getStringTopic("/SmartDashboard/Auto Path");
-        autoPathPublisher = topic.publish();
-        autoPathPublisher.set("1,2,9,4"); // default shown in textbox
-        autoPathSubscriber = topic.subscribe("1,2,9,4");
 
         SmartDashboard.putData("Rebuild Auto", new InstantCommand(() -> {
             /* note from testing:
@@ -74,37 +52,33 @@ public class AutoBrain {
         );
     }
 
-    public void buildAuto() {
-        String autoNum = autoMode.getSelected();
-        String pathName = autoPathSubscriber.get().trim();
+    private List<AutoTrajectory> buildPreload(String startPoint) {
+        AutoRoutine auto = autoFactory.newRoutine("preload");
 
-        String[] points = pathName.split(",");
+        AutoTrajectory path = auto.trajectory(startPoint + "__1_Preload");
+        auto.active().onTrue(Commands.sequence(
+            path.resetOdometry(),
+            path.cmd().withName("preloadPathSequence"),
+            superstructure.shootCommand().withTimeout(3)
+        ));
 
-        AutoRoutine auto = autoFactory.newRoutine("auto");
+        cachedAuto = auto;
+        autoThatIsCached = "";
 
-        // Trigger preload branch if path is empty OR only one waypoint provided
-        if (pathName.isEmpty() || points.length < 2) {
-            if (!pathName.isEmpty() && points.length < 2) {
-                System.out.println("Not enough points");
-                cachedAuto = null;
-                autoThatIsCached = "";
-            }
+        var list = new ArrayList<AutoTrajectory>();
+        list.add(path);
 
-            AutoTrajectory path = auto.trajectory(autoNum + "__1_Preload");
-            auto.active().onTrue(Commands.sequence(
-                path.resetOdometry(),
-                path.cmd().withName("preloadPathSequence"),
-                superstructure.shootCommand().withTimeout(3)
-            ));
-            cachedAuto = auto;
-            autoThatIsCached = "";
-        }
+        return list;
+    }
+
+    private List<AutoTrajectory> buildWaypoints(String startPoint, String requestedPath, String[] points) {
+        AutoRoutine auto = autoFactory.newRoutine("auto:" + requestedPath);
 
         String[] pathNames = new String[points.length - 1];
         AutoTrajectory[] paths = new AutoTrajectory[points.length - 1];
 
         for (int i = 0; i < points.length - 1; i++) {
-            pathNames[i] = autoNum + "__" + points[i] + "_" + points[i + 1];
+            pathNames[i] = startPoint + "__" + points[i] + "_" + points[i + 1];
             paths[i] = auto.trajectory(pathNames[i]);
         }
 
@@ -127,7 +101,7 @@ public class AutoBrain {
                     superstructure.shootCommand().withTimeout(6),
                     paths[i + 1].cmd()
                 ));
-            } 
+            }
             else if (shouldIntakeDuring(pathN)) {
                 paths[i].active().onTrue(
                     Commands.runOnce(
@@ -151,7 +125,7 @@ public class AutoBrain {
                 paths[i].done().onTrue(
                     paths[i+ 1].cmd()
                 );
-            } 
+            }
             else {
                 paths[i].done().onTrue(
                     paths[i + 1].cmd()
@@ -161,7 +135,6 @@ public class AutoBrain {
 
         String lastEP = points[points.length - 1];
         AutoTrajectory lastPath = paths[paths.length - 1];
-        String lastPathName = pathNames[pathNames.length - 1];
 
         if (shouldShootAfter(lastEP)) {
             paths[paths.length - 1].done().onTrue(Commands.sequence(
@@ -169,12 +142,37 @@ public class AutoBrain {
             ));
         }
 
+        var list = new ArrayList<AutoTrajectory>();
+        list.addAll(Arrays.stream(paths).toList());
+
         cachedAuto = auto;
-        autoThatIsCached = pathName;
+        autoThatIsCached = requestedPath;
+
+        return list;
+    }
+
+    private void buildAuto() {
+        String startPoint = OperatorDashboard.getSelectedAutoStartLocation();
+        String requestedPath = OperatorDashboard.getRequestedAutoPath();
+
+        String[] points = requestedPath.split(",");
+        List<AutoTrajectory> trajectories;
+
+        if (requestedPath.isEmpty()) {
+            trajectories = buildPreload(startPoint);
+        } else if (points.length < 2) {
+            System.out.println("Not enough points");
+            cachedAuto = null;
+            autoThatIsCached = "";
+            OperatorDashboard.getField().getObject("traj").setPoses(new ArrayList<>());
+            return;
+        } else {
+            trajectories = buildWaypoints(startPoint, requestedPath, points);
+        }
 
         List<Pose2d> allPoses = new ArrayList<>();
 
-        for (AutoTrajectory traj : paths) {
+        for (AutoTrajectory traj : trajectories) {
             allPoses.addAll(
                 traj.getRawTrajectory()
                     .samples()
@@ -227,6 +225,6 @@ public class AutoBrain {
     }
 
     private void updateBuiltBoolean() {
-        SmartDashboard.putBoolean("AutoHasBeenBuiltAndCached", cachedAuto != null && autoThatIsCached.equals(autoPathSubscriber.get().trim()));
+        SmartDashboard.putBoolean("AutoHasBeenBuiltAndCached", cachedAuto != null && autoThatIsCached.equals(OperatorDashboard.getRequestedAutoPath()));
     }
 }
