@@ -86,6 +86,9 @@ public class Constants {
     public static final double odometryFrequency = 50.0; // hz (50 is default of 20ms)
 
     public static class FieldConstants {
+        public static final double FIELD_WIDTH = Units.inchesToMeters(317.69);
+        public static final double FIELD_LENGTH = Units.inchesToMeters(651.22);
+
         public static Pose2d getHubCenter() {
             double x, y;
 

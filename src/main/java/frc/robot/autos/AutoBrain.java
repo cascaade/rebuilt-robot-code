@@ -8,9 +8,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import frc.robot.Constants;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.WantedSuperState;
 import frc.robot.subsystems.swerve.SwerveFSM;
+import frc.robot.util.FieldUtil;
 import frc.robot.util.OperatorDashboard;
 
 import java.util.*;
@@ -170,6 +172,10 @@ public class AutoBrain {
             trajectories = buildWaypoints(startPoint, requestedPath, points);
         }
 
+        updateFieldTrajectories(trajectories);
+    }
+
+    private void updateFieldTrajectories(List<AutoTrajectory> trajectories) {
         List<Pose2d> allPoses = new ArrayList<>();
 
         for (AutoTrajectory traj : trajectories) {
@@ -178,6 +184,7 @@ public class AutoBrain {
                     .samples()
                     .stream()
                     .map(TrajectorySample::getPose)
+                    .map(pose -> Constants.isRed() ? FieldUtil.rotate(pose) : pose)
                     .toList()
             );
         }
