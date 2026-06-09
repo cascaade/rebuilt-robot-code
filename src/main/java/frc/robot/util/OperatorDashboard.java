@@ -4,7 +4,14 @@ import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.smartdashboard.*;
 import lombok.Getter;
 
+/**
+ * A class that represents the driver's Elastic dashboard
+ */
 public class OperatorDashboard {
+    /**
+     *
+     * @return the field object displayed on the operator dashboard
+     */
     @Getter
     private static final Field2d field = new Field2d();
 
@@ -12,10 +19,18 @@ public class OperatorDashboard {
     private static final StringSubscriber autoPathSubscriber;
     private static final SendableChooser<String> autoMode = new SendableChooser<>();
 
+    /**
+     *
+     * @return the name of the starting position of the robot
+     */
     public static String getSelectedAutoStartLocation() {
         return autoMode.getSelected();
     }
 
+    /**
+     *
+     * @return the string containing the segment numbers that construct the auto path
+     */
     public static String getRequestedAutoPath() {
         return autoPathSubscriber.get().trim();
     }
