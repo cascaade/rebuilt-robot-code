@@ -388,7 +388,7 @@ public class SwerveFSM extends SubsystemBase {
             lastMove.mut_replace(Timer.getFPGATimestamp(), Seconds);
         }
 
-        Logger.recordOutput("Swerve/ChassisSpeeds/RawChassisSpeeds", new ChassisSpeeds(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.vyMetersPerSecond, chassisSpeeds.omegaRadiansPerSecond));
+        Logger.recordOutput("Swerve/ChassisSpeeds/RawChassisSpeeds", chassisSpeeds.toSuper());
 //        Logger.recordOutput("Swerve/ChassisSpeeds/rawVelocity", chassisSpeeds.omegaRadiansPerSecond);
         Logger.recordOutput("Swerve/timeSinceLastMove", Seconds.of(Timer.getFPGATimestamp()).minus(lastMove));
 
@@ -401,7 +401,7 @@ public class SwerveFSM extends SubsystemBase {
         }
 
         // Adjust speeds to be robot centric if they aren't already
-        ChassisSpeeds adjustedSpeeds = chassisSpeeds;
+        ChassisSpeeds adjustedSpeeds = chassisSpeeds.toSuper();
 
         if (chassisSpeeds.fieldCentric) {
             adjustedSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(

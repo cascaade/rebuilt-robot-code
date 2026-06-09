@@ -66,4 +66,12 @@ public class OrientedChassisSpeeds extends ChassisSpeeds {
         this.allianceFlipped = allianceFlipped;
         this.fieldCentric = fieldCentric;
     }
+
+    public ChassisSpeeds toSuper() {
+        return new ChassisSpeeds(
+            vxMetersPerSecond,
+            vyMetersPerSecond,
+            omegaRadiansPerSecond
+        );
+    }
 }
