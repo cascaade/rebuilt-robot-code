@@ -10,13 +10,18 @@ import java.util.TreeMap;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
+/**
+ * A lookup-table that linearly links shooter distance and required speed
+ */
 public class ShooterLUT {
     private static final TreeMap<Double, Double> flywheelSpeedTable = new TreeMap<>();
 
+    // offsets to make it as easy as plugging in the number from the tape measure into the .put spam below
     private final static double robotOffsetDistance = Units.inchesToMeters(25.0) / 2;
     private final static double hubOffsetDistance = Units.inchesToMeters(23.0);
 
-    static {    
+    static {
+        // had to take off a bit of speed because it was overshooting, varying at different distances
         flywheelSpeedTable.put(Units.inchesToMeters(90) + robotOffsetDistance + hubOffsetDistance, 395.0 - 24.0);
         flywheelSpeedTable.put(Units.inchesToMeters(80) + robotOffsetDistance + hubOffsetDistance, 380.0 - 24.0);
         flywheelSpeedTable.put(Units.inchesToMeters(70) + robotOffsetDistance + hubOffsetDistance, 360.0 - 24.0);
@@ -27,6 +32,11 @@ public class ShooterLUT {
         flywheelSpeedTable.put(Units.inchesToMeters(20) + robotOffsetDistance + hubOffsetDistance, 275.0 - 14.0);
     }
 
+    /**
+     *
+     * @param targetDistance the distance the robot currently is from the hub (center-center)
+     * @return the speed the shooter must run at to make a shot into the hub
+     */
     public static AngularVelocity getFlywheelSpeedAtDistance(Distance targetDistance) {
         if (flywheelSpeedTable.isEmpty()) {
             return RadiansPerSecond.of(0.0);
