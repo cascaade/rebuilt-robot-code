@@ -26,9 +26,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants;
+import frc.robot.*;
 import frc.robot.Constants.FieldConstants;
-import frc.robot.RobotState;
 import frc.robot.util.*;
 import frc.robot.util.SwerveMathUtil.TranslationOutput;
 import lombok.Setter;
@@ -343,31 +342,22 @@ public class SwerveFSM extends SubsystemBase {
     }
 
     private void adjustSpeedsForPresetRotation(OrientedChassisSpeeds speeds) {
-        Pose2d robotPose = getPose();
-        Pose2d hubPose = FieldConstants.getHubCenter();
-
-        Translation2d robotToHub = hubPose.getTranslation().minus(robotPose.getTranslation());
-        Rotation2d targetHeading = robotToHub.getAngle().minus(Rotation2d.k180deg);
-
-        Logger.recordOutput("Swerve/AutoAlignTargetPose", new Pose2d(robotPose.getTranslation(), targetHeading));
-        Logger.recordOutput("Swerve/DistanceToHub", robotToHub.getNorm());
-        Logger.recordOutput("Field/HubPose", hubPose);
-        Logger.recordOutput("Swerve/AutoAlignUpdate", Timer.getFPGATimestamp());
+        var robotPose = getPose();
 
         switch (systemState) {
             case AIMING_HUB -> {
+                targetRotation = RobotState.getInstance().getFieldHubTargetHeading();
                 speeds.omegaRadiansPerSecond = trajHeadingController.calculate(
                     robotPose.getRotation().getRadians(),
-                    targetHeading.getRadians()
+                    targetRotation.getRadians()
                 );
-                targetRotation = targetHeading;
             }
             case AIMING_PASS -> {
+                targetRotation = RobotState.getInstance().getClosestFieldPassTargetHeading();
                 speeds.omegaRadiansPerSecond = trajHeadingController.calculate(
                     robotPose.getRotation().getRadians(),
-                    RobotState.getInstance().getClosestFieldPassTargetHeading().getRadians()
+                    targetRotation.getRadians()
                 );
-                targetRotation = RobotState.getInstance().getClosestFieldPassTargetHeading();
             }
             default -> targetRotation = rawGyroRotation.rotateBy(Rotation2d.k180deg);
         }
