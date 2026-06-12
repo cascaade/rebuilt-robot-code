@@ -8,7 +8,6 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.*;
-import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
 import frc.robot.Constants.RobotMode;
 import lombok.Getter;
@@ -43,7 +42,7 @@ public class TunableControlConstants {
     private FeedforwardType feedforwardType = FeedforwardType.NONE;
     @Getter
     private FeedforwardType simFeedforwardType = FeedforwardType.NONE;
-    private final int changeId = hashCode();
+    private final int defaultChangeId = hashCode();
 
     /**
      * @param prefix The logged tunable key prefix (e.g., "Shooter/Flywheel")
@@ -200,28 +199,36 @@ public class TunableControlConstants {
     }
 
     /** Checks if values were updated on the dashboard. */
-    public boolean hasChanged() {
+    public boolean hasChanged(int id) {
         return Constants.tuningMode
-            && (kP.hasChanged(changeId)
-                | kI.hasChanged(changeId)
-                | kD.hasChanged(changeId)
-                | kS.hasChanged(changeId)
-                | kV.hasChanged(changeId)
-                | kA.hasChanged(changeId)
-                | kG.hasChanged(changeId));
+            && (kP.hasChanged(id)
+                | kI.hasChanged(id)
+                | kD.hasChanged(id)
+                | kS.hasChanged(id)
+                | kV.hasChanged(id)
+                | kA.hasChanged(id)
+                | kG.hasChanged(id));
+    }
+
+    public boolean hasChanged() {
+        return hasChanged(defaultChangeId);
     }
 
     /** Checks if simulation-only values were updated on the dashboard. */
-    public boolean hasSimChanged() {
+    public boolean hasSimChanged(int id) {
         return Constants.currentMode == Constants.RobotMode.SIM
             && Constants.tuningMode
-            && (simKP.hasChanged(changeId)
-                | simKI.hasChanged(changeId)
-                | simKD.hasChanged(changeId)
-                | simKS.hasChanged(changeId)
-                | simKV.hasChanged(changeId)
-                | simKA.hasChanged(changeId)
-                | simKG.hasChanged(changeId));
+            && (simKP.hasChanged(id)
+                | simKI.hasChanged(id)
+                | simKD.hasChanged(id)
+                | simKS.hasChanged(id)
+                | simKV.hasChanged(id)
+                | simKA.hasChanged(id)
+                | simKG.hasChanged(id));
+    }
+
+    public boolean hasSimChanged() {
+        return hasSimChanged(defaultChangeId);
     }
 
     public boolean haveAnyChanged() {
@@ -296,7 +303,7 @@ public class TunableControlConstants {
     }
 
     public boolean applyIfChanged(TalonFXConfiguration config) {
-        if (!hasChanged()) {
+        if (!hasChanged(config.hashCode())) {
             return false;
         }
 
@@ -304,8 +311,8 @@ public class TunableControlConstants {
         return true;
     }
 
-    public boolean applyIfChanged(TalonFXConfiguration config, Consumer<TalonFXConfiguration> applyConfig) {
-        if (!hasChanged()) {
+    public boolean applyIfChanged(int changeId, TalonFXConfiguration config, Consumer<TalonFXConfiguration> applyConfig) {
+        if (!hasChanged(changeId)) {
             return false;
         }
 
@@ -315,11 +322,11 @@ public class TunableControlConstants {
     }
 
     public boolean applyIfChanged(TalonFXConfiguration config, TalonFX motor) {
-        return applyIfChanged(config, c -> motor.getConfigurator().apply(c));
+        return applyIfChanged(motor.hashCode(), config, c -> motor.getConfigurator().apply(c));
     }
 
     public boolean applyIfChanged(SparkMaxConfig config) {
-        if (!hasChanged()) {
+        if (!hasChanged(config.hashCode())) {
             return false;
         }
 
@@ -327,7 +334,7 @@ public class TunableControlConstants {
         return true;
     }
 
-    public boolean applyIfChanged(SparkMaxConfig config, Consumer<SparkMaxConfig> applyConfig) {
+    public boolean applyIfChanged(int changeId, SparkMaxConfig config, Consumer<SparkMaxConfig> applyConfig) {
         if (!hasChanged()) {
             return false;
         }
@@ -338,16 +345,15 @@ public class TunableControlConstants {
     }
 
     public boolean applyIfChanged(SparkMaxConfig config, SparkMax motor) {
-        return applyIfChanged(config,
-            c -> motor.configure(c, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        return applyIfChanged(motor.hashCode(), config, c -> motor.configure(c, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
     }
 
     /*
-    override comments for PIDController applyIfChanged:
+    overload comments for PIDController applyIfChanged:
         "changed" can mean one of three things: any value has changed, only primary values have changed (used for
         physical motors), or the simulation values have changed. PIDController can represent any of these scenarios,
         unlike designated physical PID controller constant classes like SparkMaxConfig or TalonFXConfiguration. to
-        account for this, I have created three overrides, one for each of the meanings of "changed".
+        account for this, I have created three overloads, one for each of the meanings of "changed".
         the wording of the last one (applySimIfChanged) is different from the second simply because I realized it was
         setting the primary values when the sim was changed, so to clarify i changed it. feel free to change it later
      */
