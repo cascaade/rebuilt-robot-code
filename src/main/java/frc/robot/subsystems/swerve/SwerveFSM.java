@@ -101,6 +101,7 @@ public class SwerveFSM extends SubsystemBase {
         this.gyroIO = gyroIO;
         this.gyroIOInputs = new GyroIOInputsAutoLogged();
 
+        //== Required Setup ==//
         modules = new SDSSwerveModule[] {
             new SDSSwerveModule("Module 0", flModuleIO),
             new SDSSwerveModule("Module 1", frModuleIO),
@@ -115,6 +116,7 @@ public class SwerveFSM extends SubsystemBase {
             new Translation2d(SwerveConstants.kWheelDistanceX.div(-2), SwerveConstants.kWheelDistanceY.div(-2))
         );
 
+        //== Set Defaults ==//
         rawGyroRotation = new Rotation2d();
         modulePositions = Arrays.stream(modules).map(SDSSwerveModule::getPosition).toArray(SwerveModulePosition[]::new);
         poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, modulePositions, Constants.getInitialPose());
@@ -258,6 +260,9 @@ public class SwerveFSM extends SubsystemBase {
         }
     }
 
+    /**
+     * Sync control constants for autonomous trajectory controllers
+     */
     private void syncControlConstants() {
         trajVXControllerControlConstants.applyIfChanged(trajVXController);
         trajVYControllerControlConstants.applyIfChanged(trajVYController);
@@ -265,6 +270,8 @@ public class SwerveFSM extends SubsystemBase {
     }
 
     public void periodic() {
+        //== State Machine ==//
+
         this.systemState = handleStateTransitions();
         applyStates();
         this.previousWantedState = wantedState;
@@ -272,9 +279,10 @@ public class SwerveFSM extends SubsystemBase {
         Logger.recordOutput("Swerve/WantedState", wantedState);
         Logger.recordOutput("Swerve/SystemState", systemState);
 
+        //== Sync Control Constants ==//
         syncControlConstants();
 
-        // updated all hardware inputs
+        //== Update All Hardware Inputs ==//
         gyroIO.updateInputs(gyroIOInputs);
         Logger.processInputs("Swerve/Gyro", gyroIOInputs);
 
@@ -294,6 +302,7 @@ public class SwerveFSM extends SubsystemBase {
             moduleStates[i] = modules[i].getCurrentState();
         }
 
+        //== Update Raw Gyro Rotation ==//
         if (gyroIOInputs.connected) {
             rawGyroRotation = gyroIOInputs.yawPosition;
         } else {
@@ -301,10 +310,12 @@ public class SwerveFSM extends SubsystemBase {
             rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
         }
 
-        // record updated positions and update odometry
+        //== Record All Input Data ==//
         Logger.recordOutput("Swerve/Positions", updatedModulePositions);
         Logger.recordOutput("Swerve/States/Actual", moduleStates);
 
+        //== Update the Pose Estimator and Pose on the Dashboard ==//
+        poseEstimator.update(rawGyroRotation, updatedModulePositions);
         RobotState.getInstance().addPoseObservation(poseEstimator.getEstimatedPosition());
         OperatorDashboard.getField().setRobotPose(getPose());
     }
@@ -326,6 +337,10 @@ public class SwerveFSM extends SubsystemBase {
         getPose();
     }
 
+    /**
+     * Adjust {@link OrientedChassisSpeeds} based on the need to align rotationally
+     * @param speeds the speeds to align
+     */
     private void adjustSpeedsForPresetRotation(OrientedChassisSpeeds speeds) {
         var robotPose = getPose();
 
@@ -350,11 +365,14 @@ public class SwerveFSM extends SubsystemBase {
         Logger.recordOutput("Odometry/Alignment/TargetPose", new Pose2d(robotPose.getTranslation(), targetRotation));
     }
 
+    /**
+     * Send final {@link OrientedChassisSpeeds} for this code loop to the motors
+     * @param chassisSpeeds the ChassisSpeeds to send
+     */
     private void submitChassisSpeeds(
         OrientedChassisSpeeds chassisSpeeds
     ) {
-
-        // Update lastMove
+        //== Update lastMove ==//
         if (
             chassisSpeeds.vxMetersPerSecond != 0 ||
                 chassisSpeeds.vyMetersPerSecond != 0 ||
@@ -363,10 +381,11 @@ public class SwerveFSM extends SubsystemBase {
             lastMove.mut_replace(Timer.getFPGATimestamp(), Seconds);
         }
 
+        //== Log Debug Data ==//
         Logger.recordOutput("Swerve/ChassisSpeeds/RawChassisSpeeds", chassisSpeeds.toSuper());
         Logger.recordOutput("Swerve/TimeSinceLastMove", Seconds.of(Timer.getFPGATimestamp()).minus(lastMove));
 
-        // Set modules to cross if the time since last move exceeds threshold
+        // Set Modules to Cross if Conditions are Met ==//
         if (
             (Seconds.of(Timer.getFPGATimestamp()).minus(lastMove).gt(SwerveConstants.crossDelay))
         ) {
@@ -374,7 +393,7 @@ public class SwerveFSM extends SubsystemBase {
             return;
         }
 
-        // Adjust speeds to be robot centric if they aren't already
+        //== Ensure Speeds are Robot-Centric ==//
         ChassisSpeeds adjustedSpeeds = chassisSpeeds.toSuper();
 
         if (chassisSpeeds.fieldCentric) {
@@ -384,24 +403,36 @@ public class SwerveFSM extends SubsystemBase {
             );
         }
 
-        // Account for the skew discrete periods make on the smooth arc
+        //== Account for the Skew Discrete Periods Make on the Smooth Arc ==//
         adjustedSpeeds = ChassisSpeeds.discretize(adjustedSpeeds, LoggedRobot.defaultPeriodSecs);
 
+        //== Ensure Wheel Speeds are Safe ==//
         SwerveModuleState[] moduleSetpoints = kinematics.toSwerveModuleStates(adjustedSpeeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleSetpoints, SwerveConstants.kMaxWheelSpeed);
 
+        //== Log States and Final ChassisSpeeds ==//
         Logger.recordOutput("Swerve/States/Setpoints", moduleSetpoints);
         Logger.recordOutput("Swerve/ChassisSpeeds/Setpoints", adjustedSpeeds);
 
+        //== Command Setpoints of the Motors ==//
         setRawModuleSetpoints(moduleSetpoints, true);
     }
 
+    /**
+     * Set the raw setpoints (direction and speed) for each module
+     * @param states the states to set
+     * @param optimize whether to optimize or not (find the nearest 180deg multiple of the angle)
+     */
     private void setRawModuleSetpoints(SwerveModuleState[] states, boolean optimize) {
         for (int i = 0; i < 4; i++) {
             modules[i].setDesiredState(states[i], optimize);
         }
     }
 
+    /**
+     * Set the setpoints of each module to a cross position
+     * @param optimize whether to optimize or not (find the nearest 180deg multiple of the angle)
+     */
     private void setModulesToCrossPosition(boolean optimize) {
         setRawModuleSetpoints(new SwerveModuleState[] {
             new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
@@ -411,6 +442,12 @@ public class SwerveFSM extends SubsystemBase {
         }, optimize);
     }
 
+    /**
+     * A command builder method for zeroing the Gyro.
+     *
+     * Only works when connected to the FMS.
+     * @return the command to zero the gyro
+     */
     public Command runZeroGyro() {
         return runOnce(() -> {
             gyroIO.zeroGyro();
