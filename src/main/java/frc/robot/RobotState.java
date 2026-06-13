@@ -6,7 +6,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.Constants.FieldConstants;
 import lombok.Getter;
-import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.*;
 
 import static edu.wpi.first.units.Units.Meters;
 
@@ -34,7 +34,7 @@ public class RobotState {
      *
      * @return the distance from the robot to the scoring hub
      */
-    @AutoLogOutput(key = "Odometry/HubDistance")
+    @AutoLogOutput(key = "Odometry/Alignment/HubDistance")
     public Distance getFieldHubDistance() {
         Pose2d hubPose = FieldConstants.getHubCenter();
 
@@ -45,7 +45,7 @@ public class RobotState {
      *
      * @return the field-oriented heading needed to align the robot to the hub
      */
-    @AutoLogOutput(key = "Odometry/HubTargetHeading")
+    @AutoLogOutput(key = "Odometry/Alignment/HubTargetHeading")
     public Rotation2d getFieldHubTargetHeading() {
         Pose2d hubPose = FieldConstants.getHubCenter();
 
@@ -57,7 +57,7 @@ public class RobotState {
      *
      * @return true if the robot should pass toward the right half of the field, otherwise false
      */
-    @AutoLogOutput(key = "Odometry/ShouldPassLow")
+    @AutoLogOutput(key = "Odometry/ShouldPassRight")
     public boolean shouldPassRight() {
         boolean blue = getRobotFieldPose().getMeasureY().lt(FieldConstants.getHubCenter().getMeasureY());
         return Constants.isRed() != blue; // XOR - reference truth tables
@@ -65,9 +65,9 @@ public class RobotState {
 
     /**
      *
-     * @return
+     * @return distance to the closest pass point
      */
-    @AutoLogOutput(key = "Odometry/ClosestPassDistance")
+    @AutoLogOutput(key = "Odometry/Alignment/ClosestPassDistance")
     public Distance getClosestFieldPassDistance() {
         Pose2d passPose = shouldPassRight() ? FieldConstants.getPassLow() : FieldConstants.getPassHigh();
 
@@ -78,7 +78,7 @@ public class RobotState {
      *
      * @return the field-oriented heading needed to align the robot to the closest pass point
      */
-    @AutoLogOutput(key = "Odometry/ClosestPassTargetHeading")
+    @AutoLogOutput(key = "Odometry/Alignment/ClosestPassTargetHeading")
     public Rotation2d getClosestFieldPassTargetHeading() {
         Pose2d passPose = shouldPassRight() ? FieldConstants.getPassLow() : FieldConstants.getPassHigh();
 

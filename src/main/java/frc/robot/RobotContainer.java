@@ -43,6 +43,9 @@ public class RobotContainer {
 
     private final Superstructure superstructure;
 
+    // todo: research on why this can't be anywhere but here (tried in constructor, first thing, no work)
+    private final RobotState robotState = RobotState.getInstance();
+
     public RobotContainer() {
         Preferences.removeAll();
 
