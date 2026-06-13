@@ -71,8 +71,6 @@ public class SwerveFSM extends SubsystemBase {
 
     private final MutTime lastMove;
 
-    private final AtomicBoolean aimHubFlag;
-
     private PIDController trajVXController;
     private PIDController trajVYController;
     private PIDController trajHeadingController;
@@ -119,10 +117,7 @@ public class SwerveFSM extends SubsystemBase {
 
         rawGyroRotation = new Rotation2d();
         modulePositions = Arrays.stream(modules).map(SDSSwerveModule::getPosition).toArray(SwerveModulePosition[]::new);
-
         poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, modulePositions, Constants.getInitialPose());
-
-        aimHubFlag = new AtomicBoolean(false);
 
         trajVXController = new PIDController(0, 0, 0);
         trajVYController = new PIDController(0, 0, 0);
@@ -263,6 +258,12 @@ public class SwerveFSM extends SubsystemBase {
         }
     }
 
+    private void syncControlConstants() {
+        trajVXControllerControlConstants.applyIfChanged(trajVXController);
+        trajVYControllerControlConstants.applyIfChanged(trajVYController);
+        trajHeadingControllerControlConstants.applyIfChanged(trajHeadingController);
+    }
+
     public void periodic() {
         this.systemState = handleStateTransitions();
         applyStates();
@@ -271,27 +272,19 @@ public class SwerveFSM extends SubsystemBase {
         Logger.recordOutput("Swerve/WantedState", wantedState);
         Logger.recordOutput("Swerve/SystemState", systemState);
 
-        trajVXControllerControlConstants.applyIfChanged(trajVXController);
-        trajVYControllerControlConstants.applyIfChanged(trajVYController);
-        trajHeadingControllerControlConstants.applyIfChanged(trajHeadingController);
-
-        Logger.recordOutput("Swerve/AimHubFlag", aimHubFlag.get());
+        syncControlConstants();
 
         // updated all hardware inputs
         gyroIO.updateInputs(gyroIOInputs);
         Logger.processInputs("Swerve/Gyro", gyroIOInputs);
 
-        for (SDSSwerveModule module : modules) {
-            module.periodic();
-        }
-
         SwerveModuleState[] moduleStates = new SwerveModuleState[4];
-
-        // process updates from hardware
         SwerveModulePosition[] updatedModulePositions = new SwerveModulePosition[4];
         SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
 
         for (int i = 0; i < 4; i++) {
+            modules[i].periodic();
+
             updatedModulePositions[i] = modules[i].getPosition();
             moduleDeltas[i] = new SwerveModulePosition(
                 updatedModulePositions[i].distanceMeters - modulePositions[i].distanceMeters,
@@ -311,22 +304,14 @@ public class SwerveFSM extends SubsystemBase {
         // record updated positions and update odometry
         Logger.recordOutput("Swerve/Positions", updatedModulePositions);
         Logger.recordOutput("Swerve/States/Actual", moduleStates);
-        poseEstimator.update(rawGyroRotation, updatedModulePositions);
-
-        OperatorDashboard.getField().setRobotPose(getPose());
-
-        if (DriverStation.isDisabled()) {
-            aimHubFlag.set(false);
-        }
 
         RobotState.getInstance().addPoseObservation(poseEstimator.getEstimatedPosition());
-
-        Logger.recordOutput("Swerve/Drive_Command", this.getCurrentCommand() == null ? "null" : this.getCurrentCommand().getName());
+        OperatorDashboard.getField().setRobotPose(getPose());
     }
 
-    @AutoLogOutput(key = "Swerve/IsAligned")
+    @AutoLogOutput(key = "Odometry/Alignment/IsAligned")
     public boolean isAligned() {
-        Logger.recordOutput("Swerve/AlignmentError", rawGyroRotation.getMeasure().minus(targetRotation.getMeasure()).abs(Degrees));
+        Logger.recordOutput("Odometry/Alignment/AlignmentError", rawGyroRotation.getMeasure().minus(targetRotation.getMeasure()).abs(Degrees));
         return rawGyroRotation.getMeasure().isNear(targetRotation.getMeasure(), BODY_ROTATION_ALIGN_TOLERANCE);
     }
 
@@ -362,7 +347,7 @@ public class SwerveFSM extends SubsystemBase {
             default -> targetRotation = rawGyroRotation.rotateBy(Rotation2d.k180deg);
         }
 
-        Logger.recordOutput("Swerve/targetRotation", new Pose2d(robotPose.getTranslation(), targetRotation));
+        Logger.recordOutput("Odometry/Alignment/TargetPose", new Pose2d(robotPose.getTranslation(), targetRotation));
     }
 
     private void submitChassisSpeeds(
@@ -379,8 +364,7 @@ public class SwerveFSM extends SubsystemBase {
         }
 
         Logger.recordOutput("Swerve/ChassisSpeeds/RawChassisSpeeds", chassisSpeeds.toSuper());
-//        Logger.recordOutput("Swerve/ChassisSpeeds/rawVelocity", chassisSpeeds.omegaRadiansPerSecond);
-        Logger.recordOutput("Swerve/timeSinceLastMove", Seconds.of(Timer.getFPGATimestamp()).minus(lastMove));
+        Logger.recordOutput("Swerve/TimeSinceLastMove", Seconds.of(Timer.getFPGATimestamp()).minus(lastMove));
 
         // Set modules to cross if the time since last move exceeds threshold
         if (
@@ -428,16 +412,12 @@ public class SwerveFSM extends SubsystemBase {
     }
 
     public Command runZeroGyro() {
-        if (!DriverStation.isFMSAttached()) {
-            return runOnce(() -> {
-                gyroIO.zeroGyro();
-            })
-                .andThen(new WaitCommand(0.1))
-                .andThen(() -> {
-                    poseEstimator.resetRotation(Constants.isRed() ? Rotation2d.kPi : Rotation2d.kZero);
-                });
-        }
-        return Commands.none();
+        return runOnce(() -> {
+            gyroIO.zeroGyro();
+        })
+            .andThen(new WaitCommand(0.1))
+            .andThen(() -> poseEstimator.resetRotation(Constants.isRed() ? Rotation2d.kPi : Rotation2d.kZero))
+            .onlyIf(() -> !DriverStation.isFMSAttached());
     }
 
     public void resetOdometry(Pose2d pose) {
