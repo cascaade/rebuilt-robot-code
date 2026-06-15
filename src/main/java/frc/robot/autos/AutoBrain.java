@@ -54,7 +54,7 @@ public class AutoBrain {
         );
     }
 
-    private List<AutoTrajectory> buildPreload(String startPoint) {
+    private Pose2d buildPreload(String startPoint, ArrayList<AutoTrajectory> trajectories) {
         AutoRoutine auto = autoFactory.newRoutine("preload");
 
         AutoTrajectory path = auto.trajectory(startPoint + "__1_Preload");
@@ -67,13 +67,12 @@ public class AutoBrain {
         cachedAuto = auto;
         autoThatIsCached = "";
 
-        var list = new ArrayList<AutoTrajectory>();
-        list.add(path);
+        trajectories.add(path);
 
-        return list;
+        return FieldUtil.rotateIfRed(path.getRawTrajectory().samples().get(0).getPose());
     }
 
-    private List<AutoTrajectory> buildWaypoints(String startPoint, String requestedPath, String[] points) {
+    private Pose2d buildWaypoints(String startPoint, String requestedPath, String[] points, ArrayList<AutoTrajectory> trajectories) {
         AutoRoutine auto = autoFactory.newRoutine("auto:" + requestedPath);
 
         String[] pathNames = new String[points.length - 1];
@@ -144,13 +143,12 @@ public class AutoBrain {
             ));
         }
 
-        var list = new ArrayList<AutoTrajectory>();
-        list.addAll(Arrays.stream(paths).toList());
+        trajectories.addAll(Arrays.stream(paths).toList());
 
         cachedAuto = auto;
         autoThatIsCached = requestedPath;
 
-        return list;
+        return FieldUtil.rotateIfRed(paths[0].getRawTrajectory().samples().get(0).getPose());
     }
 
     private void buildAuto() {
@@ -158,24 +156,23 @@ public class AutoBrain {
         String requestedPath = OperatorDashboard.getRequestedAutoPath();
 
         String[] points = requestedPath.split(",");
-        List<AutoTrajectory> trajectories;
+        ArrayList<AutoTrajectory> trajectories = new ArrayList<>();
+        Pose2d startPose = null;
 
         if (requestedPath.isEmpty()) {
-            trajectories = buildPreload(startPoint);
+            startPose = buildPreload(startPoint, trajectories);
         } else if (points.length < 2) {
             System.out.println("Not enough points");
             cachedAuto = null;
             autoThatIsCached = "";
-            OperatorDashboard.getField().getObject("traj").setPoses(new ArrayList<>());
-            return;
         } else {
-            trajectories = buildWaypoints(startPoint, requestedPath, points);
+            startPose = buildWaypoints(startPoint, requestedPath, points, trajectories);
         }
 
-        updateFieldTrajectories(trajectories);
+        updateFieldTrajectories(trajectories, startPose);
     }
 
-    private void updateFieldTrajectories(List<AutoTrajectory> trajectories) {
+    private void updateFieldTrajectories(List<AutoTrajectory> trajectories, Pose2d startPose) {
         List<Pose2d> allPoses = new ArrayList<>();
 
         for (AutoTrajectory traj : trajectories) {
@@ -184,12 +181,13 @@ public class AutoBrain {
                     .samples()
                     .stream()
                     .map(TrajectorySample::getPose)
-                    .map(pose -> Constants.isRed() ? FieldUtil.rotate(pose) : pose)
+                    .map(FieldUtil::rotateIfRed)
                     .toList()
             );
         }
 
         OperatorDashboard.getField().getObject("traj").setPoses(allPoses);
+        if (startPose != null) OperatorDashboard.getField().getObject("start").setPose(startPose);
     }
 
     public AutoRoutine fetchAuto() {
