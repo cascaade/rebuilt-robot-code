@@ -166,61 +166,6 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        // swerve default joystick inputs
-//        swerveSubsystem.setDefaultCommand(swerveSubsystem.runDriveInputs(
-//            driverController::getLeftX,          // vx
-//            driverController::getLeftY,          // vy
-//            driverController::getRightX,         // omega
-//            driverController::getLeftTriggerAxis // raw slow input
-//        ));
-
-        // reset robot orientation (doesn't work with vision or FMS)
-//        driverController.y().onTrue(swerveSubsystem.runZeroGyro());
-
-        // hub aim on/off
-//        driverController.leftBumper().onTrue(swerveSubsystem.runToggleAimHub(true));
-//        driverController.leftBumper().onFalse(swerveSubsystem.runToggleAimHub(false));
-
-        // swerve adjustments using POV
-        // auxController.povUp().onTrue(swerve.runXSetTime(-0.15));
-        // auxController.povDown().onTrue(swerve.runXSetTime(0.15));
-        // auxController.povLeft().onTrue(swerve.runOmegaSetTime(0.05));
-        // auxController.povRight().onTrue(swerve.runOmegaSetTime(-0.05));
-
-        // shooter flywheel on/off
-
-        // index feed on/off
-//        driverController.rightTrigger(.5).onTrue(shooterSubsystem.toggleRunIndex(true));
-//        driverController.rightTrigger(.5).onFalse(shooterSubsystem.toggleRunIndex(false));
-//
-//        // agitator feed/unjam
-//        driverController.povDown().onTrue(shooterSubsystem.runToggleReverseFeeder(true));
-//        driverController.povDown().onFalse(shooterSubsystem.runToggleReverseFeeder(false));
-//
-//        // intake wrist up/down
-//        auxController.a().onTrue(intakeSubsystem.toggleWristPosFlag(true));
-//        auxController.a().onFalse(intakeSubsystem.toggleWristPosFlag(false));
-//        auxController.x().onTrue(intakeSubsystem.toggleWristNegFlag(true));
-//        auxController.x().onFalse(intakeSubsystem.toggleWristNegFlag(false));
-//
-//        // intake wrist pulses
-//        auxController.leftTrigger().onTrue(intakeSubsystem.addPulse());
-//
-//        // intake rollers suck/repel
-//        auxController.b().onTrue(intakeSubsystem.toggleRollerDirection(true));
-//        auxController.b().onFalse(intakeSubsystem.toggleRollerDirection(false));
-//
-//        // intake rollers on/off
-//        auxController.rightBumper().onTrue(intakeSubsystem.toggleRollerFlag(false));
-//        auxController.rightBumper().onFalse(intakeSubsystem.toggleRollerFlag(true));
-//
-//        // shooter toggles on/off
-//        auxController.leftBumper().onTrue(shooterSubsystem.toggleRunShooter());
-//
-//        // shooter goes to max speed
-//        auxController.y().onTrue(shooterSubsystem.switchMaxShooterFlag(true));
-//        auxController.y().onFalse(shooterSubsystem.switchMaxShooterFlag(false));
-
         controller.leftBumper().whileTrue(superstructure.intakeCommand());
         controller.rightTrigger().whileTrue(superstructure.shootCommand());
     }
